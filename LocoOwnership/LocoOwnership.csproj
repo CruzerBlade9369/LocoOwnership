@@ -10,6 +10,12 @@
 	<!-- Derail Valley -->
 	<ItemGroup>
 		<Reference Include="Assembly-CSharp" />
+		<Reference Include="DV.PointSet">
+		  <HintPath>..\..\..\..\Steam\steamapps\common\Derail Valley\DerailValley_Data\Managed\DV.PointSet.dll</HintPath>
+		</Reference>
+		<Reference Include="DV.Simulation">
+		  <HintPath>..\..\..\..\Steam\steamapps\common\Derail Valley\DerailValley_Data\Managed\DV.Simulation.dll</HintPath>
+		</Reference>
 		<Reference Include="DV.ThingTypes">
 		  <HintPath>..\..\..\..\Steam\steamapps\common\Derail Valley\DerailValley_Data\Managed\DV.ThingTypes.dll</HintPath>
 		</Reference>
@@ -21,7 +27,13 @@
 	<!-- Unity -->
 	<ItemGroup>
 		<Reference Include="UnityEngine" />
+		<Reference Include="UnityEngine.AudioModule">
+		  <HintPath>..\..\..\..\Programs\Unity Hub\2019.4.40f1\Editor\Data\Managed\UnityEngine\UnityEngine.AudioModule.dll</HintPath>
+		</Reference>
 		<Reference Include="UnityEngine.CoreModule" />
+		<Reference Include="UnityEngine.PhysicsModule">
+		  <HintPath>..\..\..\..\Programs\Unity Hub\2019.4.40f1\Editor\Data\Managed\UnityEngine\UnityEngine.PhysicsModule.dll</HintPath>
+		</Reference>
 	</ItemGroup>
 
 	<!-- Mod Loader -->
