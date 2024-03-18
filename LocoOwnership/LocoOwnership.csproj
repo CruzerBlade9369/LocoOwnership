@@ -10,6 +10,9 @@
 	<!-- Derail Valley -->
 	<ItemGroup>
 		<Reference Include="Assembly-CSharp" />
+		<Reference Include="CommsRadioAPI">
+		  <HintPath>..\..\..\..\Steam\steamapps\common\Derail Valley\Mods\CommsRadioAPI\CommsRadioAPI.dll</HintPath>
+		</Reference>
 		<Reference Include="DV.PointSet">
 		  <HintPath>..\..\..\..\Steam\steamapps\common\Derail Valley\DerailValley_Data\Managed\DV.PointSet.dll</HintPath>
 		</Reference>

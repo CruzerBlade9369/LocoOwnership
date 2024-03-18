@@ -45,7 +45,7 @@ namespace LocoOwnership
 			settings.Save(modEntry);
 		}
 
-		static void DebugLog(string message)
+		public static void DebugLog(string message)
 		{
 			if (settings.isLoggingEnabled)
 				mod?.Logger.Log(message);
