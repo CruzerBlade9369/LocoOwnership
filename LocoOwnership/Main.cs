@@ -2,6 +2,9 @@ using System;
 using System.Reflection;
 using HarmonyLib;
 using UnityModManagerNet;
+using CommsRadioAPI;
+using LocoOwnership.LocoPurchaser;
+using UnityEngine;
 
 namespace LocoOwnership
 {
@@ -10,6 +13,7 @@ namespace LocoOwnership
 		public static bool enabled;
 		public static UnityModManager.ModEntry? mod;
 		public static Settings settings = new Settings();
+		public static CommsRadioMode CommsRadioMode { get; private set; }
 
 		private static bool Load(UnityModManager.ModEntry modEntry)
 		{
@@ -24,6 +28,8 @@ namespace LocoOwnership
 				mod = modEntry;
 				modEntry.OnGUI = OnGui;
 				modEntry.OnSaveGUI = OnSaveGui;
+
+				ControllerAPI.Ready += StartCommsRadio;
 			}
 			catch (Exception ex)
 			{
@@ -49,6 +55,11 @@ namespace LocoOwnership
 		{
 			if (settings.isLoggingEnabled)
 				mod?.Logger.Log(message);
+		}
+
+		public static void StartCommsRadio()
+		{
+			CommsRadioMode = CommsRadioMode.Create(new PointAtNothing(), Color.blue);
 		}
 	}
 }
