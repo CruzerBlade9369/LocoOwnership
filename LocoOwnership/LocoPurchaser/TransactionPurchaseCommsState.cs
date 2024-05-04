@@ -6,14 +6,11 @@ using DV.Logic.Job;
 using UnityEngine;
 
 using CommsRadioAPI;
-using LocoOwnership.Shared;
 
 namespace LocoOwnership.LocoPurchaser
 {
-	// this class enables when ponting at a loco
-	internal abstract class PurchasePointAtSomething : AStateBehaviour
+	internal abstract class TransactionPurchaseCommsState : AStateBehaviour
 	{
-		private const float SIGNAL_RANGE = 200f;
 		private static readonly Vector3 HIGHLIGHT_BOUNDS_EXTENSION = new Vector3(0.25f, 0.8f, 0f);
 
 		internal TrainCar selectedCar;
@@ -22,10 +19,10 @@ namespace LocoOwnership.LocoPurchaser
 
 		private GameObject highlighter;
 
-		public PurchasePointAtSomething(TrainCar selectedCar)
+		public TransactionPurchaseCommsState(TrainCar selectedCar)
 			: base(new CommsRadioState(
 				titleText: "Purchase",
-				contentText: "Aim at the locomotive you wish to purchase.",
+				contentText: "Purchase L-### for $#########?",
 				actionText: "Confirm",
 				buttonBehaviour: ButtonBehaviourType.Override))
 		{
@@ -36,7 +33,6 @@ namespace LocoOwnership.LocoPurchaser
 				throw new ArgumentNullException(nameof(selectedCar));
 			}
 
-			//got to steal some components from other radio modes
 			ICommsRadioMode? commsRadioMode = ControllerAPI.GetVanillaMode(VanillaMode.Clear);
 			if (commsRadioMode is null)
 			{
@@ -48,30 +44,6 @@ namespace LocoOwnership.LocoPurchaser
 			highlighter = carDeleter.trainHighlighter;
 			highlighter.SetActive(false);
 			highlighter.transform.SetParent(null);
-		}
-
-		public void Awake()
-		{
-
-		}
-
-		public override AStateBehaviour OnUpdate(CommsRadioUtility utility)
-		{
-			RaycastHit hit;
-			//if we're not pointing at anything
-			if (!Physics.Raycast(signalOrigin.position, signalOrigin.forward, out hit, SIGNAL_RANGE, trainCarMask))
-			{
-				return new PurchasePointAtNothing();
-			}
-			TrainCar target = TrainCar.Resolve(hit.transform.root);
-			if (target is null || target != selectedCar)
-			{
-				//if we stopped pointing at selectedCar and are now pointing at either
-				//nothing or another train car, then go back to PointingAtNothing so
-				//we can figure out what we're pointing at
-				return new PurchasePointAtNothing();
-			}
-			return this;
 		}
 
 		public override void OnEnter(CommsRadioUtility utility, AStateBehaviour? previous)

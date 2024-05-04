@@ -11,12 +11,11 @@ using CommsRadioAPI;
 
 namespace LocoOwnership.LocoPurchaser
 {
-	// this class inherits point at something
-	internal class PurchasePointAtLoco : PurchasePointAtSomething
+	internal class TransactionPurchase : TransactionPurchaseCommsState
 	{
-		public PurchasePointAtLoco(TrainCar selectedCar) : base(selectedCar)
+		public TransactionPurchase(TrainCar selectedCar) : base(selectedCar)
 		{
-
+			
 		}
 
 		public override AStateBehaviour OnAction(CommsRadioUtility utility, InputAction action)
@@ -26,8 +25,8 @@ namespace LocoOwnership.LocoPurchaser
 				throw new ArgumentException();
 			}
 
-			utility.PlaySound(VanillaSoundCommsRadio.Confirm);
-			return new TransactionPurchase(selectedCar);
+			utility.PlaySound(VanillaSoundCommsRadio.MoneyRemoved);
+			return new PurchasePointAtNothing();
 		}
 	}
 }

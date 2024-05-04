@@ -19,7 +19,6 @@ namespace LocoOwnership.LocoPurchaser
 	{
 		private const float SIGNAL_RANGE = 100f;
 
-		private TrainCar selectedCar;
 		private Transform signalOrigin;
 		private int trainCarMask;
 
@@ -98,8 +97,7 @@ namespace LocoOwnership.LocoPurchaser
 			{
 				foreach (ASimInitializedController controller in simController.otherSimControllers)
 				{
-					//if we're a locomotive that can explode
-					//This should cover all locomotives in the game but we'll see
+					// might change the way loco checking works but we'll see
 					Main.DebugLog("Pointing at locomotive");
 					utility.PlaySound(VanillaSoundCommsRadio.HoverOver);
 					return new PurchasePointAtLoco(selectedCar);
