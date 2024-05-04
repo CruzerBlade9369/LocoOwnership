@@ -1,15 +1,20 @@
-using CommsRadioAPI;
+using System;
+
 using DV;
 using DV.Simulation.Cars;
 using DV.Simulation.Controllers;
 using DV.Damage;
 using DV.ThingTypes;
-using UnityEngine;
-using System;
 
-namespace LocoOwnership.LocoPurchaser
+using UnityEngine;
+
+using CommsRadioAPI;
+using LocoOwnership.Menus;
+
+
+namespace LocoOwnership.LocoSeller
 {
-	internal class PointAtNothing : AStateBehaviour
+	internal class SellPointAtNothing : AStateBehaviour
 	{
 		private const float SIGNAL_RANGE = 100f;
 
@@ -17,11 +22,12 @@ namespace LocoOwnership.LocoPurchaser
 		private Transform signalOrigin;
 		private int trainCarMask;
 
-		public PointAtNothing()
+		public SellPointAtNothing()
 			: base(new CommsRadioState(
-				titleText: "Loco purchaser",
-				contentText: "Aim at the locomotive you wish to purchase.",
-				buttonBehaviour: ButtonBehaviourType.Regular))
+				titleText: "Sell",
+				contentText: "Aim at the locomotive you wish to sell.",
+				actionText: "Cancel",
+				buttonBehaviour: ButtonBehaviourType.Override))
 		{
 
 		}
@@ -40,8 +46,8 @@ namespace LocoOwnership.LocoPurchaser
 
 		public override AStateBehaviour OnAction(CommsRadioUtility utility, InputAction action)
 		{
-			Main.DebugLog("Calling OnAction while pointing at nothing");
-			return new PointAtNothing();
+			utility.PlaySound(VanillaSoundCommsRadio.Cancel);
+			return new LocoPurchase();
 		}
 
 		private void refreshSignalOriginAndTrainCarMask()
@@ -94,7 +100,8 @@ namespace LocoOwnership.LocoPurchaser
 					//if we're a locomotive that can explode
 					//This should cover all locomotives in the game but we'll see
 					Main.DebugLog("Pointing at locomotive");
-					return new PointAtLoco(selectedCar);
+					utility.PlaySound(VanillaSoundCommsRadio.HoverOver);
+					return new SellPointAtLoco(selectedCar);
 				}
 			}
 			else
@@ -104,7 +111,7 @@ namespace LocoOwnership.LocoPurchaser
 				if (cargoDamageModel is not null)
 				{
 					Main.DebugLog("Pointing at rolling stock - nothing should happen");
-					return new PointAtNothing();
+					return new SellPointAtNothing();
 				}
 			}
 			return this;

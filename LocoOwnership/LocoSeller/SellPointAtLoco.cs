@@ -1,17 +1,19 @@
-using CommsRadioAPI;
+using System;
+
 using DV;
 using DV.Damage;
 using DV.Simulation.Cars;
 using DV.Simulation.Controllers;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
-namespace LocoOwnership.LocoPurchaser
+using UnityEngine;
+
+using CommsRadioAPI;
+
+namespace LocoOwnership.LocoSeller
 {
-	internal class PointAtLoco : PointAtSomething
+	internal class SellPointAtLoco : SellPointAtSomething
 	{
-		public PointAtLoco(TrainCar selectedCar) : base(selectedCar)
+		public SellPointAtLoco(TrainCar selectedCar) : base(selectedCar)
 		{
 
 		}
@@ -23,8 +25,10 @@ namespace LocoOwnership.LocoPurchaser
 				throw new ArgumentException();
 			}
 
+			utility.PlaySound(VanillaSoundCommsRadio.Confirm);
+
 			Main.DebugLog("Loco purchasing should go here, currently unimplemented");
-			return new PointAtNothing();
+			return new SellPointAtNothing();
 		}
 	}
 }

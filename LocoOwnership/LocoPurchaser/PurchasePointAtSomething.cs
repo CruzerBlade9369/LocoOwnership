@@ -1,12 +1,16 @@
-using CommsRadioAPI;
+using System;
+
 using DV;
 using DV.Logic.Job;
-using System;
+
 using UnityEngine;
+
+using CommsRadioAPI;
 
 namespace LocoOwnership.LocoPurchaser
 {
-	internal abstract class PointAtSomething : AStateBehaviour
+	// this class enables when ponting at a loco
+	internal abstract class PurchasePointAtSomething : AStateBehaviour
 	{
 		private const float SIGNAL_RANGE = 200f;
 		private static readonly Vector3 HIGHLIGHT_BOUNDS_EXTENSION = new Vector3(0.25f, 0.8f, 0f);
@@ -17,11 +21,12 @@ namespace LocoOwnership.LocoPurchaser
 
 		private GameObject highlighter;
 
-		public PointAtSomething(TrainCar selectedCar)
+		public PurchasePointAtSomething(TrainCar selectedCar)
 			: base(new CommsRadioState(
-				titleText: "Loco purchaser",
+				titleText: "Purchase",
 				contentText: "Aim at the locomotive you wish to purchase.",
-				buttonBehaviour: ButtonBehaviourType.Regular))
+				actionText: "Confirm",
+				buttonBehaviour: ButtonBehaviourType.Override))
 		{
 			this.selectedCar = selectedCar;
 			if (this.selectedCar is null)
@@ -55,7 +60,7 @@ namespace LocoOwnership.LocoPurchaser
 			//if we're not pointing at anything
 			if (!Physics.Raycast(signalOrigin.position, signalOrigin.forward, out hit, SIGNAL_RANGE, trainCarMask))
 			{
-				return new PointAtNothing();
+				return new PurchasePointAtNothing();
 			}
 			TrainCar target = TrainCar.Resolve(hit.transform.root);
 			if (target is null || target != selectedCar)
@@ -63,7 +68,7 @@ namespace LocoOwnership.LocoPurchaser
 				//if we stopped pointing at selectedCar and are now pointing at either
 				//nothing or another train car, then go back to PointingAtNothing so
 				//we can figure out what we're pointing at
-				return new PointAtNothing();
+				return new PurchasePointAtNothing();
 			}
 			return this;
 		}

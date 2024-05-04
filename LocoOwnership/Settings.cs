@@ -9,9 +9,9 @@ namespace LocoOwnership
 		[Draw("Enable logging")]
 		public bool isLoggingEnabled =
 #if DEBUG
-			true;
+			false;
 #else
-            false;
+            true;
 #endif
 		public override void Save(UnityModManager.ModEntry entry)
 		{
