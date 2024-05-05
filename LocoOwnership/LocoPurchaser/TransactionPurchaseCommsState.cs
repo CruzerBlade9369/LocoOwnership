@@ -6,18 +6,19 @@ using DV.Logic.Job;
 using UnityEngine;
 
 using CommsRadioAPI;
+using LocoOwnership.Shared;
 
 namespace LocoOwnership.LocoPurchaser
 {
 	internal abstract class TransactionPurchaseCommsState : AStateBehaviour
 	{
-		private static readonly Vector3 HIGHLIGHT_BOUNDS_EXTENSION = new Vector3(0.25f, 0.8f, 0f);
+		private const float SIGNAL_RANGE = 200f;
 
 		internal TrainCar selectedCar;
 		private Transform signalOrigin;
 		private int trainCarMask;
 
-		private GameObject highlighter;
+		private CarHighlighter highlighter;
 
 		public TransactionPurchaseCommsState(TrainCar selectedCar)
 			: base(new CommsRadioState(
@@ -39,39 +40,42 @@ namespace LocoOwnership.LocoPurchaser
 				Main.DebugLog("Could not find CommsRadioCarDeleter");
 				throw new NullReferenceException();
 			}
+
 			CommsRadioCarDeleter carDeleter = (CommsRadioCarDeleter)commsRadioMode;
 			signalOrigin = carDeleter.signalOrigin;
-			highlighter = carDeleter.trainHighlighter;
-			highlighter.SetActive(false);
-			highlighter.transform.SetParent(null);
+			highlighter = new CarHighlighter();
+			highlighter.InitHighlighter(selectedCar, carDeleter);
+		}
+
+		public override AStateBehaviour OnUpdate(CommsRadioUtility utility)
+		{
+			RaycastHit hit;
+			//if we're not pointing at anything
+			if (!Physics.Raycast(signalOrigin.position, signalOrigin.forward, out hit, SIGNAL_RANGE, trainCarMask))
+			{
+				return new PurchasePointAtNothing();
+			}
+			TrainCar target = TrainCar.Resolve(hit.transform.root);
+			if (target is null || target != selectedCar)
+			{
+				//if we stopped pointing at selectedCar and are now pointing at either
+				//nothing or another train car, then go back to PointingAtNothing so
+				//we can figure out what we're pointing at
+				return new PurchasePointAtNothing();
+			}
+			return this;
 		}
 
 		public override void OnEnter(CommsRadioUtility utility, AStateBehaviour? previous)
 		{
 			base.OnEnter(utility, previous);
-			trainCarMask = LayerMask.GetMask(new string[]
-			{
-			"Train_Big_Collider"
-			});
-
-			MeshRenderer highlighterRenderer = highlighter.GetComponentInChildren<MeshRenderer>(true);
-			highlighterRenderer.material = utility.GetMaterial(VanillaMaterial.Valid);
-
-			highlighter.transform.localScale = selectedCar.Bounds.size + HIGHLIGHT_BOUNDS_EXTENSION;
-			Vector3 b = selectedCar.transform.up * (highlighter.transform.localScale.y / 2f);
-			Vector3 b2 = selectedCar.transform.forward * selectedCar.Bounds.center.z;
-			Vector3 position = selectedCar.transform.position + b + b2;
-
-			highlighter.transform.SetPositionAndRotation(position, selectedCar.transform.rotation);
-			highlighter.SetActive(true);
-			highlighter.transform.SetParent(selectedCar.transform, true);
+			trainCarMask = highlighter.StartHighlighter(utility, previous);
 		}
 
 		public override void OnLeave(CommsRadioUtility utility, AStateBehaviour? next)
 		{
 			base.OnLeave(utility, next);
-			highlighter.SetActive(false);
-			highlighter.transform.SetParent(null);
+			highlighter.StopHighlighter(utility, next);
 		}
 	}
 }
