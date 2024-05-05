@@ -9,8 +9,10 @@ using CommsRadioAPI;
 
 namespace LocoOwnership.Shared
 {
-	public class Highlighter
+	// this class enables when ponting at a loco
+	internal class Highlighter
 	{
+		private const float SIGNAL_RANGE = 200f;
 		private static readonly Vector3 HIGHLIGHT_BOUNDS_EXTENSION = new Vector3(0.25f, 0.8f, 0f);
 
 		internal TrainCar selectedCar;
@@ -18,10 +20,18 @@ namespace LocoOwnership.Shared
 		private int trainCarMask;
 
 		private GameObject highlighter;
-		private CommsRadioUtility utility;
 
-		public void initHighlighter()
+		public void InitHighlighter(TrainCar selectedCar)
 		{
+			Main.DebugLog("Init highlighter");
+			this.selectedCar = selectedCar;
+			if (this.selectedCar is null)
+			{
+				Main.DebugLog("selectedCar is null");
+				throw new ArgumentNullException(nameof(selectedCar));
+			}
+
+			//got to steal some components from other radio modes
 			ICommsRadioMode? commsRadioMode = ControllerAPI.GetVanillaMode(VanillaMode.Clear);
 			if (commsRadioMode is null)
 			{
@@ -35,8 +45,9 @@ namespace LocoOwnership.Shared
 			highlighter.transform.SetParent(null);
 		}
 
-		public void enableHighlighter(TrainCar selectedcar)
+		public void StartHighlighter(CommsRadioUtility utility, AStateBehaviour? previous)
 		{
+			Main.DebugLog("Start highlighter");
 			trainCarMask = LayerMask.GetMask(new string[]
 			{
 			"Train_Big_Collider"
@@ -55,8 +66,9 @@ namespace LocoOwnership.Shared
 			highlighter.transform.SetParent(selectedCar.transform, true);
 		}
 
-		public void disableHighlighter()
+		public void StopHighlighter(CommsRadioUtility utility, AStateBehaviour? next)
 		{
+			Main.DebugLog("Stop highlighter");
 			highlighter.SetActive(false);
 			highlighter.transform.SetParent(null);
 		}

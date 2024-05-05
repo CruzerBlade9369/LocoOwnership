@@ -20,7 +20,8 @@ namespace LocoOwnership.LocoPurchaser
 		private Transform signalOrigin;
 		private int trainCarMask;
 
-		private GameObject highlighter;
+		//private GameObject highlighter;
+		private Highlighter highlighter;
 
 		public PurchasePointAtSomething(TrainCar selectedCar)
 			: base(new CommsRadioState(
@@ -36,8 +37,11 @@ namespace LocoOwnership.LocoPurchaser
 				throw new ArgumentNullException(nameof(selectedCar));
 			}
 
+			highlighter = new Highlighter();
+			highlighter.InitHighlighter(selectedCar);
+
 			//got to steal some components from other radio modes
-			ICommsRadioMode? commsRadioMode = ControllerAPI.GetVanillaMode(VanillaMode.Clear);
+			/*ICommsRadioMode? commsRadioMode = ControllerAPI.GetVanillaMode(VanillaMode.Clear);
 			if (commsRadioMode is null)
 			{
 				Main.DebugLog("Could not find CommsRadioCarDeleter");
@@ -47,7 +51,7 @@ namespace LocoOwnership.LocoPurchaser
 			signalOrigin = carDeleter.signalOrigin;
 			highlighter = carDeleter.trainHighlighter;
 			highlighter.SetActive(false);
-			highlighter.transform.SetParent(null);
+			highlighter.transform.SetParent(null);*/
 		}
 
 		public void Awake()
@@ -57,10 +61,12 @@ namespace LocoOwnership.LocoPurchaser
 
 		public override AStateBehaviour OnUpdate(CommsRadioUtility utility)
 		{
+			Main.DebugLog("On update");
 			RaycastHit hit;
 			//if we're not pointing at anything
 			if (!Physics.Raycast(signalOrigin.position, signalOrigin.forward, out hit, SIGNAL_RANGE, trainCarMask))
 			{
+				Main.DebugLog("Trying to return to point at nothing if raycast is not");
 				return new PurchasePointAtNothing();
 			}
 			TrainCar target = TrainCar.Resolve(hit.transform.root);
@@ -69,15 +75,18 @@ namespace LocoOwnership.LocoPurchaser
 				//if we stopped pointing at selectedCar and are now pointing at either
 				//nothing or another train car, then go back to PointingAtNothing so
 				//we can figure out what we're pointing at
+				Main.DebugLog("Trying to return to point at nothing if pointing at nothing");
 				return new PurchasePointAtNothing();
 			}
+			Main.DebugLog("You shouldn't be here");
 			return this;
 		}
 
 		public override void OnEnter(CommsRadioUtility utility, AStateBehaviour? previous)
 		{
 			base.OnEnter(utility, previous);
-			trainCarMask = LayerMask.GetMask(new string[]
+			highlighter.StartHighlighter(utility, previous);
+			/*trainCarMask = LayerMask.GetMask(new string[]
 			{
 			"Train_Big_Collider"
 			});
@@ -92,14 +101,15 @@ namespace LocoOwnership.LocoPurchaser
 
 			highlighter.transform.SetPositionAndRotation(position, selectedCar.transform.rotation);
 			highlighter.SetActive(true);
-			highlighter.transform.SetParent(selectedCar.transform, true);
+			highlighter.transform.SetParent(selectedCar.transform, true);*/
 		}
 
 		public override void OnLeave(CommsRadioUtility utility, AStateBehaviour? next)
 		{
 			base.OnLeave(utility, next);
-			highlighter.SetActive(false);
-			highlighter.transform.SetParent(null);
+			highlighter.StopHighlighter(utility, next);
+			/*highlighter.SetActive(false);
+			highlighter.transform.SetParent(null);*/
 		}
 	}
 }
