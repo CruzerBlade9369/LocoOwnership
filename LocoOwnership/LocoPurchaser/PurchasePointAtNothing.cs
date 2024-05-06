@@ -4,13 +4,11 @@ using DV;
 using DV.Simulation.Cars;
 using DV.Simulation.Controllers;
 using DV.Damage;
-using DV.ThingTypes;
 
 using UnityEngine;
 
 using CommsRadioAPI;
 using LocoOwnership.Menus;
-using LocoOwnership.Shared;
 
 
 namespace LocoOwnership.LocoPurchaser
@@ -36,11 +34,6 @@ namespace LocoOwnership.LocoPurchaser
 		public override void OnEnter(CommsRadioUtility utility, AStateBehaviour? previous)
 		{
 			base.OnEnter(utility, previous);
-			trainCarMask = LayerMask.GetMask(new string[]
-			{
-			"Train_Big_Collider"
-			});
-
 			// Steal some components from other radio modes
 			refreshSignalOriginAndTrainCarMask();
 		}

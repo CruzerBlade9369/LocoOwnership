@@ -1,7 +1,9 @@
 using System;
 
 using DV;
-using DV.Logic.Job;
+using DV.Simulation.Cars;
+using DV.Simulation.Controllers;
+using DV.Damage;
 
 using UnityEngine;
 
@@ -23,7 +25,7 @@ namespace LocoOwnership.LocoPurchaser
 		public TransactionPurchaseCancelState(TrainCar selectedCar)
 			: base(new CommsRadioState(
 				titleText: "Purchase",
-				contentText: "Purchase L-### for $#########?",
+				contentText: $"Purchase {selectedCar.ID} for $###?",
 				actionText: "Cancel",
 				buttonBehaviour: ButtonBehaviourType.Override))
 		{
@@ -34,6 +36,7 @@ namespace LocoOwnership.LocoPurchaser
 				throw new ArgumentNullException(nameof(selectedCar));
 			}
 
+			// Steal some components from vanilla modes
 			ICommsRadioMode? commsRadioMode = ControllerAPI.GetVanillaMode(VanillaMode.Clear);
 			if (commsRadioMode is null)
 			{
@@ -42,27 +45,72 @@ namespace LocoOwnership.LocoPurchaser
 			}
 
 			CommsRadioCarDeleter carDeleter = (CommsRadioCarDeleter)commsRadioMode;
-			signalOrigin = carDeleter.signalOrigin;
+
 			highlighter = new CarHighlighter();
+
+			signalOrigin = carDeleter.signalOrigin;
 			highlighter.InitHighlighter(selectedCar, carDeleter);
+		}
+
+		private void refreshSignalOriginAndTrainCarMask()
+		{
+			trainCarMask = LayerMask.GetMask(new string[]
+			{
+			"Train_Big_Collider"
+			});
+			ICommsRadioMode? commsRadioMode = ControllerAPI.GetVanillaMode(VanillaMode.Clear);
+			if (commsRadioMode is null)
+			{
+				Main.DebugLog("Could not find CommsRadioCarDeleter");
+				throw new NullReferenceException();
+			}
+			CommsRadioCarDeleter carDeleter = (CommsRadioCarDeleter)commsRadioMode;
+			signalOrigin = carDeleter.signalOrigin;
 		}
 
 		public override AStateBehaviour OnUpdate(CommsRadioUtility utility)
 		{
-			// GOTTA REPLACE THIS WITH CAR DETECTOR CODE LATER
+			while (signalOrigin is null)
+			{
+				Main.DebugLog("signalOrigin is null for some reason");
+				refreshSignalOriginAndTrainCarMask();
+			}
+
 			RaycastHit hit;
-			//if we're not pointing at anything
+			// If we're not pointing at anything
 			if (!Physics.Raycast(signalOrigin.position, signalOrigin.forward, out hit, SIGNAL_RANGE, trainCarMask))
 			{
-				return new PurchasePointAtNothing();
+				return this;
 			}
-			TrainCar target = TrainCar.Resolve(hit.transform.root);
-			if (target is null || target != selectedCar)
+
+			// Try to get the car we're pointing at
+			TrainCar selectedCar = TrainCar.Resolve(hit.transform.root);
+
+			// If we aren't pointing at a car
+			if (selectedCar is null)
 			{
-				//if we stopped pointing at selectedCar and are now pointing at either
-				//nothing or another train car, then go back to PointingAtNothing so
-				//we can figure out what we're pointing at
-				return new PurchasePointAtNothing();
+				return this;
+			}
+
+			// If we're pointing at a locomotive
+			SimController simController = selectedCar.GetComponent<SimController>();
+			if (simController is not null)
+			{
+				foreach (ASimInitializedController controller in simController.otherSimControllers)
+				{
+					// Might change the way loco checking works
+					utility.PlaySound(VanillaSoundCommsRadio.HoverOver);
+					return new TransactionPurchaseConfirm(selectedCar);
+				}
+			}
+			else
+			{
+				// If this is a freight car, ignore (we only care bout locos not stinky freight cars
+				CargoDamageModel cargoDamageModel = selectedCar.GetComponent<CargoDamageModel>();
+				if (cargoDamageModel is not null)
+				{
+					return this;
+				}
 			}
 			return this;
 		}

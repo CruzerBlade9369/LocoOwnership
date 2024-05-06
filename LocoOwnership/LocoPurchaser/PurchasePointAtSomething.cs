@@ -19,7 +19,6 @@ namespace LocoOwnership.LocoPurchaser
 		private Transform signalOrigin;
 		private int trainCarMask;
 
-		/*private GameObject highlighter;*/
 		private CarHighlighter highlighter;
 
 		public PurchasePointAtSomething(TrainCar selectedCar)
@@ -36,7 +35,7 @@ namespace LocoOwnership.LocoPurchaser
 				throw new ArgumentNullException(nameof(selectedCar));
 			}
 
-			//got to steal some components from other radio modes
+			// Steal some components from vanilla modes
 			ICommsRadioMode? commsRadioMode = ControllerAPI.GetVanillaMode(VanillaMode.Clear);
 			if (commsRadioMode is null)
 			{
@@ -45,8 +44,10 @@ namespace LocoOwnership.LocoPurchaser
 			}
 
 			CommsRadioCarDeleter carDeleter = (CommsRadioCarDeleter)commsRadioMode;
-			signalOrigin = carDeleter.signalOrigin;
+
 			highlighter = new CarHighlighter();
+
+			signalOrigin = carDeleter.signalOrigin;
 			highlighter.InitHighlighter(selectedCar, carDeleter);
 		}
 
@@ -81,7 +82,7 @@ namespace LocoOwnership.LocoPurchaser
 			{
 			"Train_Big_Collider"
 			});
-			highlighter.StartHighlighter(utility, previous);
+			highlighter.StartHighlighter(utility, previous, true);
 		}
 
 		public override void OnLeave(CommsRadioUtility utility, AStateBehaviour? next)

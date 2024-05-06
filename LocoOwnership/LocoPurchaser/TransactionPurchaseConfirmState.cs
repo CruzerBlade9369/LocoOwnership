@@ -1,7 +1,6 @@
 using System;
 
 using DV;
-using DV.Logic.Job;
 
 using UnityEngine;
 
@@ -23,7 +22,7 @@ namespace LocoOwnership.LocoPurchaser
 		public TransactionPurchaseConfirmState(TrainCar selectedCar)
 			: base(new CommsRadioState(
 				titleText: "Purchase",
-				contentText: "Purchase L-### for $#########?",
+				contentText: $"Purchase {selectedCar.ID} for $###?",
 				actionText: "Confirm",
 				buttonBehaviour: ButtonBehaviourType.Override))
 		{
@@ -34,6 +33,7 @@ namespace LocoOwnership.LocoPurchaser
 				throw new ArgumentNullException(nameof(selectedCar));
 			}
 
+			// Steal some components from vanilla modes
 			ICommsRadioMode? commsRadioMode = ControllerAPI.GetVanillaMode(VanillaMode.Clear);
 			if (commsRadioMode is null)
 			{
@@ -42,8 +42,10 @@ namespace LocoOwnership.LocoPurchaser
 			}
 
 			CommsRadioCarDeleter carDeleter = (CommsRadioCarDeleter)commsRadioMode;
-			signalOrigin = carDeleter.signalOrigin;
+
 			highlighter = new CarHighlighter();
+
+			signalOrigin = carDeleter.signalOrigin;
 			highlighter.InitHighlighter(selectedCar, carDeleter);
 		}
 
