@@ -40,6 +40,10 @@ namespace LocoOwnership.LocoPurchaser
 
 		public override AStateBehaviour OnAction(CommsRadioUtility utility, InputAction action)
 		{
+			if (action != InputAction.Activate)
+			{
+				throw new ArgumentException();
+			}
 			utility.PlaySound(VanillaSoundCommsRadio.Cancel);
 			return new LocoPurchase();
 		}
@@ -86,25 +90,19 @@ namespace LocoOwnership.LocoPurchaser
 			}
 
 			// If we're pointing at a locomotive
-			SimController simController = selectedCar.GetComponent<SimController>();
-			if (simController is not null)
+			bool isLoco = selectedCar.IsLoco;
+			if (isLoco)
 			{
-				foreach (ASimInitializedController controller in simController.otherSimControllers)
-				{
-					// Might change the way loco checking works
-					utility.PlaySound(VanillaSoundCommsRadio.HoverOver);
-					return new PurchasePointAtLoco(selectedCar);
-				}
+				utility.PlaySound(VanillaSoundCommsRadio.HoverOver);
+				return new PurchasePointAtLoco(selectedCar);
 			}
 			else
 			{
-				// If this is a freight car, ignore (we only care bout locos not stinky freight cars
-				CargoDamageModel cargoDamageModel = selectedCar.GetComponent<CargoDamageModel>();
-				if (cargoDamageModel is not null)
-				{
-					return this;
-				}
+				return this;
 			}
+
+			// Keeping this here just in case
+			Main.DebugLog("PurchasePointAtNothing OnUpdate: You shouldn't be here");
 			return this;
 		}
 	}

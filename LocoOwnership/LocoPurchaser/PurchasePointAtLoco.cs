@@ -4,7 +4,7 @@ using CommsRadioAPI;
 
 namespace LocoOwnership.LocoPurchaser
 {
-	// This class inherits point at something for the radio state
+	// This class inherits PointAtSomething for the radio state
 	internal class PurchasePointAtLoco : PurchasePointAtSomething
 	{
 		public PurchasePointAtLoco(TrainCar selectedCar) : base(selectedCar)

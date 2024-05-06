@@ -4,12 +4,12 @@ using CommsRadioAPI;
 
 namespace LocoOwnership.LocoPurchaser
 {
+	// This class inherits PurchaseConfirmState for the radio state
 	internal class TransactionPurchaseConfirm : TransactionPurchaseConfirmState
 	{
-		private string carID;
 		public TransactionPurchaseConfirm(TrainCar selectedCar) : base(selectedCar)
 		{
-			carID = selectedCar.ID;
+
 		}
 
 		public override AStateBehaviour OnAction(CommsRadioUtility utility, InputAction action)
@@ -20,7 +20,6 @@ namespace LocoOwnership.LocoPurchaser
 			}
 
 			utility.PlaySound(VanillaSoundCommsRadio.MoneyRemoved);
-			Main.DebugLog($"Purchased L-{carID} for $###");
 			return new PurchasePointAtNothing();
 		}
 	}

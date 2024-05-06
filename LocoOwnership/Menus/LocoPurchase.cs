@@ -28,7 +28,7 @@ namespace LocoOwnership.Menus
 					return new PurchasePointAtNothing();
 
 				case InputAction.Up:
-					return new PlaySound();
+					return new LocoSell();
 
 				case InputAction.Down:
 					return new LocoSell();

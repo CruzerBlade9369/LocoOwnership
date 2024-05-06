@@ -31,7 +31,7 @@ namespace LocoOwnership.Menus
 					return new LocoPurchase();
 
 				case InputAction.Down:
-					return new PlaySound();
+					return new LocoPurchase();
 
 				default:
 					Main.DebugLog("Main menu error: why are you here?");

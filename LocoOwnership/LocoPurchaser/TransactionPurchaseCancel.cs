@@ -4,6 +4,7 @@ using CommsRadioAPI;
 
 namespace LocoOwnership.LocoPurchaser
 {
+	// This class inherits PurchaseCancelState for the radio state
 	internal class TransactionPurchaseCancel : TransactionPurchaseCancelState
 	{
 		public TransactionPurchaseCancel(TrainCar selectedCar) : base(selectedCar)
