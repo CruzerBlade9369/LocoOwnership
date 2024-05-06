@@ -10,8 +10,7 @@ using LocoOwnership.Shared;
 
 namespace LocoOwnership.LocoPurchaser
 {
-	// this class enables when ponting at a loco
-	internal abstract class PurchasePointAtSomething : AStateBehaviour
+	internal abstract class TransactionPurchaseCancelState : AStateBehaviour
 	{
 		private const float SIGNAL_RANGE = 200f;
 
@@ -19,14 +18,13 @@ namespace LocoOwnership.LocoPurchaser
 		private Transform signalOrigin;
 		private int trainCarMask;
 
-		/*private GameObject highlighter;*/
 		private CarHighlighter highlighter;
 
-		public PurchasePointAtSomething(TrainCar selectedCar)
+		public TransactionPurchaseCancelState(TrainCar selectedCar)
 			: base(new CommsRadioState(
 				titleText: "Purchase",
-				contentText: "Aim at the locomotive you wish to purchase.",
-				actionText: "Confirm",
+				contentText: "Purchase L-### for $#########?",
+				actionText: "Cancel",
 				buttonBehaviour: ButtonBehaviourType.Override))
 		{
 			this.selectedCar = selectedCar;
@@ -36,7 +34,6 @@ namespace LocoOwnership.LocoPurchaser
 				throw new ArgumentNullException(nameof(selectedCar));
 			}
 
-			//got to steal some components from other radio modes
 			ICommsRadioMode? commsRadioMode = ControllerAPI.GetVanillaMode(VanillaMode.Clear);
 			if (commsRadioMode is null)
 			{
@@ -50,13 +47,9 @@ namespace LocoOwnership.LocoPurchaser
 			highlighter.InitHighlighter(selectedCar, carDeleter);
 		}
 
-		public void Awake()
-		{
-
-		}
-
 		public override AStateBehaviour OnUpdate(CommsRadioUtility utility)
 		{
+			// GOTTA REPLACE THIS WITH CAR DETECTOR CODE LATER
 			RaycastHit hit;
 			//if we're not pointing at anything
 			if (!Physics.Raycast(signalOrigin.position, signalOrigin.forward, out hit, SIGNAL_RANGE, trainCarMask))
@@ -81,7 +74,7 @@ namespace LocoOwnership.LocoPurchaser
 			{
 			"Train_Big_Collider"
 			});
-			highlighter.StartHighlighter(utility, previous);
+			highlighter.StartHighlighter(utility, previous, false);
 		}
 
 		public override void OnLeave(CommsRadioUtility utility, AStateBehaviour? next)

@@ -10,6 +10,7 @@ using UnityEngine;
 
 using CommsRadioAPI;
 using LocoOwnership.Menus;
+using LocoOwnership.Shared;
 
 
 namespace LocoOwnership.LocoPurchaser
@@ -40,7 +41,7 @@ namespace LocoOwnership.LocoPurchaser
 			"Train_Big_Collider"
 			});
 
-			//got to steal some components from other radio modes
+			// Steal some components from other radio modes
 			refreshSignalOriginAndTrainCarMask();
 		}
 
@@ -66,7 +67,7 @@ namespace LocoOwnership.LocoPurchaser
 			signalOrigin = carDeleter.signalOrigin;
 		}
 
-		//Highlighting of locomotives happens here
+		// Detecting what we're looking at
 		public override AStateBehaviour OnUpdate(CommsRadioUtility utility)
 		{
 			while (signalOrigin is null)
@@ -76,41 +77,39 @@ namespace LocoOwnership.LocoPurchaser
 			}
 
 			RaycastHit hit;
-			//if we're not pointing at anything
+			// If we're not pointing at anything
 			if (!Physics.Raycast(signalOrigin.position, signalOrigin.forward, out hit, SIGNAL_RANGE, trainCarMask))
 			{
 				return this;
 			}
 
-			//try to get the car we're pointing at
+			// Try to get the car we're pointing at
 			TrainCar selectedCar = TrainCar.Resolve(hit.transform.root);
 
-			//if we aren't pointing at a car
+			// If we aren't pointing at a car
 			if (selectedCar is null)
 			{
 				return this;
 			}
 
-			//if we're pointing at a locomotive
+			// If we're pointing at a locomotive
 			SimController simController = selectedCar.GetComponent<SimController>();
 			if (simController is not null)
 			{
 				foreach (ASimInitializedController controller in simController.otherSimControllers)
 				{
-					// might change the way loco checking works but we'll see
-					Main.DebugLog("Pointing at locomotive");
+					// Might change the way loco checking works
 					utility.PlaySound(VanillaSoundCommsRadio.HoverOver);
 					return new PurchasePointAtLoco(selectedCar);
 				}
 			}
 			else
 			{
-				//if this is a freight car
+				// If this is a freight car, ignore (we only care bout locos not stinky freight cars
 				CargoDamageModel cargoDamageModel = selectedCar.GetComponent<CargoDamageModel>();
 				if (cargoDamageModel is not null)
 				{
-					Main.DebugLog("Pointing at rolling stock - nothing should happen, cba to remove this section");
-					return new PurchasePointAtNothing();
+					return this;
 				}
 			}
 			return this;

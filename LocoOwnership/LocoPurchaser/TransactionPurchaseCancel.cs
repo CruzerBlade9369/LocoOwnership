@@ -11,11 +11,11 @@ using CommsRadioAPI;
 
 namespace LocoOwnership.LocoPurchaser
 {
-	internal class TransactionPurchase : TransactionPurchaseCommsState
+	internal class TransactionPurchaseCancel : TransactionPurchaseCancelState
 	{
-		public TransactionPurchase(TrainCar selectedCar) : base(selectedCar)
+		public TransactionPurchaseCancel(TrainCar selectedCar) : base(selectedCar)
 		{
-			
+
 		}
 
 		public override AStateBehaviour OnAction(CommsRadioUtility utility, InputAction action)
@@ -25,7 +25,7 @@ namespace LocoOwnership.LocoPurchaser
 				throw new ArgumentException();
 			}
 
-			utility.PlaySound(VanillaSoundCommsRadio.MoneyRemoved);
+			utility.PlaySound(VanillaSoundCommsRadio.Cancel);
 			return new PurchasePointAtNothing();
 		}
 	}

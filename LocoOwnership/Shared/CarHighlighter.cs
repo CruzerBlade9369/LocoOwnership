@@ -1,7 +1,4 @@
-using System;
-
 using DV;
-using DV.Logic.Job;
 
 using UnityEngine;
 
@@ -9,16 +6,16 @@ using CommsRadioAPI;
 
 namespace LocoOwnership.Shared
 {
-	// this class enables when ponting at a loco
+	// Shared class for highlighting locos
 	internal class CarHighlighter
 	{
 		private static readonly Vector3 HIGHLIGHT_BOUNDS_EXTENSION = new Vector3(0.25f, 0.8f, 0f);
 
 		internal TrainCar selectedCar;
-		private int trainCarMask;
 
 		private GameObject highlighter;
 
+		// Accepts 2 arguments: Car to highlight, comms radio deleter state
 		public void InitHighlighter(TrainCar selectedCar, CommsRadioCarDeleter carDeleter)
 		{
 			this.selectedCar = selectedCar;
@@ -27,15 +24,18 @@ namespace LocoOwnership.Shared
 			highlighter.transform.SetParent(null);
 		}
 
-		public int StartHighlighter(CommsRadioUtility utility, AStateBehaviour? previous)
+		// Accepts 3 arguments: CommsRadioUtility, AStateBehaviour, material type bool
+		public void StartHighlighter(CommsRadioUtility utility, AStateBehaviour? previous, bool isValid)
 		{
-			trainCarMask = LayerMask.GetMask(new string[]
-			{
-			"Train_Big_Collider"
-			});
-
 			MeshRenderer highlighterRenderer = highlighter.GetComponentInChildren<MeshRenderer>(true);
-			highlighterRenderer.material = utility.GetMaterial(VanillaMaterial.Valid);
+			if (isValid)
+			{
+				highlighterRenderer.material = utility.GetMaterial(VanillaMaterial.Valid);
+			}
+			else
+			{
+				highlighterRenderer.material = utility.GetMaterial(VanillaMaterial.Invalid);
+			}
 
 			highlighter.transform.localScale = selectedCar.Bounds.size + HIGHLIGHT_BOUNDS_EXTENSION;
 			Vector3 b = selectedCar.transform.up * (highlighter.transform.localScale.y / 2f);
@@ -45,8 +45,6 @@ namespace LocoOwnership.Shared
 			highlighter.transform.SetPositionAndRotation(position, selectedCar.transform.rotation);
 			highlighter.SetActive(true);
 			highlighter.transform.SetParent(selectedCar.transform, true);
-
-			return trainCarMask;
 		}
 
 		public void StopHighlighter(CommsRadioUtility utility, AStateBehaviour? next)

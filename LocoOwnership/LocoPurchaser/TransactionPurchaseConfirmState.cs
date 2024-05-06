@@ -10,7 +10,7 @@ using LocoOwnership.Shared;
 
 namespace LocoOwnership.LocoPurchaser
 {
-	internal abstract class TransactionPurchaseCommsState : AStateBehaviour
+	internal abstract class TransactionPurchaseConfirmState : AStateBehaviour
 	{
 		private const float SIGNAL_RANGE = 200f;
 
@@ -20,7 +20,7 @@ namespace LocoOwnership.LocoPurchaser
 
 		private CarHighlighter highlighter;
 
-		public TransactionPurchaseCommsState(TrainCar selectedCar)
+		public TransactionPurchaseConfirmState(TrainCar selectedCar)
 			: base(new CommsRadioState(
 				titleText: "Purchase",
 				contentText: "Purchase L-### for $#########?",
@@ -53,7 +53,7 @@ namespace LocoOwnership.LocoPurchaser
 			//if we're not pointing at anything
 			if (!Physics.Raycast(signalOrigin.position, signalOrigin.forward, out hit, SIGNAL_RANGE, trainCarMask))
 			{
-				return new PurchasePointAtNothing();
+				return new TransactionPurchaseCancel(selectedCar);
 			}
 			TrainCar target = TrainCar.Resolve(hit.transform.root);
 			if (target is null || target != selectedCar)
@@ -61,7 +61,7 @@ namespace LocoOwnership.LocoPurchaser
 				//if we stopped pointing at selectedCar and are now pointing at either
 				//nothing or another train car, then go back to PointingAtNothing so
 				//we can figure out what we're pointing at
-				return new PurchasePointAtNothing();
+				return new TransactionPurchaseCancel(selectedCar);
 			}
 			return this;
 		}
@@ -69,7 +69,11 @@ namespace LocoOwnership.LocoPurchaser
 		public override void OnEnter(CommsRadioUtility utility, AStateBehaviour? previous)
 		{
 			base.OnEnter(utility, previous);
-			trainCarMask = highlighter.StartHighlighter(utility, previous);
+			trainCarMask = LayerMask.GetMask(new string[]
+			{
+			"Train_Big_Collider"
+			});
+			highlighter.StartHighlighter(utility, previous, true);
 		}
 
 		public override void OnLeave(CommsRadioUtility utility, AStateBehaviour? next)
