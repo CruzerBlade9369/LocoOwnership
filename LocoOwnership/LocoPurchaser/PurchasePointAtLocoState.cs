@@ -9,8 +9,7 @@ using LocoOwnership.Shared;
 
 namespace LocoOwnership.LocoPurchaser
 {
-	// this class enables when ponting at a loco
-	internal abstract class PurchasePointAtSomething : AStateBehaviour
+	internal abstract class PurchasePointAtLocoState : AStateBehaviour
 	{
 		private const float SIGNAL_RANGE = 200f;
 
@@ -20,7 +19,7 @@ namespace LocoOwnership.LocoPurchaser
 
 		private CarHighlighter highlighter;
 
-		public PurchasePointAtSomething(TrainCar selectedCar, string carID, float carBuyPrice)
+		public PurchasePointAtLocoState(TrainCar selectedCar, string carID, float carBuyPrice)
 			: base(new CommsRadioState(
 				titleText: "Purchase",
 				contentText: "Aim at the locomotive you wish to purchase.",

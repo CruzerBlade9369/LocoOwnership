@@ -11,6 +11,7 @@ using LocoOwnership.Menus;
 
 namespace LocoOwnership
 {
+	[EnableReloading]
 	public static class Main
 	{
 		public static bool enabled;

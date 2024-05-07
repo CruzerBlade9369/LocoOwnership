@@ -11,7 +11,7 @@ namespace LocoOwnership.PlaySound
 		private int selectedIndex;
 		private static readonly string[] soundNames = {
 		"Confirm", "Cancel", "Warning", "Switch", "ModeEnter", "HoverOver", "MoneyRemoved"
-	};
+		};
 
 		public SoundPlayer(int soundIndex)
 			: base(new CommsRadioState(

@@ -1,4 +1,5 @@
-using DV.InventorySystem;
+using DV.ThingTypes;
+using DV.Utils;
 
 namespace LocoOwnership.Shared
 {
@@ -11,26 +12,40 @@ namespace LocoOwnership.Shared
 
 		public float CalculateBuyPrice(TrainCar selectedCar)
 		{
-			if (settings.freeSandboxOwnership is true)
+			if (settings.freeSandboxOwnership)
 			{
 				carBuyPrice = 0f;
 			}
 			else
 			{
-				carBuyPrice = selectedCar.carLivery.requiredLicense.price * 2f;
+				if (selectedCar.carType == TrainCarType.LocoShunter)
+				{
+					carBuyPrice = 20000f;
+				}
+				else
+				{
+					carBuyPrice = selectedCar.carLivery.requiredLicense.price * 2f;
+				}
 			}
 			return carBuyPrice;
 		}
 
 		public float CalculateSellPrice(TrainCar selectedCar)
 		{
-			if (settings.freeSandboxOwnership is true)
+			if (settings.freeSandboxOwnership)
 			{
 				carSellPrice = 0f;
 			}
 			else
 			{
-				carSellPrice = selectedCar.carLivery.requiredLicense.price / 2f;
+				if (selectedCar.carType == TrainCarType.LocoShunter)
+				{
+					carSellPrice = 5000f;
+				}
+				else
+				{
+					carSellPrice = selectedCar.carLivery.requiredLicense.price / 2f;
+				}
 			}
 			return carSellPrice;
 		}

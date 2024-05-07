@@ -70,6 +70,9 @@ namespace LocoOwnership.LocoPurchaser
 		// Detecting what we're looking at
 		public override AStateBehaviour OnUpdate(CommsRadioUtility utility)
 		{
+			// Add check to see if loco thats being pointed is already purchased or not
+			// implement later
+
 			while (signalOrigin is null)
 			{
 				Main.DebugLog("signalOrigin is null for some reason");
