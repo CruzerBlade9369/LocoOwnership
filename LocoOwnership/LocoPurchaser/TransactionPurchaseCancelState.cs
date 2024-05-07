@@ -86,25 +86,29 @@ namespace LocoOwnership.LocoPurchaser
 				return this;
 			}
 
+			// Try to get the train car we're pointing at
+			TrainCar nextCar = TrainCar.Resolve(hit.transform.root);
+
 			// If we aren't pointing at a car
 			if (selectedCar is null)
 			{
 				return this;
 			}
 
-			// If we're pointing at a locomotive
-			bool isLoco = selectedCar.IsLoco;
-			if (isLoco)
+			// If we're pointing at the previous locomotive
+			if (nextCar.ID == selectedCar.ID)
 			{
-				utility.PlaySound(VanillaSoundCommsRadio.HoverOver);
-				return new TransactionPurchaseConfirm(selectedCar, carID, carBuyPrice);
+				if (selectedCar.carLivery.requiredLicense is not null)
+				{
+					utility.PlaySound(VanillaSoundCommsRadio.HoverOver);
+					return new TransactionPurchaseConfirm(selectedCar, carID, carBuyPrice);
+				}
 			}
 			else
 			{
 				return this;
 			}
-			// Keeping this here just in case
-			Main.DebugLog("TransactionPurchaseCancelState OnUpdate: You shouldn't be here");
+
 			return this;
 		}
 

@@ -6,6 +6,7 @@ using UnityEngine;
 
 using CommsRadioAPI;
 using LocoOwnership.Menus;
+using LocoOwnership.Shared;
 
 
 namespace LocoOwnership.LocoPurchaser
@@ -18,6 +19,8 @@ namespace LocoOwnership.LocoPurchaser
 		private Transform signalOrigin;
 		private int trainCarMask;
 
+		private Finances finances;
+
 		private string carID;
 		private float carBuyPrice;
 
@@ -28,7 +31,7 @@ namespace LocoOwnership.LocoPurchaser
 				actionText: "Cancel",
 				buttonBehaviour: ButtonBehaviourType.Override))
 		{
-
+			finances = new Finances();
 		}
 
 		public override void OnEnter(CommsRadioUtility utility, AStateBehaviour? previous)
@@ -82,8 +85,6 @@ namespace LocoOwnership.LocoPurchaser
 
 			// Try to get the car we're pointing at
 			TrainCar selectedCar = TrainCar.Resolve(hit.transform.root);
-			carID = selectedCar.ID;
-			carBuyPrice = ((selectedCar.carLivery.requiredLicense.price)*2f);
 
 			// If we aren't pointing at a car
 			if (selectedCar is null)
@@ -95,16 +96,21 @@ namespace LocoOwnership.LocoPurchaser
 			bool isLoco = selectedCar.IsLoco;
 			if (isLoco)
 			{
-				utility.PlaySound(VanillaSoundCommsRadio.HoverOver);
-				return new PurchasePointAtLoco(selectedCar, carID, carBuyPrice);
+				if (selectedCar.carLivery.requiredLicense is not null)
+				{
+					// Get car information before passing down to PointAtLoco
+					carID = selectedCar.ID;
+					carBuyPrice = finances.CalculateBuyPrice(selectedCar);
+
+					utility.PlaySound(VanillaSoundCommsRadio.HoverOver);
+					return new PurchasePointAtLoco(selectedCar, carID, carBuyPrice);
+				}
 			}
 			else
 			{
 				return this;
 			}
 
-			// Keeping this here just in case
-			Main.DebugLog("PurchasePointAtNothing OnUpdate: You shouldn't be here");
 			return this;
 		}
 	}
