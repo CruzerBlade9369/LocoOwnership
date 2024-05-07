@@ -7,7 +7,8 @@ namespace LocoOwnership.LocoPurchaser
 	// This class inherits PurchaseCancelState for the radio state
 	internal class TransactionPurchaseCancel : TransactionPurchaseCancelState
 	{
-		public TransactionPurchaseCancel(TrainCar selectedCar) : base(selectedCar)
+		public TransactionPurchaseCancel(TrainCar selectedCar, string carID, float carBuyPrice)
+			: base(selectedCar, carID, carBuyPrice)
 		{
 
 		}

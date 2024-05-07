@@ -7,9 +7,15 @@ namespace LocoOwnership.LocoPurchaser
 	// This class inherits PointAtSomething for the radio state
 	internal class PurchasePointAtLoco : PurchasePointAtSomething
 	{
-		public PurchasePointAtLoco(TrainCar selectedCar) : base(selectedCar)
-		{
 
+		private string carID;
+		private float carBuyPrice;
+
+		public PurchasePointAtLoco(TrainCar selectedCar, string carID, float carBuyPrice)
+			: base(selectedCar, carID, carBuyPrice)
+		{
+			this.carID = carID;
+			this.carBuyPrice = carBuyPrice;
 		}
 
 		public override AStateBehaviour OnAction(CommsRadioUtility utility, InputAction action)
@@ -20,7 +26,7 @@ namespace LocoOwnership.LocoPurchaser
 			}
 
 			utility.PlaySound(VanillaSoundCommsRadio.Confirm);
-			return new TransactionPurchaseConfirm(selectedCar);
+			return new TransactionPurchaseConfirm(selectedCar, carID, carBuyPrice);
 		}
 	}
 }

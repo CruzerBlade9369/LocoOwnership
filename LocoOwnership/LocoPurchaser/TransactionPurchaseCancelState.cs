@@ -1,9 +1,6 @@
 using System;
 
 using DV;
-using DV.Simulation.Cars;
-using DV.Simulation.Controllers;
-using DV.Damage;
 
 using UnityEngine;
 
@@ -20,16 +17,22 @@ namespace LocoOwnership.LocoPurchaser
 		private Transform signalOrigin;
 		private int trainCarMask;
 
+		private string carID;
+		private float carBuyPrice;
+
 		private CarHighlighter highlighter;
 
-		public TransactionPurchaseCancelState(TrainCar selectedCar)
+		public TransactionPurchaseCancelState(TrainCar selectedCar, string carID, float carBuyPrice)
 			: base(new CommsRadioState(
 				titleText: "Purchase",
-				contentText: $"Purchase {selectedCar.ID} for $###?",
+				contentText: $"Purchase {carID} for ${carBuyPrice}?",
 				actionText: "Cancel",
 				buttonBehaviour: ButtonBehaviourType.Override))
 		{
 			this.selectedCar = selectedCar;
+			this.carID = carID;
+			this.carBuyPrice = carBuyPrice;
+
 			if (this.selectedCar is null)
 			{
 				Main.DebugLog("selectedCar is null");
@@ -83,9 +86,6 @@ namespace LocoOwnership.LocoPurchaser
 				return this;
 			}
 
-			// Try to get the car we're pointing at
-			TrainCar selectedCar = TrainCar.Resolve(hit.transform.root);
-
 			// If we aren't pointing at a car
 			if (selectedCar is null)
 			{
@@ -93,25 +93,18 @@ namespace LocoOwnership.LocoPurchaser
 			}
 
 			// If we're pointing at a locomotive
-			SimController simController = selectedCar.GetComponent<SimController>();
-			if (simController is not null)
+			bool isLoco = selectedCar.IsLoco;
+			if (isLoco)
 			{
-				foreach (ASimInitializedController controller in simController.otherSimControllers)
-				{
-					// Might change the way loco checking works
-					utility.PlaySound(VanillaSoundCommsRadio.HoverOver);
-					return new TransactionPurchaseConfirm(selectedCar);
-				}
+				utility.PlaySound(VanillaSoundCommsRadio.HoverOver);
+				return new TransactionPurchaseConfirm(selectedCar, carID, carBuyPrice);
 			}
 			else
 			{
-				// If this is a freight car, ignore (we only care bout locos not stinky freight cars
-				CargoDamageModel cargoDamageModel = selectedCar.GetComponent<CargoDamageModel>();
-				if (cargoDamageModel is not null)
-				{
-					return this;
-				}
+				return this;
 			}
+			// Keeping this here just in case
+			Main.DebugLog("TransactionPurchaseCancelState OnUpdate: You shouldn't be here");
 			return this;
 		}
 

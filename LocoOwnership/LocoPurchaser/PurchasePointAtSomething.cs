@@ -1,7 +1,6 @@
 using System;
 
 using DV;
-using DV.Logic.Job;
 
 using UnityEngine;
 
@@ -21,7 +20,7 @@ namespace LocoOwnership.LocoPurchaser
 
 		private CarHighlighter highlighter;
 
-		public PurchasePointAtSomething(TrainCar selectedCar)
+		public PurchasePointAtSomething(TrainCar selectedCar, string carID, float carBuyPrice)
 			: base(new CommsRadioState(
 				titleText: "Purchase",
 				contentText: "Aim at the locomotive you wish to purchase.",
@@ -29,6 +28,7 @@ namespace LocoOwnership.LocoPurchaser
 				buttonBehaviour: ButtonBehaviourType.Override))
 		{
 			this.selectedCar = selectedCar;
+
 			if (this.selectedCar is null)
 			{
 				Main.DebugLog("selectedCar is null");

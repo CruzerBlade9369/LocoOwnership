@@ -1,9 +1,6 @@
 using System;
 
 using DV;
-using DV.Simulation.Cars;
-using DV.Simulation.Controllers;
-using DV.Damage;
 
 using UnityEngine;
 
@@ -20,6 +17,9 @@ namespace LocoOwnership.LocoPurchaser
 
 		private Transform signalOrigin;
 		private int trainCarMask;
+
+		private string carID;
+		private float carBuyPrice;
 
 		public PurchasePointAtNothing()
 			: base(new CommsRadioState(
@@ -82,6 +82,8 @@ namespace LocoOwnership.LocoPurchaser
 
 			// Try to get the car we're pointing at
 			TrainCar selectedCar = TrainCar.Resolve(hit.transform.root);
+			carID = selectedCar.ID;
+			carBuyPrice = ((selectedCar.carLivery.requiredLicense.price)*2f);
 
 			// If we aren't pointing at a car
 			if (selectedCar is null)
@@ -94,7 +96,7 @@ namespace LocoOwnership.LocoPurchaser
 			if (isLoco)
 			{
 				utility.PlaySound(VanillaSoundCommsRadio.HoverOver);
-				return new PurchasePointAtLoco(selectedCar);
+				return new PurchasePointAtLoco(selectedCar, carID, carBuyPrice);
 			}
 			else
 			{

@@ -17,16 +17,22 @@ namespace LocoOwnership.LocoPurchaser
 		private Transform signalOrigin;
 		private int trainCarMask;
 
+		private string carID;
+		private float carBuyPrice;
+
 		private CarHighlighter highlighter;
 
-		public TransactionPurchaseConfirmState(TrainCar selectedCar)
+		public TransactionPurchaseConfirmState(TrainCar selectedCar, string carID, float carBuyPrice)
 			: base(new CommsRadioState(
 				titleText: "Purchase",
-				contentText: $"Purchase {selectedCar.ID} for $###?",
+				contentText: $"Purchase {carID} for ${carBuyPrice}?",
 				actionText: "Confirm",
 				buttonBehaviour: ButtonBehaviourType.Override))
 		{
 			this.selectedCar = selectedCar;
+			this.carID = carID;
+			this.carBuyPrice = carBuyPrice;
+
 			if (this.selectedCar is null)
 			{
 				Main.DebugLog("selectedCar is null");
@@ -49,21 +55,26 @@ namespace LocoOwnership.LocoPurchaser
 			highlighter.InitHighlighter(selectedCar, carDeleter);
 		}
 
+		/*private void GetTrainCarLicensePrice()
+		{
+			float licensePrice = selectedCar.carLivery.requiredLicense.price;
+		}*/
+
 		public override AStateBehaviour OnUpdate(CommsRadioUtility utility)
 		{
 			RaycastHit hit;
-			//if we're not pointing at anything
+			// If we're not pointing at anything
 			if (!Physics.Raycast(signalOrigin.position, signalOrigin.forward, out hit, SIGNAL_RANGE, trainCarMask))
 			{
-				return new TransactionPurchaseCancel(selectedCar);
+				return new TransactionPurchaseCancel(selectedCar, carID, carBuyPrice);
 			}
 			TrainCar target = TrainCar.Resolve(hit.transform.root);
 			if (target is null || target != selectedCar)
 			{
-				//if we stopped pointing at selectedCar and are now pointing at either
-				//nothing or another train car, then go back to PointingAtNothing so
-				//we can figure out what we're pointing at
-				return new TransactionPurchaseCancel(selectedCar);
+				/* If we stopped pointing at selectedCar and are now pointing at either
+				nothing or another train car, then go back to PointingAtNothing so
+				we can figure out what we're pointing at */
+				return new TransactionPurchaseCancel(selectedCar, carID, carBuyPrice);
 			}
 			return this;
 		}

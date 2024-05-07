@@ -7,7 +7,8 @@ namespace LocoOwnership.LocoPurchaser
 	// This class inherits PurchaseConfirmState for the radio state
 	internal class TransactionPurchaseConfirm : TransactionPurchaseConfirmState
 	{
-		public TransactionPurchaseConfirm(TrainCar selectedCar) : base(selectedCar)
+		public TransactionPurchaseConfirm(TrainCar selectedCar, string carID, float carBuyPrice)
+			: base(selectedCar, carID, carBuyPrice)
 		{
 
 		}
