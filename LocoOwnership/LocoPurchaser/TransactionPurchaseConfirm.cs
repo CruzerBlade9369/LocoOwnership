@@ -1,13 +1,12 @@
 using System;
-using System.Linq;
-using System.Collections.Generic;
 
 using DV.InventorySystem;
-using DV.Utils;
-using DV.ThingTypes;
 
 using CommsRadioAPI;
+using LocoOwnership.Patches;
 
+
+using Newtonsoft.Json.Linq;
 
 namespace LocoOwnership.LocoPurchaser
 {
@@ -60,6 +59,9 @@ namespace LocoOwnership.LocoPurchaser
 				// Must go before removing money and add checks if failed, do not
 				// remove money and pass to fail screen
 				// implement later
+				JObject ownedLocos = SavegamePatch.CreateLocoDict();
+				SavegamePatch.PrintLocoDicts(ownedLocos);
+
 				Inventory.Instance.RemoveMoney(carBuyPrice);
 				utility.PlaySound(VanillaSoundCommsRadio.MoneyRemoved);
 				return new TransactionPurchaseSuccess(selectedCar, carBuyPrice);

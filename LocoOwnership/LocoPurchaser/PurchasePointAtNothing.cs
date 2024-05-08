@@ -8,7 +8,6 @@ using CommsRadioAPI;
 using LocoOwnership.Menus;
 using LocoOwnership.Shared;
 
-
 namespace LocoOwnership.LocoPurchaser
 {
 	// this class detects what we're pointing at

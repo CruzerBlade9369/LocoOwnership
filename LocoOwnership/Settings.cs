@@ -16,9 +16,9 @@ namespace LocoOwnership
 		[Draw("Locomotives cost nothing in sandbox")]
 		public bool freeSandboxOwnership =
 #if DEBUG
-			true;
-#else
 			false;
+#else
+			true;
 #endif
 
 		public override void Save(UnityModManager.ModEntry entry)
