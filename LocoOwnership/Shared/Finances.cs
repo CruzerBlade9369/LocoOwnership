@@ -1,9 +1,11 @@
 using DV.ThingTypes;
+using DV.UserManagement;
 
 namespace LocoOwnership.Shared
 {
 	internal class Finances
 	{
+		private const float DE2_ARTIFICIAL_LICENSE_PRICE = 10000f;
 		private float carBuyPrice;
 		private float carSellPrice;
 
@@ -11,7 +13,13 @@ namespace LocoOwnership.Shared
 
 		public float CalculateBuyPrice(TrainCar selectedCar)
 		{
-			if (settings.freeSandboxOwnership)
+			if (settings.freeOwnership)
+			{
+				carBuyPrice = 0f;
+				return carBuyPrice;
+			}
+
+			if (settings.freeSandboxOwnership && UserManager.Instance.CurrentUser.CurrentSession.GameMode.Equals("FreeRoam"))
 			{
 				carBuyPrice = 0f;
 			}
@@ -19,7 +27,7 @@ namespace LocoOwnership.Shared
 			{
 				if (selectedCar.carType == TrainCarType.LocoShunter)
 				{
-					carBuyPrice = 20000f;
+					carBuyPrice = DE2_ARTIFICIAL_LICENSE_PRICE * 2f;
 				}
 				else
 				{
@@ -31,7 +39,13 @@ namespace LocoOwnership.Shared
 
 		public float CalculateSellPrice(TrainCar selectedCar)
 		{
-			if (settings.freeSandboxOwnership)
+			if (settings.freeOwnership)
+			{
+				carSellPrice = 0f;
+				return carSellPrice;
+			}
+
+			if (settings.freeSandboxOwnership && UserManager.Instance.CurrentUser.CurrentSession.GameMode.Equals("FreeRoam"))
 			{
 				carSellPrice = 0f;
 			}
@@ -39,7 +53,7 @@ namespace LocoOwnership.Shared
 			{
 				if (selectedCar.carType == TrainCarType.LocoShunter)
 				{
-					carSellPrice = 5000f;
+					carSellPrice = DE2_ARTIFICIAL_LICENSE_PRICE / 2f;
 				}
 				else
 				{

@@ -3,10 +3,7 @@ using System;
 using DV.InventorySystem;
 
 using CommsRadioAPI;
-using LocoOwnership.Patches;
-
-
-using Newtonsoft.Json.Linq;
+using LocoOwnership.Shared;
 
 namespace LocoOwnership.LocoPurchaser
 {
@@ -19,6 +16,8 @@ namespace LocoOwnership.LocoPurchaser
 
 		UnlockablesManager unlockManager;
 
+		private OwnedLocos ownedLocosHandler;
+
 		public TransactionPurchaseConfirm(TrainCar selectedCar, string carID, float carBuyPrice)
 			: base(selectedCar, carID, carBuyPrice)
 		{
@@ -27,6 +26,7 @@ namespace LocoOwnership.LocoPurchaser
 			playerMoney = Inventory.Instance.PlayerMoney;
 
 			unlockManager = new UnlockablesManager();
+			ownedLocosHandler = new OwnedLocos();
 			currentLicense = $"{selectedCar.carLivery.requiredLicense.v1}";
 		}
 
@@ -54,13 +54,18 @@ namespace LocoOwnership.LocoPurchaser
 			// Check if player can afford
 			if (playerMoney >= carBuyPrice)
 			{
-				// Implement functions to save locomotive data into savegame
-				// and patch it to owned vehicles list
+				// Implement functions to save locomotive data into owned
+				// loco cache
 				// Must go before removing money and add checks if failed, do not
 				// remove money and pass to fail screen
 				// implement later
-				JObject ownedLocos = SavegamePatch.CreateLocoDict();
-				SavegamePatch.PrintLocoDicts(ownedLocos);
+
+				bool purchaseSuccess = ownedLocosHandler.OnLocoBuy(selectedCar);
+				if (!purchaseSuccess)
+				{
+					utility.PlaySound(VanillaSoundCommsRadio.Warning);
+					return new TransactionPurchaseFail(3);
+				}
 
 				Inventory.Instance.RemoveMoney(carBuyPrice);
 				utility.PlaySound(VanillaSoundCommsRadio.MoneyRemoved);

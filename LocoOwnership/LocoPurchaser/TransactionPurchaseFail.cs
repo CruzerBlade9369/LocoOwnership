@@ -11,7 +11,7 @@ namespace LocoOwnership.LocoPurchaser
 			"insufficient funds.",
 			"you do not have the required license for this locomotive.",
 			"manual service license is required to own locomotives.",
-			"you can't buy any more locomotives of this type!"
+			"you have reached the maximum number of owned locomotives!"
 		};
 
 		public TransactionPurchaseFail(int failState)

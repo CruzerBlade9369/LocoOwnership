@@ -21,6 +21,14 @@ namespace LocoOwnership
 			true;
 #endif
 
+		[Draw("Locomotives cost nothing at all")]
+		public bool freeOwnership =
+#if DEBUG
+			true;
+#else
+			false;
+#endif
+
 		public override void Save(UnityModManager.ModEntry entry)
 		{
 			Save(this, entry);
