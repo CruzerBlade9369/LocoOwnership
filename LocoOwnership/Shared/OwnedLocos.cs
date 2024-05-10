@@ -16,7 +16,10 @@ namespace LocoOwnership.Shared
 		private const int MAX_OWNED_LOCOS = 16;
 
 		// This is the cache
-		private static Dictionary<string, string> ownedLocos = new Dictionary<string, string>();
+		public static Dictionary<string, string> ownedLocos = new Dictionary<string, string>();
+
+		/*-----------------------------------------------------------------------------------------------------------------------*/
+		#region CACHE HANDLER
 
 		public static void ClearCache()
 		{
@@ -47,8 +50,10 @@ namespace LocoOwnership.Shared
 
 				foreach (KeyValuePair<string, string> kvp in ownedLocos)
 				{
-					Main.DebugLog($"Key = {kvp.Key}, Value = {kvp.Value}");
+					Debug.Log($"Key = {kvp.Key}, Value = {kvp.Value}");
 				}
+
+				Debug.Log(selectedCar.carLivery.parentType.unusedCarDeletePreventionMode);
 
 				cachingSuccess = true;
 				return cachingSuccess;
@@ -69,6 +74,10 @@ namespace LocoOwnership.Shared
 			}
 		}
 
+		#endregion
+		/*-----------------------------------------------------------------------------------------------------------------------*/
+		#region LOAD/SAVE HANDLER
+
 		// Convert JObject of owned locos back into dict and apply to cache
 		public static void OnGameLoad(JObject savedOwnedLocos)
 		{
@@ -79,17 +88,17 @@ namespace LocoOwnership.Shared
 				foreach (JObject jobject in jobjectArray)
 				{
 					var guid = jobject.GetString("guid");
-					var name = jobject.GetString("locoType");
+					var locoType = jobject.GetString("locoType");
 
 					if (!ownedLocos.ContainsKey(guid))
 					{
-						ownedLocos.Add(guid, name);
+						ownedLocos.Add(guid, locoType);
 					}
 				}
 			}
 		}
 
-		// Convert owned locos list cache into JObjects for savegame
+		// Convert owned locos dict cache into JObjects for savegame
 		public static JObject OnGameSaved()
 		{
 			JObject savedOwnedLocos = new();
@@ -114,5 +123,9 @@ namespace LocoOwnership.Shared
 
 			return savedOwnedLocos;
 		}
+
+		#endregion
+		/*-----------------------------------------------------------------------------------------------------------------------*/
+
 	}
 }

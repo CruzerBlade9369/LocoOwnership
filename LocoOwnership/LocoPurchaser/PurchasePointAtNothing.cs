@@ -98,6 +98,12 @@ namespace LocoOwnership.LocoPurchaser
 			bool isLoco = selectedCar.IsLoco;
 			if (isLoco)
 			{
+				// Check if loco exists in owned locos cache
+				if (OwnedLocos.ownedLocos.ContainsKey(selectedCar.CarGUID))
+				{
+					return this;
+				}
+
 				if (selectedCar.carLivery.requiredLicense is not null)
 				{
 					// Get car information before passing down to PointAtLoco
