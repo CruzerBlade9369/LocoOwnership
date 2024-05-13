@@ -25,14 +25,14 @@ namespace LocoOwnership.Shared
 
 		public SimController simController = new();
 
-		public SimConnectionDefinition connectionsDefinition;
-		public ResourceContainerController resourceContainerController;
-		public EnvironmentDamageController environmentDamageController;
+		public SimConnectionDefinition? connectionsDefinition;
+		public ResourceContainerController? resourceContainerController;
+		public EnvironmentDamageController? environmentDamageController;
 
-		public SimulationFlow simFlow;
-		public SimulationFlow SimulationFlow => simFlow;
+		public SimulationFlow? simFlow;
+		public SimulationFlow? SimulationFlow => simFlow;
 
-		private SimulatedCarDebtTracker? scdt;
+		private OwnedCarsStateController ocsc = new();
 
 		// This is the cache
 		public static Dictionary<string, string> ownedLocos = new Dictionary<string, string>();
@@ -66,7 +66,7 @@ namespace LocoOwnership.Shared
 			}
 			else
 			{
-				resourceContainerController = simController.resourceContainerController;
+				/*resourceContainerController = simController.resourceContainerController;
 				environmentDamageController = simController.environmentDamageController;
 				connectionsDefinition = simController.connectionsDefinition;
 
@@ -90,7 +90,24 @@ namespace LocoOwnership.Shared
 				selectedCar.carType);
 
 				Main.DebugLog("register car");
-				SingletonBehaviour<OwnedCarsStateController>.Instance.RegisterCarStateTracker(selectedCar, scdt);
+				SingletonBehaviour<OwnedCarsStateController>.Instance.RegisterCarStateTracker(selectedCar, scdt);*/
+
+				DamageController component = selectedCar.GetComponent<DamageController>();
+				SimController newSimController = selectedCar.GetComponent<SimController>();
+
+				if (newSimController != null)
+				{
+					selectedCar.uniqueCar = true;
+					newSimController.Initialize(selectedCar, component);
+
+					ocsc.RefreshOwnedCarsStatesData();
+				}
+				else
+				{
+					throw new Exception("SimController is null!");
+				}
+
+				Main.DebugLog($"uniquecar: {selectedCar.uniqueCar}");
 
 				ownedLocos.Add(guid, locoID);
 
