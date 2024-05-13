@@ -5,20 +5,30 @@ using Newtonsoft.Json.Linq;
 
 using UnityEngine;
 
-using DV;
 using DV.JObjectExtstensions;
-using DV.ThingTypes;
+using DV.ServicePenalty;
+using DV.Simulation.Cars;
+using DV.Utils;
+using DV.Logic.Job;
 
 namespace LocoOwnership.Shared
 {
-	internal class OwnedLocos
+	internal class OwnedLocos : MonoBehaviour
 	{
 		private const int MAX_OWNED_LOCOS = 16;
+		private const float SIGNAL_RANGE = 100f;
+
+		private Transform? signalOrigin;
+		private int trainCarMask;
+
+		private readonly CarHighlighter highlighter = new();
+		private readonly OwnedCarsStateController ocsc = new();
 
 		// This is the cache
 		public static Dictionary<string, string> ownedLocos = new Dictionary<string, string>();
 
 		/*-----------------------------------------------------------------------------------------------------------------------*/
+
 		#region CACHE HANDLER
 
 		public static void ClearCache()
@@ -50,10 +60,25 @@ namespace LocoOwnership.Shared
 
 				foreach (KeyValuePair<string, string> kvp in ownedLocos)
 				{
-					Debug.Log($"Key = {kvp.Key}, Value = {kvp.Value}");
+					Main.DebugLog($"Key = {kvp.Key}, Value = {kvp.Value}");
 				}
 
-				Debug.Log(selectedCar.carLivery.parentType.unusedCarDeletePreventionMode);
+				RaycastHit hit;
+				signalOrigin = highlighter.RefreshSignalOrigin();
+				trainCarMask = highlighter.RefreshTrainCarMask();
+
+				if (!Physics.Raycast(signalOrigin.position, signalOrigin.forward, out hit, SIGNAL_RANGE, trainCarMask))
+				{
+					throw new Exception("Why are you pointing at nothing when this code is executed?");
+				}
+
+				GameObject carGameObject = hit.transform.root.gameObject;
+				SimulatedCarDebtTracker scdt = carGameObject.GetComponent<SimulatedCarDebtTracker>();
+				/*ExistingLocoDebt eld = new ExistingLocoDebt(selectedCar, scdt);
+
+				SingletonBehaviour<LocoDebtController>.Instance.PayExistingLocoDebt(eld);*/
+
+				SingletonBehaviour<OwnedCarsStateController>.Instance.RegisterCarStateTracker(selectedCar, scdt);
 
 				cachingSuccess = true;
 				return cachingSuccess;
@@ -75,7 +100,9 @@ namespace LocoOwnership.Shared
 		}
 
 		#endregion
+
 		/*-----------------------------------------------------------------------------------------------------------------------*/
+
 		#region LOAD/SAVE HANDLER
 
 		// Convert JObject of owned locos back into dict and apply to cache
@@ -88,11 +115,11 @@ namespace LocoOwnership.Shared
 				foreach (JObject jobject in jobjectArray)
 				{
 					var guid = jobject.GetString("guid");
-					var locoType = jobject.GetString("locoType");
+					var locoID = jobject.GetString("locoID");
 
 					if (!ownedLocos.ContainsKey(guid))
 					{
-						ownedLocos.Add(guid, locoType);
+						ownedLocos.Add(guid, locoID);
 					}
 				}
 			}
@@ -112,7 +139,7 @@ namespace LocoOwnership.Shared
 				JObject dataObject = new JObject();
 
 				dataObject.SetString("guid", kvp.Key);
-				dataObject.SetString("locoType", kvp.Value);
+				dataObject.SetString("locoID", kvp.Value);
 
 				array[i] = dataObject;
 
@@ -125,7 +152,7 @@ namespace LocoOwnership.Shared
 		}
 
 		#endregion
-		/*-----------------------------------------------------------------------------------------------------------------------*/
 
+		/*-----------------------------------------------------------------------------------------------------------------------*/
 	}
 }

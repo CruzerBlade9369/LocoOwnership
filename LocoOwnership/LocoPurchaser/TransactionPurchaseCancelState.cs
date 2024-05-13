@@ -15,6 +15,7 @@ namespace LocoOwnership.LocoPurchaser
 
 		internal TrainCar selectedCar;
 		private Transform signalOrigin;
+		private CommsRadioCarDeleter carDeleter;
 		private int trainCarMask;
 
 		private string carID;
@@ -39,36 +40,17 @@ namespace LocoOwnership.LocoPurchaser
 				throw new ArgumentNullException(nameof(selectedCar));
 			}
 
-			// Steal some components from vanilla modes
-			ICommsRadioMode? commsRadioMode = ControllerAPI.GetVanillaMode(VanillaMode.Clear);
-			if (commsRadioMode is null)
-			{
-				Main.DebugLog("Could not find CommsRadioCarDeleter");
-				throw new NullReferenceException();
-			}
-
-			CommsRadioCarDeleter carDeleter = (CommsRadioCarDeleter)commsRadioMode;
-
 			highlighter = new CarHighlighter();
 
+			carDeleter = highlighter.RefreshCarDeleterComponent();
 			signalOrigin = carDeleter.signalOrigin;
 			highlighter.InitHighlighter(selectedCar, carDeleter);
 		}
 
 		private void refreshSignalOriginAndTrainCarMask()
 		{
-			trainCarMask = LayerMask.GetMask(new string[]
-			{
-			"Train_Big_Collider"
-			});
-			ICommsRadioMode? commsRadioMode = ControllerAPI.GetVanillaMode(VanillaMode.Clear);
-			if (commsRadioMode is null)
-			{
-				Main.DebugLog("Could not find CommsRadioCarDeleter");
-				throw new NullReferenceException();
-			}
-			CommsRadioCarDeleter carDeleter = (CommsRadioCarDeleter)commsRadioMode;
-			signalOrigin = carDeleter.signalOrigin;
+			trainCarMask = highlighter.RefreshTrainCarMask();
+			signalOrigin = highlighter.RefreshSignalOrigin();
 		}
 
 		public override AStateBehaviour OnUpdate(CommsRadioUtility utility)
@@ -115,10 +97,7 @@ namespace LocoOwnership.LocoPurchaser
 		public override void OnEnter(CommsRadioUtility utility, AStateBehaviour? previous)
 		{
 			base.OnEnter(utility, previous);
-			trainCarMask = LayerMask.GetMask(new string[]
-			{
-			"Train_Big_Collider"
-			});
+			trainCarMask = highlighter.RefreshTrainCarMask();
 			highlighter.StartHighlighter(utility, previous, false);
 		}
 

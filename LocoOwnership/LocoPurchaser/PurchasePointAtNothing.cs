@@ -19,6 +19,7 @@ namespace LocoOwnership.LocoPurchaser
 		private int trainCarMask;
 
 		private Finances finances;
+		private CarHighlighter highlighter;
 
 		private string carID;
 		private float carBuyPrice;
@@ -31,6 +32,7 @@ namespace LocoOwnership.LocoPurchaser
 				buttonBehaviour: ButtonBehaviourType.Override))
 		{
 			finances = new Finances();
+			highlighter = new CarHighlighter();
 		}
 
 		public override void OnEnter(CommsRadioUtility utility, AStateBehaviour? previous)
@@ -52,18 +54,8 @@ namespace LocoOwnership.LocoPurchaser
 
 		private void refreshSignalOriginAndTrainCarMask()
 		{
-			trainCarMask = LayerMask.GetMask(new string[]
-			{
-			"Train_Big_Collider"
-			});
-			ICommsRadioMode? commsRadioMode = ControllerAPI.GetVanillaMode(VanillaMode.Clear);
-			if (commsRadioMode is null)
-			{
-				Main.DebugLog("Could not find CommsRadioCarDeleter");
-				throw new NullReferenceException();
-			}
-			CommsRadioCarDeleter carDeleter = (CommsRadioCarDeleter)commsRadioMode;
-			signalOrigin = carDeleter.signalOrigin;
+			trainCarMask = highlighter.RefreshTrainCarMask();
+			signalOrigin = highlighter.RefreshSignalOrigin();
 		}
 
 		// Detecting what we're looking at

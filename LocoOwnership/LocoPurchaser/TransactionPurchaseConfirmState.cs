@@ -15,6 +15,7 @@ namespace LocoOwnership.LocoPurchaser
 
 		internal TrainCar selectedCar;
 		private Transform signalOrigin;
+		private CommsRadioCarDeleter carDeleter;
 		private int trainCarMask;
 
 		private string carID;
@@ -39,26 +40,12 @@ namespace LocoOwnership.LocoPurchaser
 				throw new ArgumentNullException(nameof(selectedCar));
 			}
 
-			// Steal some components from vanilla modes
-			ICommsRadioMode? commsRadioMode = ControllerAPI.GetVanillaMode(VanillaMode.Clear);
-			if (commsRadioMode is null)
-			{
-				Main.DebugLog("Could not find CommsRadioCarDeleter");
-				throw new NullReferenceException();
-			}
-
-			CommsRadioCarDeleter carDeleter = (CommsRadioCarDeleter)commsRadioMode;
-
 			highlighter = new CarHighlighter();
 
+			carDeleter = highlighter.RefreshCarDeleterComponent();
 			signalOrigin = carDeleter.signalOrigin;
 			highlighter.InitHighlighter(selectedCar, carDeleter);
 		}
-
-		/*private void GetTrainCarLicensePrice()
-		{
-			float licensePrice = selectedCar.carLivery.requiredLicense.price;
-		}*/
 
 		public override AStateBehaviour OnUpdate(CommsRadioUtility utility)
 		{
@@ -68,12 +55,11 @@ namespace LocoOwnership.LocoPurchaser
 			{
 				return new TransactionPurchaseCancel(selectedCar, carID, carBuyPrice);
 			}
+
 			TrainCar target = TrainCar.Resolve(hit.transform.root);
+
 			if (target is null || target != selectedCar)
 			{
-				/* If we stopped pointing at selectedCar and are now pointing at either
-				nothing or another train car, then go back to PointingAtNothing so
-				we can figure out what we're pointing at */
 				return new TransactionPurchaseCancel(selectedCar, carID, carBuyPrice);
 			}
 			return this;
@@ -82,10 +68,7 @@ namespace LocoOwnership.LocoPurchaser
 		public override void OnEnter(CommsRadioUtility utility, AStateBehaviour? previous)
 		{
 			base.OnEnter(utility, previous);
-			trainCarMask = LayerMask.GetMask(new string[]
-			{
-			"Train_Big_Collider"
-			});
+			trainCarMask = highlighter.RefreshTrainCarMask();
 			highlighter.StartHighlighter(utility, previous, true);
 		}
 

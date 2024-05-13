@@ -1,8 +1,11 @@
+using System;
+
 using DV;
 
 using UnityEngine;
 
 using CommsRadioAPI;
+
 
 namespace LocoOwnership.Shared
 {
@@ -11,9 +14,16 @@ namespace LocoOwnership.Shared
 	{
 		private static readonly Vector3 HIGHLIGHT_BOUNDS_EXTENSION = new Vector3(0.25f, 0.8f, 0f);
 
+		private Transform signalOrigin;
+		private int trainCarMask;
+
 		internal TrainCar selectedCar;
 
 		private GameObject highlighter;
+
+		/*-----------------------------------------------------------------------------------------------------------------------*/
+
+		#region HIGHLIGHTER FUNCTIONS
 
 		// Accepts 2 arguments: Car to highlight, comms radio deleter state
 		public void InitHighlighter(TrainCar selectedCar, CommsRadioCarDeleter carDeleter)
@@ -52,5 +62,47 @@ namespace LocoOwnership.Shared
 			highlighter.SetActive(false);
 			highlighter.transform.SetParent(null);
 		}
+
+		#endregion
+
+		/*-----------------------------------------------------------------------------------------------------------------------*/
+
+		#region COMPONENT STEALERS
+
+		public CommsRadioCarDeleter RefreshCarDeleterComponent()
+		{
+			ICommsRadioMode? commsRadioMode = ControllerAPI.GetVanillaMode(VanillaMode.Clear);
+			if (commsRadioMode is null)
+			{
+				Main.DebugLog("Could not find CommsRadioCarDeleter");
+				throw new NullReferenceException();
+			}
+			CommsRadioCarDeleter carDeleter = (CommsRadioCarDeleter)commsRadioMode;
+			
+
+			return carDeleter;
+		}
+
+		public Transform RefreshSignalOrigin()
+		{
+			CommsRadioCarDeleter carDeleter = RefreshCarDeleterComponent();
+			signalOrigin = carDeleter.signalOrigin;
+			return signalOrigin;
+		}
+
+		public int RefreshTrainCarMask()
+		{
+			trainCarMask = LayerMask.GetMask(new string[]
+			{
+			"Train_Big_Collider"
+			});
+
+			return trainCarMask;
+		}
+
+		#endregion
+
+		/*-----------------------------------------------------------------------------------------------------------------------*/
+
 	}
 }

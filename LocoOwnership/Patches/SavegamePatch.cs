@@ -43,12 +43,12 @@ namespace LocoOwnership.Patches
 	class OwnedLocosSaveData
 	{
 		public string guid;
-		public string locoType;
+		public string locoID;
 
-		public OwnedLocosSaveData(string guid, string locoType)
+		public OwnedLocosSaveData(string guid, string locoID)
 		{
 			this.guid = guid;
-			this.locoType = locoType;
+			this.locoID = locoID;
 		}
 	}
 }
