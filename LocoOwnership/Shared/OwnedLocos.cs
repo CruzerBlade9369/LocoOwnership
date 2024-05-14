@@ -17,8 +17,14 @@ namespace LocoOwnership.Shared
 	{
 		private const int MAX_OWNED_LOCOS = 16;
 
-		private LocoDebtController ldc = new();
 		private SimulatedCarDebtTracker? locoDebt;
+
+		public class VehicleOwnershipResult
+		{
+			public bool MaxOwnedLoc { get; set; }
+			public bool DebtNotZero { get; set; }
+			public bool Success { get; set; }
+		}
 
 		// This is the cache
 		public static Dictionary<string, string> ownedLocos = new Dictionary<string, string>();
@@ -33,14 +39,15 @@ namespace LocoOwnership.Shared
 			ownedLocos.Clear();
 		}
 
-		public bool OnLocoBuy(TrainCar selectedCar)
+		public VehicleOwnershipResult OnLocoBuy(TrainCar selectedCar)
 		{
-			bool cachingSuccess = false;
+			var result = new VehicleOwnershipResult();
 
 			// Check if player already has enough owned locos
 			if (ownedLocos.Count >= MAX_OWNED_LOCOS)
 			{
-				return cachingSuccess;
+				result.MaxOwnedLoc = true;
+				return result;
 			}
 
 			string guid = selectedCar.CarGUID;
@@ -52,20 +59,13 @@ namespace LocoOwnership.Shared
 			}
 			else
 			{
-
-				try
+				bool allowOwnVehicle = SetVehicleToOwned(selectedCar);
+				if (!allowOwnVehicle)
 				{
-					SetVehicleToOwned(selectedCar);
-				}
-				catch (Exception ex)
-				{
-					throw ex;
+					result.DebtNotZero = true;
+					return result;
 				}
 
-				// debug functions
-				Debug.Log($"uniquecar: {selectedCar.uniqueCar}");
-				Debug.Log($"{selectedCar.carType}");
-				
 				ownedLocos.Add(guid, locoID);
 
 				foreach (KeyValuePair<string, string> kvp in ownedLocos)
@@ -73,8 +73,8 @@ namespace LocoOwnership.Shared
 					Main.DebugLog($"Key = {kvp.Key}, Value = {kvp.Value}");
 				}
 
-				cachingSuccess = true;
-				return cachingSuccess;
+				result.Success = true;
+				return result;
 			}
 		}
 
@@ -98,60 +98,79 @@ namespace LocoOwnership.Shared
 
 		#region VANILLA OWNED VEHICLES HANDLER
 
-		public void SetVehicleToOwned(TrainCar car)
+		public SimulatedCarDebtTracker DebtValueStealer(SimController simController)
+		{
+			// Use reflection to steal the private 'debt' field
+			if (simController == null)
+			{
+				throw new Exception("SimController not found on the specified TrainCar!");
+			}
+
+			FieldInfo debtField = typeof(SimController).GetField("debt", BindingFlags.NonPublic | BindingFlags.Instance);
+			if (debtField == null)
+			{
+				throw new Exception("Field 'debt' not found in SimController!");
+			}
+
+			locoDebt = (SimulatedCarDebtTracker)debtField.GetValue(simController);
+			if (locoDebt == null)
+			{
+				throw new Exception("Value of locoDebt is null!");
+			}
+
+			return locoDebt;
+		}
+
+		public bool SetVehicleToOwned(TrainCar car)
 		{
 			car.uniqueCar = true;
 
 			// Get car's sim controller component
 			SimController simController = car.GetComponent<SimController>();
 
-			// Use reflection to steal the private 'debt' field
-			if (simController != null)
-			{
-				FieldInfo debtField = typeof(SimController).GetField("debt", BindingFlags.NonPublic | BindingFlags.Instance);
+			// Steal debt component from car
+			locoDebt = DebtValueStealer(simController);
 
-				if (debtField != null)
-				{
-					locoDebt = (SimulatedCarDebtTracker)debtField.GetValue(simController);
-
-					if (locoDebt == null)
-					{
-						throw new Exception("Value of locoDebt is null!");
-					}
-				}
-				else
-				{
-					throw new Exception("Field 'debt' not found in SimController!");
-				}
-			}
-			else
+			// Find the traincar in tracked loco debts to remove
+			LocoDebtController locoDebtController = LocoDebtController.Instance;
+			if (locoDebtController == null)
 			{
-				throw new Exception("SimController not found on the specified TrainCar!");
+				throw new Exception("LocoDebtController instance is null!");
 			}
+
+			int num = locoDebtController.trackedLocosDebts.FindIndex((ExistingLocoDebt debt) => debt.locoDebtTracker == locoDebt);
+			if (num == -1)
+			{
+				throw new Exception($"The index is {num}! This shouldn't happen!");
+			}
+			ExistingLocoDebt existingLocoDebt = locoDebtController.trackedLocosDebts[num];
+
+			Debug.Log(existingLocoDebt.GetTotalPrice());
+
+			// If the debt isn't 0 don't allow to buy loco
+			if (existingLocoDebt.GetTotalPrice() > 0f)
+			{
+				return false;
+			}
+
+			// Remove car from tracked debts
+			locoDebtController.trackedLocosDebts.RemoveAt(num);
+			SingletonBehaviour<CareerManagerDebtController>.Instance.UnregisterDebt(existingLocoDebt);
+			existingLocoDebt.UpdateDebtState();
 
 			// Invoke OnLogicCarInitialized with new uniqueCar value to register to owned vehicles list
 			MethodInfo onLogicCarInitializedMethod = typeof(SimController).GetMethod("OnLogicCarInitialized", BindingFlags.NonPublic | BindingFlags.Instance);
 			if (onLogicCarInitializedMethod != null)
 			{
 				onLogicCarInitializedMethod.Invoke(simController, null);
-				Debug.Log("OnLogicCarInitialized method invoked.");
+				Debug.Log("OnLogicCarInitialized method reinvoked.");
 			}
 			else
 			{
 				throw new Exception("onLogicCarInitialized method failed to be found!");
 			}
 
-			// Find the traincar in tracked loco debts to remove
-			int num = ldc.trackedLocosDebts.FindIndex((ExistingLocoDebt debt) => debt.locoDebtTracker == locoDebt);
-			if (num == -1)
-			{
-				throw new Exception("Why is this -1?");
-			}
-
-			ExistingLocoDebt existingLocoDebt = ldc.trackedLocosDebts[num];
-			ldc.trackedLocosDebts.RemoveAt(num);
-			SingletonBehaviour<CareerManagerDebtController>.Instance.UnregisterDebt(existingLocoDebt);
-			existingLocoDebt.UpdateDebtState();
+			return true;
 		}
 
 		public void RemoveOwnedVehicle(TrainCar car)

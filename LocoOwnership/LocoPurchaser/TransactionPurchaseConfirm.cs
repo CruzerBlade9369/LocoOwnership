@@ -54,11 +54,16 @@ namespace LocoOwnership.LocoPurchaser
 			// Check if player can afford
 			if (playerMoney >= carBuyPrice)
 			{
-				bool purchaseSuccess = ownedLocosHandler.OnLocoBuy(selectedCar);
-				if (!purchaseSuccess)
+				OwnedLocos.VehicleOwnershipResult purchaseSuccess = ownedLocosHandler.OnLocoBuy(selectedCar);
+				if (purchaseSuccess.MaxOwnedLoc)
 				{
 					utility.PlaySound(VanillaSoundCommsRadio.Warning);
 					return new TransactionPurchaseFail(3);
+				}
+				else if (purchaseSuccess.DebtNotZero)
+				{
+					utility.PlaySound(VanillaSoundCommsRadio.Warning);
+					return new TransactionPurchaseFail(4);
 				}
 
 				Inventory.Instance.RemoveMoney(carBuyPrice);
