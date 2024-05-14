@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 
 using Newtonsoft.Json.Linq;
 
@@ -8,6 +9,7 @@ using UnityEngine;
 using DV;
 using DV.JObjectExtstensions;
 using DV.ServicePenalty;
+using DV.ServicePenalty.UI;
 using DV.Simulation.Cars;
 using DV.Utils;
 using DV.Logic.Job;
@@ -19,11 +21,10 @@ using LocoSim.Definitions;
 
 namespace LocoOwnership.Shared
 {
-	internal class OwnedLocos : MonoBehaviour, ISimulationFlowProvider
+	internal class OwnedLocos : MonoBehaviour/*, ISimulationFlowProvider*/
 	{
 		private const int MAX_OWNED_LOCOS = 16;
-
-		public SimController simController = new();
+		/*public SimController simController = new();
 
 		public SimConnectionDefinition? connectionsDefinition;
 		public ResourceContainerController? resourceContainerController;
@@ -32,7 +33,10 @@ namespace LocoOwnership.Shared
 		public SimulationFlow? simFlow;
 		public SimulationFlow? SimulationFlow => simFlow;
 
+		private CareerManagerDebtController cmdc = new();
 		private OwnedCarsStateController ocsc = new();
+
+		public static SimulatedCarDebtTracker Debt { get; set; }*/
 
 		// This is the cache
 		public static Dictionary<string, string> ownedLocos = new Dictionary<string, string>();
@@ -58,7 +62,7 @@ namespace LocoOwnership.Shared
 			}
 
 			string guid = selectedCar.CarGUID;
-			string locoID = selectedCar.ID;
+			string locoID = $"{selectedCar.carType}";
 
 			if (ownedLocos.ContainsKey(guid))
 			{
@@ -66,32 +70,7 @@ namespace LocoOwnership.Shared
 			}
 			else
 			{
-				/*resourceContainerController = simController.resourceContainerController;
-				environmentDamageController = simController.environmentDamageController;
-				connectionsDefinition = simController.connectionsDefinition;
-
-				Main.DebugLog($"resourceContainerController {resourceContainerController}");
-				Main.DebugLog($"environmentDamageController {environmentDamageController}");
-				Main.DebugLog($"connectionsDefinition {connectionsDefinition}");
-
-				simFlow = simController.simFlow;
-
-				Main.DebugLog($"simFlow {simFlow}");
-
-				DamageController component = selectedCar.GetComponent<DamageController>();
-
-				Main.DebugLog($"component {component}");
-
-				scdt = new SimulatedCarDebtTracker(component,
-				resourceContainerController,
-				environmentDamageController,
-				simFlow,
-				selectedCar.ID,
-				selectedCar.carType);
-
-				Main.DebugLog("register car");
-				SingletonBehaviour<OwnedCarsStateController>.Instance.RegisterCarStateTracker(selectedCar, scdt);*/
-
+				/*// Reinitialize SimController and set uniqueCar to true to utilize existing vanilla owned vehicles feature
 				DamageController component = selectedCar.GetComponent<DamageController>();
 				SimController newSimController = selectedCar.GetComponent<SimController>();
 
@@ -99,16 +78,17 @@ namespace LocoOwnership.Shared
 				{
 					selectedCar.uniqueCar = true;
 					newSimController.Initialize(selectedCar, component);
-
-					ocsc.RefreshOwnedCarsStatesData();
 				}
 				else
 				{
 					throw new Exception("SimController is null!");
-				}
+				}*/
+
+				selectedCar.uniqueCar = true;
 
 				Main.DebugLog($"uniquecar: {selectedCar.uniqueCar}");
-
+				Debug.Log($"{selectedCar.carType}");
+				
 				ownedLocos.Add(guid, locoID);
 
 				foreach (KeyValuePair<string, string> kvp in ownedLocos)
@@ -134,6 +114,45 @@ namespace LocoOwnership.Shared
 				throw new Exception("Loco GUID not found!");
 			}
 		}
+
+		#endregion
+
+		/*-----------------------------------------------------------------------------------------------------------------------*/
+
+		#region VANILLA OWNED VEHICLES HANDLER
+
+		/*public void ReinitDebtTracker(SimController simController)
+		{
+			MethodInfo onLogicCarInitializedMethod = typeof(SimController).GetMethod("OnLogicCarInitialized",
+				BindingFlags.NonPublic | BindingFlags.Instance);
+
+			if (onLogicCarInitializedMethod != null)
+			{
+				// Invoke the method on the instance of SimController
+				onLogicCarInitializedMethod.Invoke(simController, null);
+			}
+			else
+			{
+				Debug.LogError("OnLogicCarInitialized method not found!");
+			}
+		}
+
+		public void SetVehicleToOwned(TrainCar car)
+		{
+			SimulatedCarDebtTracker debt = Debt;
+
+			if (debt == null)
+			{
+				throw new Exception("SCDT debt is null!");
+			}
+
+			SingletonBehaviour<OwnedCarsStateController>.Instance.RegisterCarStateTracker(car, debt);
+		}
+
+		public void RemoveOwnedVehicle(TrainCar car)
+		{
+
+		}*/
 
 		#endregion
 

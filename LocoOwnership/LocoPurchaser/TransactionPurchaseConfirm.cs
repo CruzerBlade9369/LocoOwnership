@@ -54,12 +54,6 @@ namespace LocoOwnership.LocoPurchaser
 			// Check if player can afford
 			if (playerMoney >= carBuyPrice)
 			{
-				// Implement functions to save locomotive data into owned
-				// loco cache
-				// Must go before removing money and add checks if failed, do not
-				// remove money and pass to fail screen
-				// implement later
-
 				bool purchaseSuccess = ownedLocosHandler.OnLocoBuy(selectedCar);
 				if (!purchaseSuccess)
 				{
