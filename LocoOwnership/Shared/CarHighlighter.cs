@@ -14,7 +14,7 @@ namespace LocoOwnership.Shared
 	{
 		private static readonly Vector3 HIGHLIGHT_BOUNDS_EXTENSION = new Vector3(0.25f, 0.8f, 0f);
 
-		private Transform? signalOrigin;
+		private Transform signalOrigin;
 		private int trainCarMask;
 
 		internal TrainCar selectedCar = new();

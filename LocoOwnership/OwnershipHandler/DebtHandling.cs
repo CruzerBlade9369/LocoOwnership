@@ -12,11 +12,13 @@ namespace LocoOwnership.OwnershipHandler
 {
 	internal class DebtHandling
 	{
-		private SimulatedCarDebtTracker? locoDebt;
-		private SimulatedCarDebtTracker? tenderDebt;
+		private SimulatedCarDebtTracker locoDebt;
+		private SimulatedCarDebtTracker tenderDebt;
 
 		public SimulatedCarDebtTracker DebtValueStealer(SimController simController)
 		{
+			SimulatedCarDebtTracker debt;
+
 			// Use reflection to steal the private 'debt' field
 			if (simController == null)
 			{
@@ -30,17 +32,19 @@ namespace LocoOwnership.OwnershipHandler
 				throw new Exception("Field 'debt' not found in SimController!");
 			}
 
-			locoDebt = (SimulatedCarDebtTracker)debtField.GetValue(simController);
-			if (locoDebt == null)
+			debt = (SimulatedCarDebtTracker)debtField.GetValue(simController);
+			if (debt == null)
 			{
 				throw new Exception("Value of locoDebt is null!");
 			}
 
-			return locoDebt;
+			return debt;
 		}
 
-		public bool RemoveTrackedLocoDebts(SimulatedCarDebtTracker locoDebt, SimulatedCarDebtTracker? tenderDebt)
+		public bool RemoveTrackedLocoDebts(SimulatedCarDebtTracker locoDebt, SimulatedCarDebtTracker tenderDebt)
 		{
+			float totalDebtCheck = 0f;
+
 			// Find the traincar in tracked loco debts to remove
 			LocoDebtController locoDebtController = LocoDebtController.Instance;
 			if (locoDebtController == null)
@@ -55,22 +59,24 @@ namespace LocoOwnership.OwnershipHandler
 				throw new Exception($"The index is {num}! This shouldn't happen!");
 			}
 			ExistingLocoDebt existingLocoDebt = locoDebtController.trackedLocosDebts[num];
+			totalDebtCheck += existingLocoDebt.GetTotalPrice();
 
 			// If tender is there find debt for tender too
-			ExistingLocoDebt? existingTenderDebt = null;
+			ExistingLocoDebt existingTenderDebt = null;
 			if (tenderDebt != null)
 			{
 				int num2 = locoDebtController.trackedLocosDebts.FindIndex
-					((ExistingLocoDebt debt) => debt.locoDebtTracker == tenderDebt);
+					((ExistingLocoDebt debt2) => debt2.locoDebtTracker == tenderDebt);
 				if (num2 == -1)
 				{
 					throw new Exception($"The tender index is {num2}! This shouldn't happen!");
 				}
 				existingTenderDebt = locoDebtController.trackedLocosDebts[num2];
+				totalDebtCheck += existingTenderDebt.GetTotalPrice();
 			}
 
 			// If the (total) debt isn't 0 don't allow to buy loco
-			float totalDebtCheck = existingLocoDebt.GetTotalPrice() + existingTenderDebt?.GetTotalPrice() ?? 0f;
+			Debug.Log(totalDebtCheck);
 			if (totalDebtCheck > 0f)
 			{
 				return false;
@@ -94,8 +100,8 @@ namespace LocoOwnership.OwnershipHandler
 			bool isSteamEngine = CarTypes.IsMUSteamLocomotive(car.carType);
 			bool hasTender = car.rearCoupler.IsCoupled() && CarTypes.IsTender(car.rearCoupler.coupledTo.train.carLivery);
 
-			TrainCar? tender = null;
-			SimController? tenderSimController = null;
+			TrainCar tender = null;
+			SimController tenderSimController = null;
 
 			if (isSteamEngine && hasTender)
 			{
@@ -119,9 +125,11 @@ namespace LocoOwnership.OwnershipHandler
 			{
 				if (tender != null && tenderSimController != null)
 				{
+					tender.uniqueCar = true;
 					onLogicCarInitializedMethod.Invoke(tenderSimController, null);
 					Debug.Log("OnLogicCarInitialized method reinvoked on tender.");
 				}
+				car.uniqueCar = true;
 				onLogicCarInitializedMethod.Invoke(simController, null);
 				Debug.Log("OnLogicCarInitialized method reinvoked.");
 			}
