@@ -74,7 +74,7 @@ namespace LocoOwnership.OwnershipHandler
 			}
 		}
 
-		public void OnLocoSell(TrainCar selectedCar)
+		public bool OnLocoSell(TrainCar selectedCar)
 		{
 			string guid = selectedCar.CarGUID;
 
@@ -86,6 +86,8 @@ namespace LocoOwnership.OwnershipHandler
 			{
 				throw new Exception("Loco GUID not found!");
 			}
+
+			return true;
 		}
 
 		#endregion

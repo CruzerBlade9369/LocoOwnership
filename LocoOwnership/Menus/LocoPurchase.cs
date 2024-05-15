@@ -4,7 +4,6 @@ using DV;
 
 using CommsRadioAPI;
 using LocoOwnership.LocoPurchaser;
-using LocoOwnership.Menus;
 
 namespace LocoOwnership.Menus
 {

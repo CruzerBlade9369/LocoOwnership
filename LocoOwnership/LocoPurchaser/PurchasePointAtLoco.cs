@@ -25,9 +25,6 @@ namespace LocoOwnership.LocoPurchaser
 				throw new ArgumentException();
 			}
 
-			// Add check to determine if player already has 10 of the same loco type, if yes
-			// then pass to fail screen, implement later
-
 			utility.PlaySound(VanillaSoundCommsRadio.Confirm);
 			return new TransactionPurchaseConfirm(selectedCar, carID, carBuyPrice);
 		}

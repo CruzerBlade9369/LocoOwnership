@@ -62,9 +62,6 @@ namespace LocoOwnership.LocoPurchaser
 		// Detecting what we're looking at
 		public override AStateBehaviour OnUpdate(CommsRadioUtility utility)
 		{
-			// Add check to see if loco thats being pointed is already purchased or not
-			// implement later
-
 			while (signalOrigin is null)
 			{
 				Main.DebugLog("signalOrigin is null for some reason");
@@ -72,6 +69,7 @@ namespace LocoOwnership.LocoPurchaser
 			}
 
 			RaycastHit hit;
+
 			// If we're not pointing at anything
 			if (!Physics.Raycast(signalOrigin.position, signalOrigin.forward, out hit, SIGNAL_RANGE, trainCarMask))
 			{

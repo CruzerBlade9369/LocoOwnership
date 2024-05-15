@@ -1,21 +1,21 @@
 using System;
 
-using DV;
-using DV.Damage;
-using DV.Simulation.Cars;
-using DV.Simulation.Controllers;
-
-using UnityEngine;
-
 using CommsRadioAPI;
 
 namespace LocoOwnership.LocoSeller
 {
-	internal class SellPointAtLoco : SellPointAtSomething
+	// This class inherits SellAtLocoState for the radio state
+	internal class SellPointAtLoco : SellPointAtLocoState
 	{
-		public SellPointAtLoco(TrainCar selectedCar) : base(selectedCar)
-		{
 
+		private string carID;
+		private float carSellPrice;
+
+		public SellPointAtLoco(TrainCar selectedCar, string carID, float carSellPrice)
+			: base(selectedCar, carID, carSellPrice)
+		{
+			this.carID = carID;
+			this.carSellPrice = carSellPrice;
 		}
 
 		public override AStateBehaviour OnAction(CommsRadioUtility utility, InputAction action)
@@ -26,9 +26,7 @@ namespace LocoOwnership.LocoSeller
 			}
 
 			utility.PlaySound(VanillaSoundCommsRadio.Confirm);
-
-			Main.DebugLog("Loco purchasing should go here, currently unimplemented");
-			return new SellPointAtNothing();
+			return new TransactionSellConfirm(selectedCar, carID, carSellPrice);
 		}
 	}
 }
