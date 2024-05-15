@@ -1,6 +1,6 @@
 using HarmonyLib;
 
-using LocoOwnership.Shared;
+using LocoOwnership.OwnershipHandler;
 
 namespace LocoOwnership.Patches
 {

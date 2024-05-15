@@ -3,7 +3,7 @@ using System;
 using DV.InventorySystem;
 
 using CommsRadioAPI;
-using LocoOwnership.Shared;
+using LocoOwnership.OwnershipHandler;
 
 namespace LocoOwnership.LocoPurchaser
 {
@@ -54,7 +54,7 @@ namespace LocoOwnership.LocoPurchaser
 			// Check if player can afford
 			if (playerMoney >= carBuyPrice)
 			{
-				OwnedLocos.VehicleOwnershipResult purchaseSuccess = ownedLocosHandler.OnLocoBuy(selectedCar);
+				OwnedLocos.DebtHandlingResult purchaseSuccess = ownedLocosHandler.OnLocoBuy(selectedCar);
 				if (purchaseSuccess.MaxOwnedLoc)
 				{
 					utility.PlaySound(VanillaSoundCommsRadio.Warning);

@@ -109,9 +109,6 @@
 		<PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
 		<PackageReference Include="Nullable" Version="1.3.1" PrivateAssets="all" />
 	</ItemGroup>
-	<ItemGroup>
-	  <Folder Include="OwnershipHandler\" />
-	</ItemGroup>
 
 	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
 		<!-- Copy to build folder -->

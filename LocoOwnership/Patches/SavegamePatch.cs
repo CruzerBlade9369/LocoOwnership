@@ -1,7 +1,7 @@
 using HarmonyLib;
 using Newtonsoft.Json.Linq;
 
-using LocoOwnership.Shared;
+using LocoOwnership.OwnershipHandler;
 
 namespace LocoOwnership.Patches
 {
