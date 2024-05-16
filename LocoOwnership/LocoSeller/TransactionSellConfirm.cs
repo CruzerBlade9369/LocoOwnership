@@ -7,14 +7,10 @@ using LocoOwnership.OwnershipHandler;
 
 namespace LocoOwnership.LocoSeller
 {
-	// This class inherits PurchaseConfirmState for the radio state
+	// This class inherits TransactionSellConfirmState for the radio state
 	internal class TransactionSellConfirm : TransactionSellConfirmState
 	{
 		private float carSellPrice;
-		private double playerMoney;
-		private string currentLicense;
-
-		UnlockablesManager unlockManager;
 
 		private OwnedLocos ownedLocosHandler;
 
@@ -23,11 +19,8 @@ namespace LocoOwnership.LocoSeller
 		{
 			this.selectedCar = selectedCar;
 			this.carSellPrice = carSellPrice;
-			playerMoney = Inventory.Instance.PlayerMoney;
 
-			unlockManager = new UnlockablesManager();
 			ownedLocosHandler = new OwnedLocos();
-			currentLicense = $"{selectedCar.carLivery.requiredLicense.v1}";
 		}
 
 		public override AStateBehaviour OnAction(CommsRadioUtility utility, InputAction action)
@@ -37,9 +30,15 @@ namespace LocoOwnership.LocoSeller
 				throw new ArgumentException();
 			}
 
-			bool sellSuccess = ownedLocosHandler.OnLocoSell(selectedCar);
-			if (sellSuccess)
+			OwnedLocos.DebtHandlingResult sellSuccess = ownedLocosHandler.OnLocoSell(selectedCar);
+			if (sellSuccess.DebtNotZero)
 			{
+				utility.PlaySound(VanillaSoundCommsRadio.Warning);
+				return new TransactionSellFail(0);
+			}
+			else
+			{
+				Inventory.Instance.AddMoney(carSellPrice);
 				utility.PlaySound(VanillaSoundCommsRadio.MoneyRemoved);
 				return new TransactionSellSuccess(selectedCar, carSellPrice);
 			}

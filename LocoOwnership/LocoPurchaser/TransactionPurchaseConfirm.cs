@@ -7,7 +7,7 @@ using LocoOwnership.OwnershipHandler;
 
 namespace LocoOwnership.LocoPurchaser
 {
-	// This class inherits PurchaseConfirmState for the radio state
+	// This class inherits TransactionPurchaseConfirmState for the radio state
 	internal class TransactionPurchaseConfirm : TransactionPurchaseConfirmState
 	{
 		private float carBuyPrice;

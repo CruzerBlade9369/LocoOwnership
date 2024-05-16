@@ -74,12 +74,21 @@ namespace LocoOwnership.OwnershipHandler
 			}
 		}
 
-		public bool OnLocoSell(TrainCar selectedCar)
+		public DebtHandlingResult OnLocoSell(TrainCar selectedCar)
 		{
+			var result = new DebtHandlingResult();
+
 			string guid = selectedCar.CarGUID;
 
 			if (ownedLocos.ContainsKey(guid))
 			{
+				bool allowSellVehicle = debtHandling.RemoveOwnedVehicle(selectedCar);
+				if (!allowSellVehicle)
+				{
+					result.DebtNotZero = true;
+					return result;
+				}
+
 				ownedLocos.Remove(guid);
 			}
 			else
@@ -87,7 +96,8 @@ namespace LocoOwnership.OwnershipHandler
 				throw new Exception("Loco GUID not found!");
 			}
 
-			return true;
+			result.Success = true;
+			return result;
 		}
 
 		#endregion
