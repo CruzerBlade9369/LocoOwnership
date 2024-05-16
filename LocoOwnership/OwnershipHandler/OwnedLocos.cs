@@ -1,11 +1,14 @@
 using System;
 using System.Collections.Generic;
 
+using MessageBox;
+
 using Newtonsoft.Json.Linq;
 
 using UnityEngine;
 
 using DV.JObjectExtstensions;
+using DV.Utils;
 
 namespace LocoOwnership.OwnershipHandler
 {
@@ -98,6 +101,38 @@ namespace LocoOwnership.OwnershipHandler
 
 			result.Success = true;
 			return result;
+		}
+
+		#endregion
+
+		/*-----------------------------------------------------------------------------------------------------------------------*/
+
+		#region OWNED LOCOS VALIDATOR
+
+		public void ValidateOwnedCars()
+		{
+			HashSet<string> allLocoGuids = new HashSet<string>();
+			List<string> missingCars = new List<string>();
+
+			foreach (TrainCar car in SingletonBehaviour<CarSpawner>.Instance.AllLocos)
+			{
+				allLocoGuids.Add(car.CarGUID);
+			}
+
+			foreach (string carGuid in ownedLocos.Keys)
+			{
+				if (!allLocoGuids.Contains(carGuid))
+				{
+					missingCars.Add(carGuid);
+				}
+			}
+
+			foreach (string missingCarGuid in missingCars)
+			{
+				Debug.Log($"Car with GUID {missingCarGuid} does not exist in the world, removing.");
+				// Optionally, remove from ownedLocos if that is desired
+				// ownedLocos.Remove(missingCarGuid);
+			}
 		}
 
 		#endregion

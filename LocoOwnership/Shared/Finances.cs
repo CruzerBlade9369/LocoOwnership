@@ -8,6 +8,7 @@ namespace LocoOwnership.Shared
 		private const float DE2_ARTIFICIAL_LICENSE_PRICE = 10000f;
 		private float carBuyPrice;
 		private float carSellPrice;
+		private float carLicensePrice;
 
 		public static Settings settings = new Settings();
 
@@ -61,6 +62,32 @@ namespace LocoOwnership.Shared
 				}
 			}
 			return carSellPrice;
+		}
+
+		public float MissingCarsRefund(string locoType)
+		{
+			if (settings.freeOwnership)
+			{
+				carLicensePrice = 0f;
+				return carLicensePrice;
+			}
+
+			if (settings.freeSandboxOwnership && UserManager.Instance.CurrentUser.CurrentSession.GameMode.Equals("FreeRoam"))
+			{
+				carLicensePrice = 0f;
+			}
+			else
+			{
+				if (locoType == "LocoShunter")
+				{
+					carLicensePrice = DE2_ARTIFICIAL_LICENSE_PRICE;
+				}
+				else
+				{
+					
+				}
+			}
+			return carLicensePrice;
 		}
 	}
 }

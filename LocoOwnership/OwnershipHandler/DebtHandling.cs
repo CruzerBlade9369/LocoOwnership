@@ -13,7 +13,7 @@ namespace LocoOwnership.OwnershipHandler
 	internal class DebtHandling
 	{
 		private SimulatedCarDebtTracker locoDebt;
-		private SimulatedCarDebtTracker tenderDebt;
+		private SimulatedCarDebtTracker tenderDebt = null;
 
 		public SimulatedCarDebtTracker DebtValueStealer(SimController simController)
 		{
@@ -64,6 +64,7 @@ namespace LocoOwnership.OwnershipHandler
 				throw new Exception($"The index is {num}! This shouldn't happen!");
 			}
 			ExistingLocoDebt existingLocoDebt = locoDebtController.trackedLocosDebts[num];
+			existingLocoDebt.UpdateDebtState();
 			totalDebtCheck += existingLocoDebt.GetTotalPrice();
 
 			// If tender is there find debt for tender too
@@ -78,6 +79,7 @@ namespace LocoOwnership.OwnershipHandler
 					throw new Exception($"The tender index is {num2}! This shouldn't happen!");
 				}
 				existingTenderDebt = locoDebtController.trackedLocosDebts[num2];
+				existingTenderDebt.UpdateDebtState();
 				totalDebtCheck += existingTenderDebt.GetTotalPrice();
 			}
 
@@ -91,12 +93,13 @@ namespace LocoOwnership.OwnershipHandler
 			// Remove car from tracked debts
 			locoDebtController.trackedLocosDebts.RemoveAt(num);
 			SingletonBehaviour<CareerManagerDebtController>.Instance.UnregisterDebt(existingLocoDebt);
+			existingLocoDebt.UpdateDebtState();
 			if (tenderDebt != null)
 			{
 				locoDebtController.trackedLocosDebts.RemoveAt(num2);
 				SingletonBehaviour<CareerManagerDebtController>.Instance.UnregisterDebt(existingTenderDebt);
+				existingTenderDebt.UpdateDebtState();
 			}
-			existingLocoDebt.UpdateDebtState();
 
 			return true;
 		}
@@ -160,6 +163,8 @@ namespace LocoOwnership.OwnershipHandler
 
 		public bool RemoveExistingOwnedCarState(SimulatedCarDebtTracker locoDebt, SimulatedCarDebtTracker tenderDebt)
 		{
+			float totalDebtCheck = 0f;
+
 			// Find the traincar in owned car states to remove
 			OwnedCarsStateController ownedCarsStateController = OwnedCarsStateController.Instance;
 			if (ownedCarsStateController == null)
@@ -174,8 +179,12 @@ namespace LocoOwnership.OwnershipHandler
 				throw new Exception($"The index is {num}! This shouldn't happen!");
 			}
 			ExistingOwnedCarDebt existingLocoDebt = ownedCarsStateController.existingOwnedCarStates[num];
+			existingLocoDebt.UpdateDebtState();
+
 			bool isLocoDebtOnlyEnv = existingLocoDebt.carDebtTrackerBase.IsDebtOnlyEnvironmental();
+			totalDebtCheck += existingLocoDebt.GetTotalPrice();
 			Debug.Log($"loco debt env only {isLocoDebtOnlyEnv}");
+			Debug.Log(existingLocoDebt.GetTotalPrice());
 
 			// If tender is there find debt for tender too
 			ExistingOwnedCarDebt existingTenderDebt = null;
@@ -190,33 +199,38 @@ namespace LocoOwnership.OwnershipHandler
 					throw new Exception($"The tender index is {num2}! This shouldn't happen!");
 				}
 				existingTenderDebt = ownedCarsStateController.existingOwnedCarStates[num2];
+				existingTenderDebt.UpdateDebtState();
+
 				isTenderDebtOnlyEnv = existingTenderDebt.carDebtTrackerBase.IsDebtOnlyEnvironmental();
+				totalDebtCheck += existingTenderDebt.GetTotalPrice();
 				Debug.Log($"tender debt env only {isTenderDebtOnlyEnv}");
+				Debug.Log(existingTenderDebt.GetTotalPrice());
 			}
 
 			// If the debts are only environmental then allow to sell loco
 			if (existingTenderDebt != null)
 			{
-				if (!isTenderDebtOnlyEnv && !isLocoDebtOnlyEnv)
+				if (!isTenderDebtOnlyEnv && !isLocoDebtOnlyEnv || totalDebtCheck > 0f)
 				{
 					return false;
 				}
 			}
 			else
 			{
-				if (!isLocoDebtOnlyEnv)
+				if (!isLocoDebtOnlyEnv || totalDebtCheck > 0f)
 				{
 					return false;
 				}
 			}
 
 			ownedCarsStateController.existingOwnedCarStates.RemoveAt(num);
+			existingLocoDebt.UpdateDebtState();
 			if(tenderDebt != null)
 			{
 				ownedCarsStateController.existingOwnedCarStates.RemoveAt(num2);
+				existingTenderDebt.UpdateDebtState();
 			}
-			existingLocoDebt.UpdateDebtState();
-
+			
 			return true;
 		}
 

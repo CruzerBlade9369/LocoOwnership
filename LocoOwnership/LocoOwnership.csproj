@@ -12,9 +12,15 @@
 
 	<!-- Derail Valley -->
 	<ItemGroup>
+		<Reference Include="0Harmony">
+		  <HintPath>..\..\..\..\Steam\steamapps\common\Derail Valley\DerailValley_Data\Managed\UnityModManager\0Harmony.dll</HintPath>
+		</Reference>
 		<Reference Include="Assembly-CSharp" />
 		<Reference Include="CommsRadioAPI">
 		  <HintPath>..\..\..\..\Steam\steamapps\common\Derail Valley\Mods\CommsRadioAPI\CommsRadioAPI.dll</HintPath>
+		</Reference>
+		<Reference Include="dnlib">
+		  <HintPath>..\..\..\..\Steam\steamapps\common\Derail Valley\DerailValley_Data\Managed\UnityModManager\dnlib.dll</HintPath>
 		</Reference>
 		<Reference Include="DV.BrakeSystem">
 		  <HintPath>..\..\..\..\Steam\steamapps\common\Derail Valley\DerailValley_Data\Managed\DV.BrakeSystem.dll</HintPath>
@@ -85,8 +91,17 @@
 		<Reference Include="DV.WeatherSystem">
 		  <HintPath>..\..\..\..\Steam\steamapps\common\Derail Valley\DerailValley_Data\Managed\DV.WeatherSystem.dll</HintPath>
 		</Reference>
+		<Reference Include="MessageBox">
+		  <HintPath>..\..\..\..\Steam\steamapps\common\Derail Valley\Mods\MessageBox\MessageBox.dll</HintPath>
+		</Reference>
 		<Reference Include="Newtonsoft.Json">
 		  <HintPath>..\..\..\..\Steam\steamapps\common\Derail Valley\DerailValley_Data\Managed\Newtonsoft.Json.dll</HintPath>
+		</Reference>
+		<Reference Include="RSG.Promise">
+		  <HintPath>..\..\..\..\Steam\steamapps\common\Derail Valley\Mods\MessageBox\RSG.Promise.dll</HintPath>
+		</Reference>
+		<Reference Include="Unity.TextMeshPro">
+		  <HintPath>..\..\..\..\Steam\steamapps\common\Derail Valley\DerailValley_Data\Managed\Unity.TextMeshPro.dll</HintPath>
 		</Reference>
 	</ItemGroup>
 
@@ -97,8 +112,17 @@
 		  <HintPath>..\..\..\..\Programs\Unity Hub\2019.4.40f1\Editor\Data\Managed\UnityEngine\UnityEngine.AudioModule.dll</HintPath>
 		</Reference>
 		<Reference Include="UnityEngine.CoreModule" />
+		<Reference Include="UnityEngine.ImageConversionModule">
+		  <HintPath>..\..\..\..\Steam\steamapps\common\Derail Valley\DerailValley_Data\Managed\UnityEngine.ImageConversionModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.IMGUIModule">
+		  <HintPath>..\..\..\..\Steam\steamapps\common\Derail Valley\DerailValley_Data\Managed\UnityEngine.IMGUIModule.dll</HintPath>
+		</Reference>
 		<Reference Include="UnityEngine.PhysicsModule">
 		  <HintPath>..\..\..\..\Programs\Unity Hub\2019.4.40f1\Editor\Data\Managed\UnityEngine\UnityEngine.PhysicsModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityModManager">
+		  <HintPath>..\..\..\..\Steam\steamapps\common\Derail Valley\DerailValley_Data\Managed\UnityModManager\UnityModManager.dll</HintPath>
 		</Reference>
 	</ItemGroup>
 

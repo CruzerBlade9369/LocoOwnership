@@ -1,9 +1,13 @@
 {
 	"Id": "LocoOwnership",
-	"Version": "0.0.2",
+	"Version": "0.0.3",
 	"DisplayName": "LocoOwnership",
 	"Author": "Cruzer",
 	"EntryMethod": "LocoOwnership.Main.Load",
+	"Requirements": [
+		"CommsRadioAPI",
+		"MessageBox"
+	],
 	"ManagerVersion": "0.27.3",
 	"Repository": "https://raw.githubusercontent.com/CruzerBlade9369/LocoOwnership/main/repository.json"
 }
