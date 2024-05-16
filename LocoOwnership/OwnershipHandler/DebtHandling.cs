@@ -6,15 +6,11 @@ using UnityEngine;
 using DV.ServicePenalty;
 using DV.Simulation.Cars;
 using DV.Utils;
-using DV.ThingTypes;
 
 namespace LocoOwnership.OwnershipHandler
 {
 	internal class DebtHandling
 	{
-		private SimulatedCarDebtTracker locoDebt;
-		private SimulatedCarDebtTracker tenderDebt = null;
-
 		public SimulatedCarDebtTracker DebtValueStealer(SimController simController)
 		{
 			SimulatedCarDebtTracker debt;
@@ -91,37 +87,35 @@ namespace LocoOwnership.OwnershipHandler
 			}
 
 			// Remove car from tracked debts
-			locoDebtController.trackedLocosDebts.RemoveAt(num);
-			SingletonBehaviour<CareerManagerDebtController>.Instance.UnregisterDebt(existingLocoDebt);
-			existingLocoDebt.UpdateDebtState();
-			if (tenderDebt != null)
+			if (existingTenderDebt != null)
 			{
 				locoDebtController.trackedLocosDebts.RemoveAt(num2);
 				SingletonBehaviour<CareerManagerDebtController>.Instance.UnregisterDebt(existingTenderDebt);
+				Debug.Log("Unregistered tender debt");
 				existingTenderDebt.UpdateDebtState();
 			}
+			locoDebtController.trackedLocosDebts.RemoveAt(num);
+			SingletonBehaviour<CareerManagerDebtController>.Instance.UnregisterDebt(existingLocoDebt);
+			Debug.Log("Unregistered loco debt");
+			existingLocoDebt.UpdateDebtState();
 
 			return true;
 		}
 
-		public bool SetVehicleToOwned(TrainCar car)
+		public bool SetVehicleToOwned(TrainCar car, TrainCar tender)
 		{
+			SimulatedCarDebtTracker locoDebt;
+			SimulatedCarDebtTracker tenderDebt = null;
+
 			// Get car's sim controller component and steal debt component
 			SimController simController = car.GetComponent<SimController>();
 			locoDebt = DebtValueStealer(simController);
 
-			// Check if S282 and get tender data too
-			bool isSteamEngine = CarTypes.IsMUSteamLocomotive(car.carType);
-			bool hasTender = car.rearCoupler.IsCoupled() && CarTypes.IsTender(car.rearCoupler.coupledTo.train.carLivery);
-
-			TrainCar tender = null;
 			SimController tenderSimController = null;
 
-			if (isSteamEngine && hasTender)
+			if (tender != null)
 			{
-				tender = car.rearCoupler.coupledTo.train;
 				tenderSimController = tender.GetComponent<SimController>();
-
 				tenderDebt = DebtValueStealer(tenderSimController);
 			}
 
@@ -207,51 +201,53 @@ namespace LocoOwnership.OwnershipHandler
 				Debug.Log(existingTenderDebt.GetTotalPrice());
 			}
 
-			// If the debts are only environmental then allow to sell loco
+			// If has unpaid debts or debts arent only environmental then dont sell loco
 			if (existingTenderDebt != null)
 			{
-				if (!isTenderDebtOnlyEnv && !isLocoDebtOnlyEnv || totalDebtCheck > 0f)
+				if (totalDebtCheck > 0f)
 				{
-					return false;
+					if (!isLocoDebtOnlyEnv && !isTenderDebtOnlyEnv)
+					{
+						return false;
+					}
 				}
 			}
 			else
 			{
-				if (!isLocoDebtOnlyEnv || totalDebtCheck > 0f)
+				if (totalDebtCheck > 0f)
 				{
-					return false;
+					if (!isLocoDebtOnlyEnv)
+					{
+						return false;
+					}
 				}
 			}
 
-			ownedCarsStateController.existingOwnedCarStates.RemoveAt(num);
-			existingLocoDebt.UpdateDebtState();
-			if(tenderDebt != null)
+			if (existingTenderDebt != null)
 			{
 				ownedCarsStateController.existingOwnedCarStates.RemoveAt(num2);
 				existingTenderDebt.UpdateDebtState();
 			}
+			ownedCarsStateController.existingOwnedCarStates.RemoveAt(num);
+			existingLocoDebt.UpdateDebtState();
 			
 			return true;
 		}
 
-		public bool RemoveOwnedVehicle(TrainCar car)
+		public bool RemoveOwnedVehicle(TrainCar car, TrainCar tender)
 		{
+			SimulatedCarDebtTracker locoDebt;
+			SimulatedCarDebtTracker tenderDebt = null;
+
 			// Get car's sim controller component and steal debt component
 			SimController simController = car.GetComponent<SimController>();
 			locoDebt = DebtValueStealer(simController);
 
-			// Check if S282 and get tender data too
-			bool isSteamEngine = CarTypes.IsMUSteamLocomotive(car.carType);
-			bool hasTender = car.rearCoupler.IsCoupled() && CarTypes.IsTender(car.rearCoupler.coupledTo.train.carLivery);
-
-			TrainCar tender = null;
 			SimController tenderSimController = null;
 
-			if (isSteamEngine && hasTender)
+			if (tender != null)
 			{
-				tender = car.rearCoupler.coupledTo.train;
 				tenderSimController = tender.GetComponent<SimController>();
-
 				tenderDebt = DebtValueStealer(tenderSimController);
 			}
 

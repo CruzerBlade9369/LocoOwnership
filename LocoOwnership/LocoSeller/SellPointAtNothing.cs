@@ -86,16 +86,19 @@ namespace LocoOwnership.LocoSeller
 			}
 
 			// Check if the car we're pointing at exists in owned locos cache
-			if (OwnedLocos.ownedLocos.ContainsKey(selectedCar.CarGUID))
+			if (selectedCar.IsLoco)
 			{
-				if (selectedCar.carLivery.requiredLicense is not null)
+				if (OwnedLocos.ownedLocos.ContainsKey(selectedCar.CarGUID))
 				{
-					// Get car information before passing down to PointAtLoco
-					carID = selectedCar.ID;
-					carSellPrice = finances.CalculateSellPrice(selectedCar);
+					if (selectedCar.carLivery.requiredLicense is not null)
+					{
+						// Get car information before passing down to PointAtLoco
+						carID = selectedCar.ID;
+						carSellPrice = finances.CalculateSellPrice(selectedCar);
 
-					utility.PlaySound(VanillaSoundCommsRadio.HoverOver);
-					return new SellPointAtLoco(selectedCar, carID, carSellPrice);
+						utility.PlaySound(VanillaSoundCommsRadio.HoverOver);
+						return new SellPointAtLoco(selectedCar, carID, carSellPrice);
+					}
 				}
 			}
 			else

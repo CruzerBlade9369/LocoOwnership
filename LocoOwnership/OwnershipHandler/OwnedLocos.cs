@@ -9,6 +9,7 @@ using UnityEngine;
 
 using DV.JObjectExtstensions;
 using DV.Utils;
+using DV.ThingTypes;
 
 namespace LocoOwnership.OwnershipHandler
 {
@@ -32,6 +33,23 @@ namespace LocoOwnership.OwnershipHandler
 
 		#region CACHE HANDLER
 
+		public static TrainCar GetTender(TrainCar selectedCar)
+		{
+			// Check if we're buying S282
+			bool isSteamEngine = CarTypes.IsMUSteamLocomotive(selectedCar.carType);
+			bool hasTender = selectedCar.rearCoupler.IsCoupled() && CarTypes.IsTender(selectedCar.rearCoupler.coupledTo.train.carLivery);
+
+			TrainCar tender = null;
+
+			// Get tender if S282
+			if (isSteamEngine && hasTender)
+			{
+				tender = selectedCar.rearCoupler.coupledTo.train;
+			}
+
+			return tender;
+		}
+
 		public static void ClearCache()
 		{
 			Main.DebugLog("Clearing owned loco list cache.");
@@ -52,17 +70,32 @@ namespace LocoOwnership.OwnershipHandler
 			string guid = selectedCar.CarGUID;
 			string locoID = $"{selectedCar.carType}";
 
+			TrainCar tender = GetTender(selectedCar);
+
+			string tenderGuid = "";
+			string tenderID = "";
+			if (tender != null)
+			{
+				tenderGuid = tender.CarGUID;
+				tenderID = tender.ID;
+			}
+
 			if (ownedLocos.ContainsKey(guid))
 			{
 				throw new Exception("Loco GUID duplicate!");
 			}
 			else
 			{
-				bool allowOwnVehicle = debtHandling.SetVehicleToOwned(selectedCar);
+				bool allowOwnVehicle = debtHandling.SetVehicleToOwned(selectedCar, tender);
 				if (!allowOwnVehicle)
 				{
 					result.DebtNotZero = true;
 					return result;
+				}
+
+				if (tender != null)
+				{
+					ownedLocos.Add(tenderGuid, tenderID);
 				}
 
 				ownedLocos.Add(guid, locoID);
@@ -83,13 +116,26 @@ namespace LocoOwnership.OwnershipHandler
 
 			string guid = selectedCar.CarGUID;
 
+			TrainCar tender = GetTender(selectedCar);
+
+			string tenderGuid = "";
+			if (tender != null)
+			{
+				tenderGuid = tender.CarGUID;
+			}
+
 			if (ownedLocos.ContainsKey(guid))
 			{
-				bool allowSellVehicle = debtHandling.RemoveOwnedVehicle(selectedCar);
+				bool allowSellVehicle = debtHandling.RemoveOwnedVehicle(selectedCar, tender);
 				if (!allowSellVehicle)
 				{
 					result.DebtNotZero = true;
 					return result;
+				}
+
+				if (tender != null)
+				{
+					ownedLocos.Remove(tenderGuid);
 				}
 
 				ownedLocos.Remove(guid);
@@ -131,7 +177,7 @@ namespace LocoOwnership.OwnershipHandler
 			{
 				Debug.Log($"Car with GUID {missingCarGuid} does not exist in the world, removing.");
 				// Optionally, remove from ownedLocos if that is desired
-				// ownedLocos.Remove(missingCarGuid);
+				ownedLocos.Remove(missingCarGuid);
 			}
 		}
 
