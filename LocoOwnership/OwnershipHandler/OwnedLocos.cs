@@ -1,15 +1,19 @@
 using System;
 using System.Collections.Generic;
-
-using MessageBox;
+using System.Linq;
 
 using Newtonsoft.Json.Linq;
 
 using UnityEngine;
 
+using MessageBox;
 using DV.JObjectExtstensions;
-using DV.Utils;
 using DV.ThingTypes;
+using DV.ServicePenalty;
+using DV.InventorySystem;
+using DV.UserManagement;
+
+using LocoOwnership.Shared;
 
 namespace LocoOwnership.OwnershipHandler
 {
@@ -19,6 +23,8 @@ namespace LocoOwnership.OwnershipHandler
 
 		DebtHandling debtHandling = new();
 
+		public static Settings settings = new Settings();
+
 		public class DebtHandlingResult
 		{
 			public bool MaxOwnedLoc { get; set; }
@@ -27,7 +33,8 @@ namespace LocoOwnership.OwnershipHandler
 		}
 
 		// This is the cache
-		public static Dictionary<string, string> ownedLocos = new Dictionary<string, string>();
+		public static Dictionary<string, string> ownedLocos = new();
+		public static Dictionary<string, float> ownedLocosLicensePrice = new();
 
 		/*-----------------------------------------------------------------------------------------------------------------------*/
 
@@ -54,6 +61,7 @@ namespace LocoOwnership.OwnershipHandler
 		{
 			Main.DebugLog("Clearing owned loco list cache.");
 			ownedLocos.Clear();
+			ownedLocosLicensePrice.Clear();
 		}
 
 		public DebtHandlingResult OnLocoBuy(TrainCar selectedCar)
@@ -68,7 +76,8 @@ namespace LocoOwnership.OwnershipHandler
 			}
 
 			string guid = selectedCar.CarGUID;
-			string locoID = $"{selectedCar.carType}";
+			string locoID = selectedCar.ID;
+			float locoLicensePrice = selectedCar.carLivery.requiredLicense.price;
 
 			TrainCar tender = GetTender(selectedCar);
 
@@ -97,9 +106,30 @@ namespace LocoOwnership.OwnershipHandler
 				{
 					ownedLocos.Add(tenderGuid, tenderID);
 				}
-
 				ownedLocos.Add(guid, locoID);
 
+				// Populate prices list for refund checking
+				if (settings.freeOwnership)
+				{
+					ownedLocosLicensePrice.Add(guid, 0f);
+				}
+
+				if (settings.freeSandboxOwnership && UserManager.Instance.CurrentUser.CurrentSession.GameMode.Equals("FreeRoam"))
+				{
+					ownedLocosLicensePrice.Add(guid, 0f);
+				}
+				else
+				{
+					if (selectedCar.carType == TrainCarType.LocoShunter)
+					{
+						ownedLocosLicensePrice.Add(guid, Finances.DE2_ARTIFICIAL_LICENSE_PRICE * 2);
+					}
+					else
+					{
+						ownedLocosLicensePrice.Add(guid, locoLicensePrice * 2);
+					}
+				}
+				
 				foreach (KeyValuePair<string, string> kvp in ownedLocos)
 				{
 					Main.DebugLog($"Key = {kvp.Key}, Value = {kvp.Value}");
@@ -139,6 +169,10 @@ namespace LocoOwnership.OwnershipHandler
 				}
 
 				ownedLocos.Remove(guid);
+				if (ownedLocosLicensePrice.ContainsKey(guid))
+				{
+					ownedLocosLicensePrice.Remove(guid);
+				}
 			}
 			else
 			{
@@ -155,29 +189,51 @@ namespace LocoOwnership.OwnershipHandler
 
 		#region OWNED LOCOS VALIDATOR
 
-		public void ValidateOwnedCars()
+		public static void ValidateOwnedCars()
 		{
-			HashSet<string> allLocoGuids = new HashSet<string>();
-			List<string> missingCars = new List<string>();
+			OwnedCarsStateController ocsc = OwnedCarsStateController.Instance;
+			List<StagedOwnedCarDebt> ownedCarsToDestage = new();
+			List<string> modOwnedCarsToRemove = new();
 
-			foreach (TrainCar car in SingletonBehaviour<CarSpawner>.Instance.AllLocos)
+			// Remove missing cars from vanilla owned locos list
+			foreach (StagedOwnedCarDebt socd in ocsc.currentlyDestroyedOwnedCarStates)
 			{
-				allLocoGuids.Add(car.CarGUID);
-			}
-
-			foreach (string carGuid in ownedLocos.Keys)
-			{
-				if (!allLocoGuids.Contains(carGuid))
+				if (ownedLocos.ContainsValue(socd.ID))
 				{
-					missingCars.Add(carGuid);
+					ownedCarsToDestage.Add(socd);
+					modOwnedCarsToRemove.Add(socd.ID);
 				}
 			}
 
-			foreach (string missingCarGuid in missingCars)
+			foreach (StagedOwnedCarDebt socd in ownedCarsToDestage)
 			{
-				Debug.Log($"Car with GUID {missingCarGuid} does not exist in the world, removing.");
-				// Optionally, remove from ownedLocos if that is desired
-				ownedLocos.Remove(missingCarGuid);
+				ocsc.currentlyDestroyedOwnedCarStates.Remove(socd);
+			}
+
+			// Refund missing cars from mod owned locos list and remove
+			foreach (string id in modOwnedCarsToRemove)
+			{
+				var keysToRemove = ownedLocos.Where(pair => pair.Value == id).Select(pair => pair.Key).ToList();
+
+				foreach (var key in keysToRemove)
+				{
+					if (ownedLocosLicensePrice.ContainsKey(key))
+					{
+						ownedLocosLicensePrice.TryGetValue(key, out float price);
+						Inventory.Instance.AddMoney(price);
+						Main.DebugLog($"Refunded purchase for {id}, ${price}");
+						ownedLocosLicensePrice.Remove(key);
+					}
+
+					ownedLocos.Remove(key);
+					Debug.LogError($"Car {id} is detected to be destroyed! Removed from mod and vanilla owned cars list.");
+				}
+			}
+
+			if (modOwnedCarsToRemove.Any())
+			{
+				PopupAPI.ShowOk("One or more of your owned locomotives have despawned! These locomotives have " +
+					"been removed from your owned vehicles list and you have been refunded accordingly.");
 			}
 		}
 
@@ -191,6 +247,7 @@ namespace LocoOwnership.OwnershipHandler
 		public static void OnGameLoad(JObject savedOwnedLocos)
 		{
 			JObject[] jobjectArray = savedOwnedLocos.GetJObjectArray("savedOwnedLocos");
+			JObject[] jobjectArrayPrice = savedOwnedLocos.GetJObjectArray("savedOwnedLocosLicensePrice");
 
 			if (jobjectArray != null)
 			{
@@ -205,6 +262,20 @@ namespace LocoOwnership.OwnershipHandler
 					}
 				}
 			}
+
+			if (jobjectArrayPrice != null)
+			{
+				foreach (JObject jobject in jobjectArrayPrice)
+				{
+					var guidPrice = jobject.GetString("guidPrice");
+					var licensePrice = jobject.GetFloat("licensePrice");
+
+					if (!ownedLocosLicensePrice.ContainsKey(guidPrice))
+					{
+						ownedLocosLicensePrice.Add(guidPrice, (float)licensePrice);
+					}
+				}
+			}
 		}
 
 		// Convert owned locos dict cache into JObjects for savegame
@@ -213,12 +284,12 @@ namespace LocoOwnership.OwnershipHandler
 			JObject savedOwnedLocos = new();
 
 			JObject[] array = new JObject[ownedLocos.Count];
+			JObject[] priceArray = new JObject[ownedLocosLicensePrice.Count];
 
 			int i = 0;
-
 			foreach (var kvp in ownedLocos)
 			{
-				JObject dataObject = new JObject();
+				JObject dataObject = new();
 
 				dataObject.SetString("guid", kvp.Key);
 				dataObject.SetString("locoID", kvp.Value);
@@ -228,7 +299,21 @@ namespace LocoOwnership.OwnershipHandler
 				i++;
 			}
 
+			int j = 0;
+			foreach (var kvp in ownedLocosLicensePrice)
+			{
+				JObject dataObject = new();
+
+				dataObject.SetString("guidPrice", kvp.Key);
+				dataObject.SetFloat("licensePrice", kvp.Value);
+
+				priceArray[j] = dataObject;
+
+				j++;
+			}
+
 			savedOwnedLocos.SetJObjectArray("savedOwnedLocos", array);
+			savedOwnedLocos.SetJObjectArray("savedOwnedLocosLicensePrice", priceArray);
 
 			return savedOwnedLocos;
 		}
