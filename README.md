@@ -1,6 +1,6 @@
 # LocoOwnership
 
-***This mod is under construction.***
+***This mod is almost finished!***
 
 Purchase locomotives from the railway and make sure they never get rotated or despawned, and you won't have to pay taxes for them again!
 
