@@ -9,16 +9,16 @@ namespace LocoOwnership
 		[Draw("Enable logging")]
 		public bool isLoggingEnabled =
 #if DEBUG
-			false;
+			true;
 #else
-            true;
+            false;
 #endif
 		[Draw("Locomotives cost nothing in sandbox")]
 		public bool freeSandboxOwnership =
 #if DEBUG
-			false;
-#else
 			true;
+#else
+			false;
 #endif
 
 		[Draw("Locomotives cost nothing at all")]
