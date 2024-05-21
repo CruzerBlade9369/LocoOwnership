@@ -18,4 +18,4 @@ Some conditions you have to fulfill to be able to purchase a locomotive:
 - Must have manual service license.
 - Fees must be cleared for the specific locomotive.
 - Locomotive has to be naturally spawned (not spawned from comms radio).
-- Not own more than 16 locomotives at a time
+- Not own more than 16 locomotives at a time.
