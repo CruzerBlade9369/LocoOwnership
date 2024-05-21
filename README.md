@@ -9,3 +9,13 @@ Not to be confused with [Rolling Stock Ownership](https://github.com/fauxnik/dv-
 - Owned locomotives can only be serviced manually.
 - Owned locomotives don't despawn and won't contribute to your fee count.
 - Sell locomotives when you don't want them anymore.
+
+Locomotive prices are based on their license price, with purchase set at twice the license price and sell set at half license price. DE2 specifically has an artificial license price of $10000 as its actual license price is $0.
+
+Some conditions you have to fulfill to be able to purchase a locomotive:
+- Sufficient funds (duh).
+- Must have the license of the locomotive you want to purchase.
+- Must have manual service license.
+- Fees must be cleared for the specific locomotive.
+- Locomotive has to be naturally spawned (not spawned from comms radio).
+- Not own more than 16 locomotives at a time
