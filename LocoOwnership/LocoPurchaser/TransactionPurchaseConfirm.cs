@@ -37,6 +37,13 @@ namespace LocoOwnership.LocoPurchaser
 				throw new ArgumentException();
 			}
 
+			// Check if loco is player spawned
+			if (selectedCar.playerSpawnedCar)
+			{
+				utility.PlaySound(VanillaSoundCommsRadio.Warning);
+				return new TransactionPurchaseFail(5);
+			}
+
 			// Check if player does not have manual service
 			if (!unlockManager.IsGeneralLicenseUnlocked("ManualService"))
 			{
@@ -66,12 +73,14 @@ namespace LocoOwnership.LocoPurchaser
 					return new TransactionPurchaseFail(4);
 				}
 
+				// Success
 				Inventory.Instance.RemoveMoney(carBuyPrice);
 				utility.PlaySound(VanillaSoundCommsRadio.MoneyRemoved);
 				return new TransactionPurchaseSuccess(selectedCar, carBuyPrice);
 			}
 			else
 			{
+				// Broke ahh
 				utility.PlaySound(VanillaSoundCommsRadio.Warning);
 				return new TransactionPurchaseFail(0);
 			}

@@ -20,6 +20,7 @@ namespace LocoOwnership.OwnershipHandler
 	internal class OwnedLocos : MonoBehaviour
 	{
 		private const int MAX_OWNED_LOCOS = 16;
+		private Finances finances = new();
 
 		DebtHandling debtHandling = new();
 
@@ -77,7 +78,6 @@ namespace LocoOwnership.OwnershipHandler
 
 			string guid = selectedCar.CarGUID;
 			string locoID = selectedCar.ID;
-			float locoLicensePrice = selectedCar.carLivery.requiredLicense.price;
 
 			TrainCar tender = GetTender(selectedCar);
 
@@ -108,31 +108,19 @@ namespace LocoOwnership.OwnershipHandler
 				}
 				ownedLocos.Add(guid, locoID);
 
-				// Populate prices list for refund checking
-				if (settings.freeOwnership)
-				{
-					ownedLocosLicensePrice.Add(guid, 0f);
-				}
-
-				if (settings.freeSandboxOwnership && UserManager.Instance.CurrentUser.CurrentSession.GameMode.Equals("FreeRoam"))
-				{
-					ownedLocosLicensePrice.Add(guid, 0f);
-				}
-				else
-				{
-					if (selectedCar.carType == TrainCarType.LocoShunter)
-					{
-						ownedLocosLicensePrice.Add(guid, Finances.DE2_ARTIFICIAL_LICENSE_PRICE * 2);
-					}
-					else
-					{
-						ownedLocosLicensePrice.Add(guid, locoLicensePrice * 2);
-					}
-				}
-				
+				Main.DebugLog("Owned locos list:");
 				foreach (KeyValuePair<string, string> kvp in ownedLocos)
 				{
-					Main.DebugLog($"Key = {kvp.Key}, Value = {kvp.Value}");
+					Main.DebugLog($"Guid = {kvp.Key}, LocoID = {kvp.Value}");
+				}
+
+				// Add loco buy price for despawn refund
+				ownedLocosLicensePrice.Add(guid, finances.CalculateBuyPrice(selectedCar));
+
+				Main.DebugLog("Owned locos list, stored loco price:");
+				foreach (KeyValuePair<string, float> kvp in ownedLocosLicensePrice)
+				{
+					Main.DebugLog($"Guid = {kvp.Key}, stored loco price = {kvp.Value}");
 				}
 
 				result.Success = true;
