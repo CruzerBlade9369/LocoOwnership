@@ -1,6 +1,10 @@
 using System;
 
+using UnityEngine;
+
 using DV.InventorySystem;
+using DV.ThingTypes;
+using DV.ThingTypes.TransitionHelpers;
 
 using CommsRadioAPI;
 using LocoOwnership.OwnershipHandler;
@@ -12,9 +16,9 @@ namespace LocoOwnership.LocoPurchaser
 	{
 		private float carBuyPrice;
 		private double playerMoney;
-		private string currentLicense;
+		private GeneralLicenseType_v2 currentLicense;
 
-		UnlockablesManager unlockManager;
+		LicenseManager licenseManager;
 
 		private OwnedLocos ownedLocosHandler;
 
@@ -25,9 +29,9 @@ namespace LocoOwnership.LocoPurchaser
 			this.carBuyPrice = carBuyPrice;
 			playerMoney = Inventory.Instance.PlayerMoney;
 
-			unlockManager = new UnlockablesManager();
+			licenseManager = LicenseManager.Instance;
 			ownedLocosHandler = new OwnedLocos();
-			currentLicense = $"{selectedCar.carLivery.requiredLicense.v1}";
+			currentLicense = selectedCar.carLivery.requiredLicense;
 		}
 
 		public override AStateBehaviour OnAction(CommsRadioUtility utility, InputAction action)
@@ -45,14 +49,14 @@ namespace LocoOwnership.LocoPurchaser
 			}
 
 			// Check if player does not have manual service
-			if (!unlockManager.IsGeneralLicenseUnlocked("ManualService"))
+			if (!licenseManager.IsGeneralLicenseAcquired(GeneralLicenseType.ManualService.ToV2()))
 			{
 				utility.PlaySound(VanillaSoundCommsRadio.Warning);
 				return new TransactionPurchaseFail(2);
 			}
 
 			// Check if player does not have has license for loco
-			if (!unlockManager.IsGeneralLicenseUnlocked(currentLicense) )
+			if (!licenseManager.IsGeneralLicenseAcquired(currentLicense) )
 			{
 				utility.PlaySound(VanillaSoundCommsRadio.Warning);
 				return new TransactionPurchaseFail(1);

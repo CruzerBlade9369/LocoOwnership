@@ -7,8 +7,10 @@ using UnityModManagerNet;
 using UnityEngine;
 
 using CommsRadioAPI;
+using DV;
 
 using LocoOwnership.Menus;
+
 
 namespace LocoOwnership
 {
@@ -64,7 +66,7 @@ namespace LocoOwnership
 
 		public static void StartCommsRadio()
 		{
-			CommsRadioMode = CommsRadioMode.Create(new MainMenu(), Color.blue);
+			CommsRadioMode = CommsRadioMode.Create(new MainMenu(), Color.blue, (mode) => mode is CommsRadioCrewVehicle);
 		}
 	}
 }
