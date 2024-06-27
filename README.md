@@ -19,3 +19,8 @@ Some conditions you have to fulfill to be able to purchase a locomotive:
 - Fees must be cleared for the specific locomotive.
 - Locomotive has to be naturally spawned (not spawned from comms radio).
 - Not own more than 16 locomotives at a time.
+
+Some known incompatibilities with other mods:
+- [Rolling Stock Ownership](https://github.com/fauxnik/dv-rolling-stock-ownership) (conflicting features)
+- [Leasable Locos](https://github.com/wwwDayDream/LeasableLocos) (conflicting features)
+- [Persistent Jobs](https://github.com/Banjobeni/DerailValley-PersistentJobs) (suspected, currently working on compatibility fix)
