@@ -11,7 +11,6 @@ using DV.JObjectExtstensions;
 using DV.ThingTypes;
 using DV.ServicePenalty;
 using DV.InventorySystem;
-using DV.UserManagement;
 
 using LocoOwnership.Shared;
 
@@ -108,6 +107,7 @@ namespace LocoOwnership.OwnershipHandler
 				}
 				ownedLocos.Add(guid, locoID);
 
+				// Debug lines
 				Main.DebugLog("Owned locos list:");
 				foreach (KeyValuePair<string, string> kvp in ownedLocos)
 				{
@@ -117,6 +117,7 @@ namespace LocoOwnership.OwnershipHandler
 				// Add loco buy price for despawn refund
 				ownedLocosLicensePrice.Add(guid, finances.CalculateBuyPrice(selectedCar));
 
+				// Debug lines
 				Main.DebugLog("Owned locos list, stored loco price:");
 				foreach (KeyValuePair<string, float> kvp in ownedLocosLicensePrice)
 				{
@@ -177,6 +178,29 @@ namespace LocoOwnership.OwnershipHandler
 
 		#region OWNED LOCOS VALIDATOR
 
+		public static void OwnedCarsStatesValidate()
+		{
+			OwnedCarsStateController ocsc = OwnedCarsStateController.Instance;
+
+			foreach (ExistingOwnedCarDebt eocd in ocsc.existingOwnedCarStates)
+			{
+				if (ownedLocos.ContainsKey(eocd.car.CarGUID))
+				{
+					if (eocd.car.carLivery.parentType.unusedCarDeletePreventionMode != TrainCarType_v2.UnusedCarDeletePreventionMode.OnlyManualDeletePossible)
+					{
+						eocd.car.carLivery.parentType.unusedCarDeletePreventionMode = TrainCarType_v2.UnusedCarDeletePreventionMode.OnlyManualDeletePossible;
+					}
+
+					if (!eocd.car.uniqueCar)
+					{
+						eocd.car.uniqueCar = true;
+					}
+				}
+			}
+
+			Main.DebugLog("Completed validation of owned cars states");
+		}
+
 		public static void ValidateOwnedCars()
 		{
 			OwnedCarsStateController ocsc = OwnedCarsStateController.Instance;
@@ -209,7 +233,7 @@ namespace LocoOwnership.OwnershipHandler
 					{
 						ownedLocosLicensePrice.TryGetValue(key, out float price);
 						Inventory.Instance.AddMoney(price);
-						Main.DebugLog($"Refunded purchase for {id}, ${price}");
+						Debug.Log($"Refunded purchase for despawned locomotive {id}, ${price}");
 						ownedLocosLicensePrice.Remove(key);
 					}
 
@@ -223,6 +247,8 @@ namespace LocoOwnership.OwnershipHandler
 				PopupAPI.ShowOk("One or more of your owned locomotives have despawned! These locomotives have " +
 					"been removed from your owned vehicles list and you have been refunded accordingly.");
 			}
+
+			Main.DebugLog("Completed validation of existence of owned cars");
 		}
 
 		#endregion

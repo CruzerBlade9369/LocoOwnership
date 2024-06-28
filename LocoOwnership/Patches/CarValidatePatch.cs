@@ -10,7 +10,10 @@ namespace LocoOwnership.Patches
 	{
 		static void Prefix()
 		{
+			Main.DebugLog("Beginning validating existence of owned cars");
 			OwnedLocos.ValidateOwnedCars();
+			Main.DebugLog("Beginning validating states of owned cars");
+			OwnedLocos.OwnedCarsStatesValidate();
 		}
 	}
 }
