@@ -140,12 +140,10 @@ namespace LocoOwnership.OwnershipHandler
 				if (tender != null && tenderSimController != null)
 				{
 					tender.uniqueCar = true;
-					tender.carLivery.parentType.unusedCarDeletePreventionMode = DV.ThingTypes.TrainCarType_v2.UnusedCarDeletePreventionMode.OnlyManualDeletePossible;
 					onLogicCarInitializedMethod.Invoke(tenderSimController, null);
 					Main.DebugLog("OnLogicCarInitialized method reinvoked on tender.");
 				}
 				car.uniqueCar = true;
-				car.carLivery.parentType.unusedCarDeletePreventionMode = DV.ThingTypes.TrainCarType_v2.UnusedCarDeletePreventionMode.OnlyManualDeletePossible;
 				onLogicCarInitializedMethod.Invoke(simController, null);
 				Main.DebugLog("OnLogicCarInitialized method reinvoked.");
 			}
@@ -236,21 +234,12 @@ namespace LocoOwnership.OwnershipHandler
 
 				Main.DebugLog("Removing tender from owned cars list");
 				existingTenderDebt.car.uniqueCar = false;
-				existingTenderDebt.car.carLivery.parentType.unusedCarDeletePreventionMode = DV.ThingTypes.TrainCarType_v2.UnusedCarDeletePreventionMode.TimeBasedCarVisitPropagatedToFrontCar;
 				ownedCarsStateController.existingOwnedCarStates.RemoveAt(num2);
 				Main.DebugLog("Removed tender from owned cars list");
 				existingTenderDebt.UpdateDebtState();
 			}
 			Main.DebugLog("Removing loco from owned cars list");
 			existingLocoDebt.car.uniqueCar = false;
-			if (existingLocoDebt.car.carType == DV.ThingTypes.TrainCarType.LocoSteamHeavy)
-			{
-				existingLocoDebt.car.carLivery.parentType.unusedCarDeletePreventionMode = DV.ThingTypes.TrainCarType_v2.UnusedCarDeletePreventionMode.TimeBasedCarVisitPropagatedToRearCar;
-			}
-			else
-			{
-				existingLocoDebt.car.carLivery.parentType.unusedCarDeletePreventionMode = DV.ThingTypes.TrainCarType_v2.UnusedCarDeletePreventionMode.TimeBasedCarVisit;
-			}
 			ownedCarsStateController.existingOwnedCarStates.RemoveAt(num);
 			Main.DebugLog("Removed loco from owned cars list");
 			existingLocoDebt.UpdateDebtState();

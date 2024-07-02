@@ -4,7 +4,6 @@ using LocoOwnership.OwnershipHandler;
 
 namespace LocoOwnership.Patches
 {
-
 	[HarmonyPatch(typeof(AStartGameData), nameof(AStartGameData.DestroyAllInstances))]
 	class CarValidatePatch
 	{

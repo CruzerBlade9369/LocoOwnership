@@ -1,26 +1,29 @@
-/*using HarmonyLib;
+using System.Reflection;
+using HarmonyLib;
+
+using DV;
 
 using LocoOwnership.OwnershipHandler;
-using UnityEngine;
 
 namespace LocoOwnership.Patches
 {
-	[HarmonyPatch(typeof(UnusedTrainCarDeleter), "AreDeleteConditionsFulfilled")]
-	[HarmonyPriority(Priority.Last)]
-	class OwnedLocoDespawnPatcher
+	[HarmonyPatch(typeof(CarVisitChecker))]
+	public static class CarVisitCheckerPatch
 	{
-		[HarmonyAfter("PersistentJobsMod")]
-		static bool Prefix(ref bool __result, TrainCar trainCar)
+		[HarmonyPatch("IsRecentlyVisited", MethodType.Getter)]
+		[HarmonyPrefix]
+		public static bool IsRecentlyVisited_Prefix(CarVisitChecker __instance, ref bool __result)
 		{
-			Debug.Log("locoownership: prefix to patch car delete conditions being called");
-			if (OwnedLocos.ownedLocos.ContainsKey(trainCar.CarGUID))
-			{
-				__result = false;
+			FieldInfo carField = typeof(CarVisitChecker).GetField("car", BindingFlags.NonPublic | BindingFlags.Instance);
+			TrainCar car = (TrainCar)carField.GetValue(__instance);
 
+			if (OwnedLocos.ownedLocos.ContainsKey(car.CarGUID))
+			{
+				__result = true;
 				return false;
 			}
 
 			return true;
 		}
 	}
-}*/
+}

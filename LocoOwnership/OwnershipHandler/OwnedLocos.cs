@@ -186,11 +186,6 @@ namespace LocoOwnership.OwnershipHandler
 			{
 				if (ownedLocos.ContainsKey(eocd.car.CarGUID))
 				{
-					if (eocd.car.carLivery.parentType.unusedCarDeletePreventionMode != TrainCarType_v2.UnusedCarDeletePreventionMode.OnlyManualDeletePossible)
-					{
-						eocd.car.carLivery.parentType.unusedCarDeletePreventionMode = TrainCarType_v2.UnusedCarDeletePreventionMode.OnlyManualDeletePossible;
-					}
-
 					if (!eocd.car.uniqueCar)
 					{
 						eocd.car.uniqueCar = true;
