@@ -1,6 +1,7 @@
 using System;
 
 using DV;
+using DV.Localization;
 
 using CommsRadioAPI;
 using LocoOwnership.LocoPurchaser;
@@ -11,8 +12,9 @@ namespace LocoOwnership.Menus
 	{
 		public LocoPurchase()
 			: base(new CommsRadioState(
-				titleText: "Purchase",
-				contentText: "Purchase a locomotive?",
+				titleText: LocalizationAPI.L("lo/radio/general/purchase"),
+				contentText: LocalizationAPI.L("lo/radio/locopurchase/content"),
+				actionText: LocalizationAPI.L("lo/radio/general/confirm"),
 				buttonBehaviour: ButtonBehaviourType.Override))
 		{
 

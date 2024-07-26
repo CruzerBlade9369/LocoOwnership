@@ -1,6 +1,7 @@
 using System;
 
 using DV;
+using DV.Localization;
 
 using UnityEngine;
 
@@ -27,9 +28,9 @@ namespace LocoOwnership.LocoPurchaser
 
 		public PurchasePointAtNothing()
 			: base(new CommsRadioState(
-				titleText: "Purchase",
-				contentText: "Aim at the locomotive you wish to purchase.",
-				actionText: "Cancel",
+				titleText: LocalizationAPI.L("lo/radio/general/purchase"),
+				contentText: LocalizationAPI.L("lo/radio/purchasing/content"),
+				actionText: LocalizationAPI.L("lo/radio/general/cancel"),
 				buttonBehaviour: ButtonBehaviourType.Override))
 		{
 			finances = new Finances();

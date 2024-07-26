@@ -1,6 +1,7 @@
 using System;
 
 using DV;
+using DV.Localization;
 
 using CommsRadioAPI;
 using LocoOwnership.Menus;
@@ -10,19 +11,19 @@ namespace LocoOwnership.LocoPurchaser
 	internal class TransactionPurchaseFail : AStateBehaviour
 	{
 		private static readonly string[] failReasons = {
-			"insufficient funds.",
-			"you do not have the required license for this locomotive.",
-			"manual service license is required to own locomotives.",
-			"you have reached the maximum number of owned locomotives.",
-			"pay the fees of this locomotive before purchasing.",
-			"cannot purchase player spawned locomotives."
+			"lo/radio/pfail/content/0",
+			"lo/radio/pfail/content/1",
+			"lo/radio/pfail/content/2",
+			"lo/radio/pfail/content/3",
+			"lo/radio/pfail/content/4",
+			"lo/radio/pfail/content/5"
 		};
 
 		public TransactionPurchaseFail(int failState)
 			: base(new CommsRadioState(
-				titleText: "Purchase",
-				contentText: $"{failReasons[failState]}",
-				actionText: "Confirm",
+				titleText: LocalizationAPI.L("lo/radio/general/purchase"),
+				contentText: LocalizationAPI.L(failReasons[failState]),
+				actionText: LocalizationAPI.L("lo/radio/general/confirm"),
 				buttonBehaviour: ButtonBehaviourType.Override))
 		{
 

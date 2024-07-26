@@ -4,13 +4,14 @@ using System.Reflection;
 using HarmonyLib;
 using UnityModManagerNet;
 
+using DV;
+
 using UnityEngine;
 
 using CommsRadioAPI;
-using DV;
+using DVLangHelper.Runtime;
 
 using LocoOwnership.Menus;
-
 
 namespace LocoOwnership
 {
@@ -35,6 +36,10 @@ namespace LocoOwnership
 				mod = modEntry;
 				modEntry.OnGUI = OnGui;
 				modEntry.OnSaveGUI = OnSaveGui;
+
+				var translations = new TranslationInjector("cruzer.locoownership");
+				string localizationUrl = "https://docs.google.com/spreadsheets/d/1UyoJuIiUykiHizaiM1qkxH4ji-em7NU-4MTgiHIyJeE/export?format=csv";
+				translations.AddTranslationsFromWebCsv(localizationUrl);
 
 				ControllerAPI.Ready += StartCommsRadio;
 			}

@@ -91,6 +91,12 @@
 		<Reference Include="DV.WeatherSystem">
 		  <HintPath>..\..\..\..\Steam\steamapps\common\Derail Valley\DerailValley_Data\Managed\DV.WeatherSystem.dll</HintPath>
 		</Reference>
+		<Reference Include="DVLangHelper.Data">
+		  <HintPath>..\..\..\..\Steam\steamapps\common\Derail Valley\Mods\DVLangHelper\DVLangHelper.Data.dll</HintPath>
+		</Reference>
+		<Reference Include="DVLangHelper.Runtime">
+		  <HintPath>..\..\..\..\Steam\steamapps\common\Derail Valley\Mods\DVLangHelper\DVLangHelper.Runtime.dll</HintPath>
+		</Reference>
 		<Reference Include="MessageBox">
 		  <HintPath>..\..\..\..\Steam\steamapps\common\Derail Valley\Mods\MessageBox\MessageBox.dll</HintPath>
 		</Reference>

@@ -1,6 +1,7 @@
 using System;
 
 using DV;
+using DV.Localization;
 
 using CommsRadioAPI;
 using LocoOwnership.Menus;
@@ -10,14 +11,14 @@ namespace LocoOwnership.LocoSeller
 	internal class TransactionSellFail : AStateBehaviour
 	{
 		private static readonly string[] failReasons = {
-			"fully service this locomotive before selling."
+			"lo/radio/sfail/content/0"
 		};
 
 		public TransactionSellFail(int failState)
 			: base(new CommsRadioState(
-				titleText: "Sell",
-				contentText: $"{failReasons[failState]}",
-				actionText: "Confirm",
+				titleText: LocalizationAPI.L("lo/radio/general/sell"),
+				contentText: LocalizationAPI.L(failReasons[failState]),
+				actionText: LocalizationAPI.L("lo/radio/general/confirm"),
 				buttonBehaviour: ButtonBehaviourType.Override))
 		{
 

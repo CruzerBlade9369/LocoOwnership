@@ -1,6 +1,7 @@
 using System;
 
 using DV;
+using DV.Localization;
 
 using CommsRadioAPI;
 
@@ -10,8 +11,8 @@ namespace LocoOwnership.Menus
 	{
 		public MainMenu()
 			: base(new CommsRadioState(
-				titleText: "Ownership",
-				contentText: "Manage owned locomotives.",
+				titleText: LocalizationAPI.L("lo/radio/mainmenu/title"),
+				contentText: LocalizationAPI.L("lo/radio/mainmenu/content"),
 				buttonBehaviour: ButtonBehaviourType.Regular))
 		{
 

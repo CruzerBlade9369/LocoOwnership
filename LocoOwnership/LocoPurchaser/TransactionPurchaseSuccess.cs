@@ -1,6 +1,7 @@
 using System;
 
 using DV;
+using DV.Localization;
 
 using CommsRadioAPI;
 using LocoOwnership.Menus;
@@ -11,9 +12,9 @@ namespace LocoOwnership.LocoPurchaser
 	{
 		public TransactionPurchaseSuccess(TrainCar selectedCar, float buyPrice)
 			: base(new CommsRadioState(
-				titleText: "Purchase",
-				contentText: $"Successfully purchased {selectedCar.ID} for ${buyPrice}.",
-				actionText: "Confirm",
+				titleText: LocalizationAPI.L("lo/radio/general/purchase"),
+				contentText: LocalizationAPI.L("lo/radio/psuccess/content", selectedCar.ID, buyPrice.ToString()),
+				actionText: LocalizationAPI.L("lo/radio/general/confirm"),
 				buttonBehaviour: ButtonBehaviourType.Override))
 		{
 

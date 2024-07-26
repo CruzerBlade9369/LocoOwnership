@@ -6,12 +6,13 @@ using Newtonsoft.Json.Linq;
 
 using UnityEngine;
 
-using MessageBox;
+using DV.Localization;
 using DV.JObjectExtstensions;
 using DV.ThingTypes;
 using DV.ServicePenalty;
 using DV.InventorySystem;
 
+using MessageBox;
 using LocoOwnership.Shared;
 
 namespace LocoOwnership.OwnershipHandler
@@ -239,8 +240,7 @@ namespace LocoOwnership.OwnershipHandler
 
 			if (modOwnedCarsToRemove.Any())
 			{
-				PopupAPI.ShowOk("One or more of your owned locomotives have despawned! These locomotives have " +
-					"been removed from your owned vehicles list and you have been refunded accordingly.");
+				PopupAPI.ShowOk(LocalizationAPI.L("lo/popupapi/okmsg/carvalidate"));
 			}
 
 			Main.DebugLog("Completed validation of existence of owned cars");

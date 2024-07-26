@@ -1,6 +1,7 @@
 using System;
 
 using DV;
+using DV.Localization;
 
 using UnityEngine;
 
@@ -22,9 +23,9 @@ namespace LocoOwnership.LocoSeller
 
 		public SellPointAtLocoState(TrainCar selectedCar, string carID, float carSellPrice)
 			: base(new CommsRadioState(
-				titleText: "Sell",
-				contentText: "Aim at the locomotive you wish to sell.",
-				actionText: "Confirm",
+				titleText: LocalizationAPI.L("lo/radio/general/sell"),
+				contentText: LocalizationAPI.L("lo/radio/selling/content"),
+				actionText: LocalizationAPI.L("lo/radio/general/confirm"),
 				buttonBehaviour: ButtonBehaviourType.Override))
 		{
 			this.selectedCar = selectedCar;

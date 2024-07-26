@@ -1,6 +1,7 @@
 using System;
 
 using DV;
+using DV.Localization;
 
 using UnityEngine;
 
@@ -25,9 +26,9 @@ namespace LocoOwnership.LocoSeller
 
 		public TransactionSellConfirmState(TrainCar selectedCar, string carID, float carSellPrice)
 			: base(new CommsRadioState(
-				titleText: "Sell",
-				contentText: $"Sell {carID} for ${carSellPrice}?",
-				actionText: "Confirm",
+				titleText: LocalizationAPI.L("lo/radio/general/sell"),
+				contentText: LocalizationAPI.L("lo/radio/sselected/content", carID, carSellPrice.ToString()),
+				actionText: LocalizationAPI.L("lo/radio/general/confirm"),
 				buttonBehaviour: ButtonBehaviourType.Override))
 		{
 			this.selectedCar = selectedCar;
