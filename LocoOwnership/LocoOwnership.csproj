@@ -15,118 +15,115 @@
 		<Reference Include="0Harmony">
 		  <HintPath>..\..\..\..\Steam\steamapps\common\Derail Valley\DerailValley_Data\Managed\UnityModManager\0Harmony.dll</HintPath>
 		</Reference>
-		<Reference Include="Assembly-CSharp" />
+		<Reference Include="Assembly-CSharp">
+		  <HintPath>..\..\..\..\..\Programs\Steam\steamapps\common\Derail Valley\DerailValley_Data\Managed\Assembly-CSharp.dll</HintPath>
+		</Reference>
 		<Reference Include="CommsRadioAPI">
-		  <HintPath>..\..\..\..\Steam\steamapps\common\Derail Valley\Mods\CommsRadioAPI\CommsRadioAPI.dll</HintPath>
+		  <HintPath>..\..\..\..\..\Programs\Steam\steamapps\common\Derail Valley\Mods\CommsRadioAPI\CommsRadioAPI.dll</HintPath>
 		</Reference>
 		<Reference Include="dnlib">
 		  <HintPath>..\..\..\..\Steam\steamapps\common\Derail Valley\DerailValley_Data\Managed\UnityModManager\dnlib.dll</HintPath>
 		</Reference>
 		<Reference Include="DV.BrakeSystem">
-		  <HintPath>..\..\..\..\Steam\steamapps\common\Derail Valley\DerailValley_Data\Managed\DV.BrakeSystem.dll</HintPath>
+		  <HintPath>..\..\..\..\..\Programs\Steam\steamapps\common\Derail Valley\DerailValley_Data\Managed\DV.BrakeSystem.dll</HintPath>
 		</Reference>
 		<Reference Include="DV.CharacterController">
-		  <HintPath>..\..\..\..\Steam\steamapps\common\Derail Valley\DerailValley_Data\Managed\DV.CharacterController.dll</HintPath>
+		  <HintPath>..\..\..\..\..\Programs\Steam\steamapps\common\Derail Valley\DerailValley_Data\Managed\DV.CharacterController.dll</HintPath>
 		</Reference>
 		<Reference Include="DV.Common">
-		  <HintPath>..\..\..\..\Steam\steamapps\common\Derail Valley\DerailValley_Data\Managed\DV.Common.dll</HintPath>
+		  <HintPath>..\..\..\..\..\Programs\Steam\steamapps\common\Derail Valley\DerailValley_Data\Managed\DV.Common.dll</HintPath>
 		</Reference>
 		<Reference Include="DV.ControllerAnchors">
-		  <HintPath>..\..\..\..\Steam\steamapps\common\Derail Valley\DerailValley_Data\Managed\DV.ControllerAnchors.dll</HintPath>
+		  <HintPath>..\..\..\..\..\Programs\Steam\steamapps\common\Derail Valley\DerailValley_Data\Managed\DV.ControllerAnchors.dll</HintPath>
 		</Reference>
 		<Reference Include="DV.Highlighting">
-		  <HintPath>..\..\..\..\Steam\steamapps\common\Derail Valley\DerailValley_Data\Managed\DV.Highlighting.dll</HintPath>
+		  <HintPath>..\..\..\..\..\Programs\Steam\steamapps\common\Derail Valley\DerailValley_Data\Managed\DV.Highlighting.dll</HintPath>
 		</Reference>
 		<Reference Include="DV.Interaction">
-		  <HintPath>..\..\..\..\Steam\steamapps\common\Derail Valley\DerailValley_Data\Managed\DV.Interaction.dll</HintPath>
+		  <HintPath>..\..\..\..\..\Programs\Steam\steamapps\common\Derail Valley\DerailValley_Data\Managed\DV.Interaction.dll</HintPath>
 		</Reference>
 		<Reference Include="DV.Inventory">
-		  <HintPath>..\..\..\..\Steam\steamapps\common\Derail Valley\DerailValley_Data\Managed\DV.Inventory.dll</HintPath>
+		  <HintPath>..\..\..\..\..\Programs\Steam\steamapps\common\Derail Valley\DerailValley_Data\Managed\DV.Inventory.dll</HintPath>
 		</Reference>
 		<Reference Include="DV.Localization">
-		  <HintPath>..\..\..\..\Steam\steamapps\common\Derail Valley\DerailValley_Data\Managed\DV.Localization.dll</HintPath>
+		  <HintPath>..\..\..\..\..\Programs\Steam\steamapps\common\Derail Valley\DerailValley_Data\Managed\DV.Localization.dll</HintPath>
 		</Reference>
 		<Reference Include="DV.NAudio">
-		  <HintPath>..\..\..\..\Steam\steamapps\common\Derail Valley\DerailValley_Data\Managed\DV.NAudio.dll</HintPath>
+		  <HintPath>..\..\..\..\..\Programs\Steam\steamapps\common\Derail Valley\DerailValley_Data\Managed\DV.NAudio.dll</HintPath>
 		</Reference>
 		<Reference Include="DV.PointSet">
-		  <HintPath>..\..\..\..\Steam\steamapps\common\Derail Valley\DerailValley_Data\Managed\DV.PointSet.dll</HintPath>
+		  <HintPath>..\..\..\..\..\Programs\Steam\steamapps\common\Derail Valley\DerailValley_Data\Managed\DV.PointSet.dll</HintPath>
 		</Reference>
 		<Reference Include="DV.RadioPlayer">
-		  <HintPath>..\..\..\..\Steam\steamapps\common\Derail Valley\DerailValley_Data\Managed\DV.RadioPlayer.dll</HintPath>
+		  <HintPath>..\..\..\..\..\Programs\Steam\steamapps\common\Derail Valley\DerailValley_Data\Managed\DV.RadioPlayer.dll</HintPath>
 		</Reference>
 		<Reference Include="DV.Scenarios.CRUD">
-		  <HintPath>..\..\..\..\Steam\steamapps\common\Derail Valley\DerailValley_Data\Managed\DV.Scenarios.CRUD.dll</HintPath>
+		  <HintPath>..\..\..\..\..\Programs\Steam\steamapps\common\Derail Valley\DerailValley_Data\Managed\DV.Scenarios.CRUD.dll</HintPath>
 		</Reference>
 		<Reference Include="DV.ShaderStripper">
-		  <HintPath>..\..\..\..\Steam\steamapps\common\Derail Valley\DerailValley_Data\Managed\DV.ShaderStripper.dll</HintPath>
+		  <HintPath>..\..\..\..\..\Programs\Steam\steamapps\common\Derail Valley\DerailValley_Data\Managed\DV.ShaderStripper.dll</HintPath>
 		</Reference>
 		<Reference Include="DV.Simulation">
-		  <HintPath>..\..\..\..\Steam\steamapps\common\Derail Valley\DerailValley_Data\Managed\DV.Simulation.dll</HintPath>
+		  <HintPath>..\..\..\..\..\Programs\Steam\steamapps\common\Derail Valley\DerailValley_Data\Managed\DV.Simulation.dll</HintPath>
 		</Reference>
 		<Reference Include="DV.Telemetry">
-		  <HintPath>..\..\..\..\Steam\steamapps\common\Derail Valley\DerailValley_Data\Managed\DV.Telemetry.dll</HintPath>
+		  <HintPath>..\..\..\..\..\Programs\Steam\steamapps\common\Derail Valley\DerailValley_Data\Managed\DV.Telemetry.dll</HintPath>
 		</Reference>
 		<Reference Include="DV.TerrainSystem">
-		  <HintPath>..\..\..\..\Steam\steamapps\common\Derail Valley\DerailValley_Data\Managed\DV.TerrainSystem.dll</HintPath>
+		  <HintPath>..\..\..\..\..\Programs\Steam\steamapps\common\Derail Valley\DerailValley_Data\Managed\DV.TerrainSystem.dll</HintPath>
 		</Reference>
 		<Reference Include="DV.TerrainTools">
-		  <HintPath>..\..\..\..\Steam\steamapps\common\Derail Valley\DerailValley_Data\Managed\DV.TerrainTools.dll</HintPath>
+		  <HintPath>..\..\..\..\..\Programs\Steam\steamapps\common\Derail Valley\DerailValley_Data\Managed\DV.TerrainTools.dll</HintPath>
 		</Reference>
 		<Reference Include="DV.ThingTypes">
-		  <HintPath>..\..\..\..\Steam\steamapps\common\Derail Valley\DerailValley_Data\Managed\DV.ThingTypes.dll</HintPath>
+		  <HintPath>..\..\..\..\..\Programs\Steam\steamapps\common\Derail Valley\DerailValley_Data\Managed\DV.ThingTypes.dll</HintPath>
 		</Reference>
 		<Reference Include="DV.UI">
-		  <HintPath>..\..\..\..\Steam\steamapps\common\Derail Valley\DerailValley_Data\Managed\DV.UI.dll</HintPath>
+		  <HintPath>..\..\..\..\..\Programs\Steam\steamapps\common\Derail Valley\DerailValley_Data\Managed\DV.UI.dll</HintPath>
 		</Reference>
 		<Reference Include="DV.UIFramework">
-		  <HintPath>..\..\..\..\Steam\steamapps\common\Derail Valley\DerailValley_Data\Managed\DV.UIFramework.dll</HintPath>
+		  <HintPath>..\..\..\..\..\Programs\Steam\steamapps\common\Derail Valley\DerailValley_Data\Managed\DV.UIFramework.dll</HintPath>
 		</Reference>
 		<Reference Include="DV.UserManagement">
-		  <HintPath>..\..\..\..\Steam\steamapps\common\Derail Valley\DerailValley_Data\Managed\DV.UserManagement.dll</HintPath>
+		  <HintPath>..\..\..\..\..\Programs\Steam\steamapps\common\Derail Valley\DerailValley_Data\Managed\DV.UserManagement.dll</HintPath>
 		</Reference>
 		<Reference Include="DV.Utils">
-		  <HintPath>..\..\..\..\Steam\steamapps\common\Derail Valley\DerailValley_Data\Managed\DV.Utils.dll</HintPath>
+		  <HintPath>..\..\..\..\..\Programs\Steam\steamapps\common\Derail Valley\DerailValley_Data\Managed\DV.Utils.dll</HintPath>
 		</Reference>
 		<Reference Include="DV.WeatherSystem">
-		  <HintPath>..\..\..\..\Steam\steamapps\common\Derail Valley\DerailValley_Data\Managed\DV.WeatherSystem.dll</HintPath>
+		  <HintPath>..\..\..\..\..\Programs\Steam\steamapps\common\Derail Valley\DerailValley_Data\Managed\DV.WeatherSystem.dll</HintPath>
 		</Reference>
 		<Reference Include="DVLangHelper.Data">
-		  <HintPath>..\..\..\..\Steam\steamapps\common\Derail Valley\Mods\DVLangHelper\DVLangHelper.Data.dll</HintPath>
+		  <HintPath>..\..\..\..\..\Programs\Steam\steamapps\common\Derail Valley\Mods\DVLangHelper\DVLangHelper.Data.dll</HintPath>
 		</Reference>
 		<Reference Include="DVLangHelper.Runtime">
-		  <HintPath>..\..\..\..\Steam\steamapps\common\Derail Valley\Mods\DVLangHelper\DVLangHelper.Runtime.dll</HintPath>
+		  <HintPath>..\..\..\..\..\Programs\Steam\steamapps\common\Derail Valley\Mods\DVLangHelper\DVLangHelper.Runtime.dll</HintPath>
 		</Reference>
 		<Reference Include="MessageBox">
-		  <HintPath>..\..\..\..\Steam\steamapps\common\Derail Valley\Mods\MessageBox\MessageBox.dll</HintPath>
+		  <HintPath>..\..\..\..\..\Programs\Steam\steamapps\common\Derail Valley\Mods\MessageBox\MessageBox.dll</HintPath>
 		</Reference>
 		<Reference Include="Newtonsoft.Json">
-		  <HintPath>..\..\..\..\Steam\steamapps\common\Derail Valley\DerailValley_Data\Managed\Newtonsoft.Json.dll</HintPath>
+		  <HintPath>..\..\..\..\..\Programs\Steam\steamapps\common\Derail Valley\DerailValley_Data\Managed\Newtonsoft.Json.dll</HintPath>
 		</Reference>
 		<Reference Include="RSG.Promise">
-		  <HintPath>..\..\..\..\Steam\steamapps\common\Derail Valley\Mods\MessageBox\RSG.Promise.dll</HintPath>
+		  <HintPath>..\..\..\..\..\Programs\Steam\steamapps\common\Derail Valley\Mods\MessageBox\RSG.Promise.dll</HintPath>
 		</Reference>
 		<Reference Include="Unity.TextMeshPro">
-		  <HintPath>..\..\..\..\Steam\steamapps\common\Derail Valley\DerailValley_Data\Managed\Unity.TextMeshPro.dll</HintPath>
+		  <HintPath>..\..\..\..\..\Programs\Steam\steamapps\common\Derail Valley\DerailValley_Data\Managed\Unity.TextMeshPro.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine">
+		  <HintPath>..\..\..\..\..\Programs\Steam\steamapps\common\Derail Valley\DerailValley_Data\Managed\UnityEngine.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.CoreModule">
+		  <HintPath>..\..\..\..\..\Programs\Steam\steamapps\common\Derail Valley\DerailValley_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.PhysicsModule">
+		  <HintPath>..\..\..\..\..\Programs\Steam\steamapps\common\Derail Valley\DerailValley_Data\Managed\UnityEngine.PhysicsModule.dll</HintPath>
 		</Reference>
 	</ItemGroup>
 
 	<!-- Unity -->
 	<ItemGroup>
-		<Reference Include="UnityEngine" />
-		<Reference Include="UnityEngine.AudioModule">
-		  <HintPath>..\..\..\..\Programs\Unity Hub\2019.4.40f1\Editor\Data\Managed\UnityEngine\UnityEngine.AudioModule.dll</HintPath>
-		</Reference>
-		<Reference Include="UnityEngine.CoreModule" />
-		<Reference Include="UnityEngine.ImageConversionModule">
-		  <HintPath>..\..\..\..\Steam\steamapps\common\Derail Valley\DerailValley_Data\Managed\UnityEngine.ImageConversionModule.dll</HintPath>
-		</Reference>
-		<Reference Include="UnityEngine.IMGUIModule">
-		  <HintPath>..\..\..\..\Steam\steamapps\common\Derail Valley\DerailValley_Data\Managed\UnityEngine.IMGUIModule.dll</HintPath>
-		</Reference>
-		<Reference Include="UnityEngine.PhysicsModule">
-		  <HintPath>..\..\..\..\Programs\Unity Hub\2019.4.40f1\Editor\Data\Managed\UnityEngine\UnityEngine.PhysicsModule.dll</HintPath>
-		</Reference>
 		<Reference Include="UnityModManager">
 		  <HintPath>..\..\..\..\Steam\steamapps\common\Derail Valley\DerailValley_Data\Managed\UnityModManager\UnityModManager.dll</HintPath>
 		</Reference>

@@ -7,7 +7,6 @@ namespace LocoOwnership.LocoPurchaser
 	// This class inherits PurchasePointAtLocoState for the radio state
 	internal class PurchasePointAtLoco : PurchasePointAtLocoState
 	{
-
 		private string carID;
 		private float carBuyPrice;
 
