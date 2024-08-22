@@ -6,7 +6,6 @@ using UnityEngine;
 
 using CommsRadioAPI;
 
-
 namespace LocoOwnership.Shared
 {
 	// Shared class for highlighting locos

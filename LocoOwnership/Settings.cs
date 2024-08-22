@@ -29,6 +29,9 @@ namespace LocoOwnership
 			false;
 #endif
 
+		[Draw("Maximum number of owned locomotives", Min = 0, Max = 100)]
+		public int maxLocosLimit = 16;
+
 		public override void Save(UnityModManager.ModEntry entry)
 		{
 			Save(this, entry);

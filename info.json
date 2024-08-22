@@ -1,6 +1,6 @@
 {
 	"Id": "LocoOwnership",
-	"Version": "1.1.0",
+	"Version": "1.2.0",
 	"DisplayName": "LocoOwnership",
 	"Author": "Cruzer",
 	"EntryMethod": "LocoOwnership.Main.Load",

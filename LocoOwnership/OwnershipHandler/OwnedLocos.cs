@@ -13,18 +13,17 @@ using DV.ServicePenalty;
 using DV.InventorySystem;
 
 using MessageBox;
+
 using LocoOwnership.Shared;
 
 namespace LocoOwnership.OwnershipHandler
 {
 	internal class OwnedLocos : MonoBehaviour
 	{
-		private const int MAX_OWNED_LOCOS = 16;
-		private Finances finances = new();
-
+		int MAX_OWNED_LOCOS = Main.settings.maxLocosLimit;
 		DebtHandling debtHandling = new();
 
-		public static Settings settings = new Settings();
+		private Finances finances = new();
 
 		public class DebtHandlingResult
 		{
@@ -70,7 +69,7 @@ namespace LocoOwnership.OwnershipHandler
 			var result = new DebtHandlingResult();
 
 			// Check if player already has enough owned locos
-			if (ownedLocos.Count >= MAX_OWNED_LOCOS)
+			if (ownedLocos.Values.Count(v => v.StartsWith("L-")) >= MAX_OWNED_LOCOS)
 			{
 				result.MaxOwnedLoc = true;
 				return result;

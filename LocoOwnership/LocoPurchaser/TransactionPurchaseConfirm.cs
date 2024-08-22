@@ -1,12 +1,11 @@
 using System;
 
-using UnityEngine;
-
 using DV.InventorySystem;
 using DV.ThingTypes;
 using DV.ThingTypes.TransitionHelpers;
 
 using CommsRadioAPI;
+
 using LocoOwnership.OwnershipHandler;
 
 namespace LocoOwnership.LocoPurchaser

@@ -1,9 +1,12 @@
 using System;
 
+using UnityEngine;
+
 using DV;
 using DV.Localization;
 
 using CommsRadioAPI;
+
 using LocoOwnership.LocoSeller;
 
 namespace LocoOwnership.Menus
@@ -32,10 +35,10 @@ namespace LocoOwnership.Menus
 					return new LocoPurchase();
 
 				case InputAction.Down:
-					return new LocoPurchase();
+					return new LocoRequest();
 
 				default:
-					Main.DebugLog("Main menu error: why are you here?");
+					Debug.Log("Main menu error: why are you here?");
 					throw new Exception($"Unexpected action: {action}");
 			}
 		}

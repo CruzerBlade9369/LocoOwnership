@@ -7,16 +7,16 @@ using DV.Localization;
 
 using CommsRadioAPI;
 
-using LocoOwnership.LocoPurchaser;
+using LocoOwnership.LocoRequester;
 
 namespace LocoOwnership.Menus
 {
-	internal class LocoPurchase : AStateBehaviour
+	internal class LocoRequest : AStateBehaviour
 	{
-		public LocoPurchase()
+		public LocoRequest()
 			: base(new CommsRadioState(
-				titleText: LocalizationAPI.L("lo/radio/general/purchase"),
-				contentText: LocalizationAPI.L("lo/radio/locopurchase/content"),
+				titleText: /*LocalizationAPI.L("lo/radio/general/purchase")*/"request",
+				contentText: /*LocalizationAPI.L("lo/radio/locopurchase/content")*/"request a locomotive?",
 				actionText: LocalizationAPI.L("lo/radio/general/confirm"),
 				buttonBehaviour: ButtonBehaviourType.Override))
 		{
@@ -28,14 +28,16 @@ namespace LocoOwnership.Menus
 			switch (action)
 			{
 				case InputAction.Activate:
-					utility.PlaySound(VanillaSoundCommsRadio.Warning);
-					return new PurchasePointAtNothing();
+					RequestLocoSelector.RefreshRequestableLocos();
+
+					utility.PlaySound(VanillaSoundCommsRadio.ModeEnter);
+					return new RequestLocoSelector(0);
 
 				case InputAction.Up:
-					return new LocoRequest();
+					return new LocoSell();
 
 				case InputAction.Down:
-					return new LocoSell();
+					return new LocoPurchase();
 
 				default:
 					Debug.Log("Main menu error: why are you here?");
