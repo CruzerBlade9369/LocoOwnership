@@ -34,7 +34,7 @@ namespace LocoOwnership
 
 		public override void Save(UnityModManager.ModEntry entry)
 		{
-			Save(this, entry);
+			Save<Settings>(this, entry);
 		}
 
 		public void OnChange() { }

@@ -3,24 +3,21 @@ using DV.UserManagement;
 
 namespace LocoOwnership.Shared
 {
-	internal class Finances
+	public class Finances
 	{
 		public const float DE2_ARTIFICIAL_LICENSE_PRICE = 10000f;
-
-		bool freeOwnership = Main.settings.freeOwnership;
-		bool freeSandboxOwnership = Main.settings.freeSandboxOwnership;
 
 		public float CalculateBuyPrice(TrainCar selectedCar)
 		{
 			float carBuyPrice;
 
-			if (freeOwnership)
+			if (Main.settings.freeOwnership)
 			{
 				carBuyPrice = 0f;
 				return carBuyPrice;
 			}
 
-			if (freeSandboxOwnership && UserManager.Instance.CurrentUser.CurrentSession.GameMode.Equals("FreeRoam"))
+			if (Main.settings.freeSandboxOwnership && UserManager.Instance.CurrentUser.CurrentSession.GameMode.Equals("FreeRoam"))
 			{
 				carBuyPrice = 0f;
 			}
@@ -42,13 +39,13 @@ namespace LocoOwnership.Shared
 		{
 			float carSellPrice;
 
-			if (freeOwnership)
+			if (Main.settings.freeOwnership)
 			{
 				carSellPrice = 0f;
 				return carSellPrice;
 			}
 
-			if (freeSandboxOwnership && UserManager.Instance.CurrentUser.CurrentSession.GameMode.Equals("FreeRoam"))
+			if (Main.settings.freeSandboxOwnership && UserManager.Instance.CurrentUser.CurrentSession.GameMode.Equals("FreeRoam"))
 			{
 				carSellPrice = 0f;
 			}

@@ -15,7 +15,7 @@ namespace LocoOwnership.Menus
 				contentText: LocalizationAPI.L("lo/radio/mainmenu/content"),
 				buttonBehaviour: ButtonBehaviourType.Regular))
 		{
-
+			
 		}
 
 		public override AStateBehaviour OnAction(CommsRadioUtility utility, InputAction action)

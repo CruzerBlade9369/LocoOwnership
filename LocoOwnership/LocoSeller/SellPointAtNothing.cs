@@ -18,14 +18,10 @@ namespace LocoOwnership.LocoSeller
 	{
 		private const float SIGNAL_RANGE = 100f;
 
-		private Transform signalOrigin;
 		private int trainCarMask;
-
-		private Finances finances;
+		private Transform signalOrigin;
+		private CommsRadioCarDeleter carDeleter;
 		private CarHighlighter highlighter;
-
-		private string carID;
-		private float carSellPrice;
 
 		public SellPointAtNothing()
 			: base(new CommsRadioState(
@@ -34,15 +30,8 @@ namespace LocoOwnership.LocoSeller
 				actionText: LocalizationAPI.L("lo/radio/general/cancel"),
 				buttonBehaviour: ButtonBehaviourType.Override))
 		{
-			finances = new Finances();
 			highlighter = new CarHighlighter();
-		}
-
-		public override void OnEnter(CommsRadioUtility utility, AStateBehaviour? previous)
-		{
-			base.OnEnter(utility, previous);
-			// Steal some components from other radio modes
-			refreshSignalOriginAndTrainCarMask();
+			RefreshRadioComponent();
 		}
 
 		public override AStateBehaviour OnAction(CommsRadioUtility utility, InputAction action)
@@ -55,10 +44,11 @@ namespace LocoOwnership.LocoSeller
 			return new LocoSell();
 		}
 
-		private void refreshSignalOriginAndTrainCarMask()
+		private void RefreshRadioComponent()
 		{
 			trainCarMask = highlighter.RefreshTrainCarMask();
-			signalOrigin = highlighter.RefreshSignalOrigin();
+			carDeleter = highlighter.RefreshCarDeleterComponent();
+			signalOrigin = carDeleter.signalOrigin;
 		}
 
 		// Detecting what we're looking at
@@ -67,7 +57,7 @@ namespace LocoOwnership.LocoSeller
 			while (signalOrigin is null)
 			{
 				Main.DebugLog("signalOrigin is null for some reason");
-				refreshSignalOriginAndTrainCarMask();
+				RefreshRadioComponent();
 			}
 
 			RaycastHit hit;
@@ -94,12 +84,8 @@ namespace LocoOwnership.LocoSeller
 				{
 					if (selectedCar.carLivery.requiredLicense is not null)
 					{
-						// Get car information before passing down to PointAtLoco
-						carID = selectedCar.ID;
-						carSellPrice = finances.CalculateSellPrice(selectedCar);
-
 						utility.PlaySound(VanillaSoundCommsRadio.HoverOver);
-						return new SellPointAtLoco(selectedCar, carID, carSellPrice);
+						return new SellPointAtLoco(selectedCar, carDeleter, highlighter);
 					}
 				}
 			}

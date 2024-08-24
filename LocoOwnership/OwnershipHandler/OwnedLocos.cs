@@ -18,9 +18,8 @@ using LocoOwnership.Shared;
 
 namespace LocoOwnership.OwnershipHandler
 {
-	internal class OwnedLocos : MonoBehaviour
+	public class OwnedLocos : MonoBehaviour
 	{
-		int MAX_OWNED_LOCOS = Main.settings.maxLocosLimit;
 		DebtHandling debtHandling = new();
 
 		private Finances finances = new();
@@ -67,9 +66,12 @@ namespace LocoOwnership.OwnershipHandler
 		public DebtHandlingResult OnLocoBuy(TrainCar selectedCar)
 		{
 			var result = new DebtHandlingResult();
+			int maxOwnedLocos = Main.settings.maxLocosLimit;
 
 			// Check if player already has enough owned locos
-			if (ownedLocos.Values.Count(v => v.StartsWith("L-")) >= MAX_OWNED_LOCOS)
+			Debug.Log(maxOwnedLocos);
+			Debug.Log(Main.settings.maxLocosLimit);
+			if (ownedLocos.Values.Count(v => v.StartsWith("L-")) >= maxOwnedLocos)
 			{
 				result.MaxOwnedLoc = true;
 				return result;
@@ -108,10 +110,10 @@ namespace LocoOwnership.OwnershipHandler
 				ownedLocos.Add(guid, locoID);
 
 				// Debug lines
-				Main.DebugLog("Owned locos list:");
+				Debug.Log("Owned locos list:");
 				foreach (KeyValuePair<string, string> kvp in ownedLocos)
 				{
-					Main.DebugLog($"Guid = {kvp.Key}, LocoID = {kvp.Value}");
+					Debug.Log($"Guid = {kvp.Key}, LocoID = {kvp.Value}");
 				}
 
 				// Add loco buy price for despawn refund

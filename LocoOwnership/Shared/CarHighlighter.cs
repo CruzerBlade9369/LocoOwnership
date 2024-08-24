@@ -9,20 +9,20 @@ using CommsRadioAPI;
 namespace LocoOwnership.Shared
 {
 	// Shared class for highlighting locos
-	internal class CarHighlighter
+	public class CarHighlighter
 	{
 		private static readonly Vector3 HIGHLIGHT_BOUNDS_EXTENSION = new Vector3(0.25f, 0.8f, 0f);
 
 		private Transform signalOrigin;
 		private int trainCarMask;
 
-		internal TrainCar selectedCar = new();
+		internal TrainCar selectedCar;
 
 		private GameObject highlighter = new();
 
 		/*-----------------------------------------------------------------------------------------------------------------------*/
 
-		#region HIGHLIGHTER FUNCTIONS
+		#region CAR HIGHLIGHTER FUNCTIONS
 
 		// Accepts 2 arguments: Car to highlight, comms radio deleter state
 		public void InitHighlighter(TrainCar selectedCar, CommsRadioCarDeleter carDeleter)
@@ -34,7 +34,7 @@ namespace LocoOwnership.Shared
 		}
 
 		// Accepts 3 arguments: CommsRadioUtility, AStateBehaviour, material type bool
-		public void StartHighlighter(CommsRadioUtility utility, AStateBehaviour? previous, bool isValid)
+		public void StartHighlighter(CommsRadioUtility utility, bool isValid)
 		{
 			MeshRenderer highlighterRenderer = highlighter.GetComponentInChildren<MeshRenderer>(true);
 			if (isValid)
@@ -56,7 +56,7 @@ namespace LocoOwnership.Shared
 			highlighter.transform.SetParent(selectedCar.transform, true);
 		}
 
-		public void StopHighlighter(CommsRadioUtility utility, AStateBehaviour? next)
+		public void StopHighlighter()
 		{
 			highlighter.SetActive(false);
 			highlighter.transform.SetParent(null);
@@ -66,7 +66,7 @@ namespace LocoOwnership.Shared
 
 		/*-----------------------------------------------------------------------------------------------------------------------*/
 
-		#region COMPONENT STEALERS
+		#region COMPONENT STEALERS FOR LOCO SELECTOR
 
 		public CommsRadioCarDeleter RefreshCarDeleterComponent()
 		{
@@ -77,16 +77,8 @@ namespace LocoOwnership.Shared
 				throw new NullReferenceException();
 			}
 			CommsRadioCarDeleter carDeleter = (CommsRadioCarDeleter)commsRadioMode;
-			
 
 			return carDeleter;
-		}
-
-		public Transform RefreshSignalOrigin()
-		{
-			CommsRadioCarDeleter carDeleter = RefreshCarDeleterComponent();
-			signalOrigin = carDeleter.signalOrigin;
-			return signalOrigin;
 		}
 
 		public int RefreshTrainCarMask()

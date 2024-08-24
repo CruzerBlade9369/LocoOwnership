@@ -12,6 +12,7 @@ using CommsRadioAPI;
 using DVLangHelper.Runtime;
 
 using LocoOwnership.Menus;
+using LocoOwnership.OwnershipHandler;
 
 namespace LocoOwnership
 {
@@ -20,7 +21,10 @@ namespace LocoOwnership
 	{
 		public static bool enabled;
 		public static UnityModManager.ModEntry? mod;
-		public static Settings settings = new Settings();
+
+		public static OwnedLocos ownershipHandler;
+
+		public static Settings settings { get; private set; }
 		public static CommsRadioMode CommsRadioMode { get; private set; }
 
 		private static bool Load(UnityModManager.ModEntry modEntry)
@@ -29,11 +33,21 @@ namespace LocoOwnership
 
 			try
 			{
+				try
+				{
+					settings = Settings.Load<Settings>(modEntry);
+				}
+				catch
+				{
+					Debug.LogWarning("Unabled to load mod settings. Using defaults instead.");
+					settings = new Settings();
+				}
+				mod = modEntry;
+
 				harmony = new Harmony(modEntry.Info.Id);
 				harmony.PatchAll(Assembly.GetExecutingAssembly());
 				DebugLog("Attempting patch.");
 
-				mod = modEntry;
 				modEntry.OnGUI = OnGui;
 				modEntry.OnSaveGUI = OnSaveGui;
 
@@ -42,6 +56,7 @@ namespace LocoOwnership
 				translations.AddTranslationsFromWebCsv(localizationUrl);
 
 				ControllerAPI.Ready += StartCommsRadio;
+				OwnershipInit();
 			}
 			catch (Exception ex)
 			{
@@ -72,6 +87,11 @@ namespace LocoOwnership
 		public static void StartCommsRadio()
 		{
 			CommsRadioMode = CommsRadioMode.Create(new MainMenu(), Color.blue, (mode) => mode is CommsRadioCrewVehicle);
+		}
+
+		public static void OwnershipInit()
+		{
+			ownershipHandler = new OwnedLocos();
 		}
 	}
 }
