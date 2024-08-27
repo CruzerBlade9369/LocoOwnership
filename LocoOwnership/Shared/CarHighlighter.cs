@@ -5,6 +5,7 @@ using DV;
 using UnityEngine;
 
 using CommsRadioAPI;
+using DV.PointSet;
 
 namespace LocoOwnership.Shared
 {
@@ -13,7 +14,6 @@ namespace LocoOwnership.Shared
 	{
 		private static readonly Vector3 HIGHLIGHT_BOUNDS_EXTENSION = new Vector3(0.25f, 0.8f, 0f);
 
-		private Transform signalOrigin;
 		private int trainCarMask;
 
 		internal TrainCar selectedCar;
@@ -60,6 +60,20 @@ namespace LocoOwnership.Shared
 		{
 			highlighter.SetActive(false);
 			highlighter.transform.SetParent(null);
+		}
+
+		public LCDArrowState GetArrowState(Transform signalOrigin, EquiPointSet.Point? spawnPoint, bool reverseDirection)
+		{
+			if (!spawnPoint.HasValue)
+			{
+				return LCDArrowState.Off;
+			}
+			bool isRight = 0f >= Mathf.Sin(
+				0.0174532924f * Vector3.SignedAngle(
+					reverseDirection ? (-spawnPoint.Value.forward) : spawnPoint.Value.forward,
+					signalOrigin.forward,
+					Vector3.up));
+			return isRight ? LCDArrowState.Right : LCDArrowState.Left;
 		}
 
 		#endregion

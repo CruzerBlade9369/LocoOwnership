@@ -1,16 +1,18 @@
 using System;
 using System.Collections.Generic;
-
-using UnityEngine;
+using System.Collections;
+using System.Diagnostics.CodeAnalysis;
 
 using DV;
 using DV.PointSet;
+using DV.Localization;
+
+using UnityEngine;
 
 using CommsRadioAPI;
 
-using System.Collections;
-using DV.ThingTypes;
-using System.Diagnostics.CodeAnalysis;
+using LocoOwnership.Menus;
+using LocoOwnership.Shared;
 
 namespace LocoOwnership.LocoRequester
 {
@@ -27,7 +29,6 @@ namespace LocoOwnership.LocoRequester
 		private const float INVALID_DESTINATION_HIGHLIGHTER_DISTANCE = 20f;
 		private const float UPDATE_TRACKS_PERIOD = 2.5f;
 
-		private TrainCarLivery selectedCarLivery;
 		private Bounds selectedCarBounds;
 		private Transform signalOrigin;
 		private RailTrack? selectedTrack;
@@ -35,10 +36,10 @@ namespace LocoOwnership.LocoRequester
 		private bool isSelectedOrientationOppositeTrackDirection;
 		private CarDestinationHighlighter destinationHighlighter;
 
-		private int selectedIndex;
+		internal TrainCar loco;
 
 		public RequestDestinationPicker(
-			int selectedIndex,
+			TrainCar loco,
 			Bounds carBounds,
 			Transform signalOrigin,
 			RailTrack? track = null,
@@ -48,14 +49,14 @@ namespace LocoOwnership.LocoRequester
 				titleText: "request",
 				contentText: "pick destination",
 				actionText: IsPlaceable(track, spawnPoint)
-				? "confirm"
-				: "cancel",
+				? LocalizationAPI.L("lo/radio/general/confirm")
+				: LocalizationAPI.L("lo/radio/general/cancel"),
 				arrowState: GetArrowState(signalOrigin, spawnPoint, reverseDirection),
 				buttonBehaviour: ButtonBehaviourType.Override
 			)
 		)
 		{
-			this.selectedIndex = selectedIndex;
+			this.loco = loco;
 			selectedCarBounds = carBounds;
 			this.signalOrigin = signalOrigin;
 			selectedTrack = track;
@@ -90,21 +91,31 @@ namespace LocoOwnership.LocoRequester
 					if (IsPlaceable(selectedTrack, selectedPoint))
 					{
 						Main.DebugLog($"Selected track: {selectedTrack.logicTrack.ID.FullID}");
-						utility.PlaySound(VanillaSoundCommsRadio.MoneyRemoved);
-						return this;
 
-						// gotta make this actually implement teleporting
+						Finances finances = new Finances();
+						float carTeleportPrice = finances.CalculatCarTeleportPrice(loco, selectedPoint);
 
-						// thats a problem for future me :3
+						utility.PlaySound(VanillaSoundCommsRadio.Confirm);
+						return new RequestConfirm(
+							loco,
+							carTeleportPrice,
+							signalOrigin,
+							selectedTrack,
+							selectedCarBounds,
+							selectedPoint,
+							cachedDestinationHighlighter,
+							isSelectedOrientationOppositeTrackDirection,
+							true
+							);
 					}
 					utility.PlaySound(VanillaSoundCommsRadio.Cancel);
-					return new RequestLocoSelector(selectedIndex);
+					return new LocoRequest();
 
 				case InputAction.Up:
-					return new RequestDestinationPicker(selectedIndex, selectedCarBounds, signalOrigin, selectedTrack, selectedPoint, !isSelectedOrientationOppositeTrackDirection);
+					return new RequestDestinationPicker(loco, selectedCarBounds, signalOrigin, selectedTrack, selectedPoint, !isSelectedOrientationOppositeTrackDirection);
 
 				case InputAction.Down:
-					return new RequestDestinationPicker(selectedIndex, selectedCarBounds, signalOrigin, selectedTrack, selectedPoint, !isSelectedOrientationOppositeTrackDirection);
+					return new RequestDestinationPicker(loco, selectedCarBounds, signalOrigin, selectedTrack, selectedPoint, !isSelectedOrientationOppositeTrackDirection);
 				default:
 					Debug.Log("Request loco selector: why are you here?");
 					throw new Exception($"Unexpected action: {action}");
@@ -115,7 +126,7 @@ namespace LocoOwnership.LocoRequester
 		{
 			base.OnEnter(utility, previous);
 			HighlightSpawnPoint(utility);
-			if (!(previous is RequestDestinationPicker))
+			if (previous is not RequestDestinationPicker)
 			{
 				if (PotentialTracksUpdateCoroutine != null)
 					Debug.LogError("Attempting to start potential track update coroutine when it's already running.");
@@ -128,7 +139,7 @@ namespace LocoOwnership.LocoRequester
 		{
 			base.OnLeave(utility, next);
 			destinationHighlighter.TurnOff();
-			if (!(next is RequestDestinationPicker))
+			if (next is not RequestDestinationPicker)
 			{
 				if (PotentialTracksUpdateCoroutine == null)
 					Debug.LogError("Attempting to stop potential track update coroutine when it's not running.");
@@ -152,14 +163,14 @@ namespace LocoOwnership.LocoRequester
 						int index = pointWithinRangeWithYOffset.Value.index;
 						EquiPointSet.Point? closestSpawnablePoint = CarSpawner.FindClosestValidPointForCarStartingFromIndex(trackPoints, index, selectedCarBounds.extents);
 
-						return new RequestDestinationPicker(selectedIndex, selectedCarBounds, signalOrigin, railTrack, closestSpawnablePoint, isSelectedOrientationOppositeTrackDirection);
+						return new RequestDestinationPicker(loco, selectedCarBounds, signalOrigin, railTrack, closestSpawnablePoint, isSelectedOrientationOppositeTrackDirection);
 					}
 				}
 			}
 
 			if (selectedTrack != null || selectedPoint != null)
 			{
-				return new RequestDestinationPicker(selectedIndex, selectedCarBounds, signalOrigin, null, null, isSelectedOrientationOppositeTrackDirection);
+				return new RequestDestinationPicker(loco, selectedCarBounds, signalOrigin, null, null, isSelectedOrientationOppositeTrackDirection);
 			}
 
 			// No transition will happen when returning `this`, thus we must manually update the destination highlighter.
@@ -217,9 +228,9 @@ namespace LocoOwnership.LocoRequester
 			}
 
 			if (highlightMaterial != null)
-				destinationHighlighter.Highlight(position, direction, selectedCarBounds, highlightMaterial);
+				cachedDestinationHighlighter.Highlight(position, direction, selectedCarBounds, highlightMaterial);
 			else
-				destinationHighlighter.TurnOff();
+				cachedDestinationHighlighter.TurnOff();
 		}
 
 		private static LCDArrowState GetArrowState(Transform signalOrigin, EquiPointSet.Point? spawnPoint, bool reverseDirection)

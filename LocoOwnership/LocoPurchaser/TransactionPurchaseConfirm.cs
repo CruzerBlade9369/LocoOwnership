@@ -12,7 +12,6 @@ using CommsRadioAPI;
 
 using LocoOwnership.Shared;
 using LocoOwnership.OwnershipHandler;
-using LocoOwnership.Menus;
 
 namespace LocoOwnership.LocoPurchaser
 {

@@ -1,13 +1,14 @@
 using System;
 
-using UnityEngine;
-
 using DV;
 using DV.Localization;
+
+using UnityEngine;
 
 using CommsRadioAPI;
 
 using LocoOwnership.LocoRequester;
+using System.Linq;
 
 namespace LocoOwnership.Menus
 {
@@ -29,6 +30,12 @@ namespace LocoOwnership.Menus
 			{
 				case InputAction.Activate:
 					RequestLocoSelector.RefreshRequestableLocos();
+
+					if (!RequestLocoSelector.requestableOwnedLocos.Any())
+					{
+						utility.PlaySound(VanillaSoundCommsRadio.Warning);
+						return new RequestFail(1);
+					}
 
 					utility.PlaySound(VanillaSoundCommsRadio.ModeEnter);
 					return new RequestLocoSelector(0);

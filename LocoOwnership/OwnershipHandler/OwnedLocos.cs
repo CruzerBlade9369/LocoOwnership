@@ -4,13 +4,12 @@ using System.Linq;
 
 using Newtonsoft.Json.Linq;
 
-using UnityEngine;
-
 using DV.Localization;
 using DV.JObjectExtstensions;
-using DV.ThingTypes;
 using DV.ServicePenalty;
 using DV.InventorySystem;
+
+using UnityEngine;
 
 using MessageBox;
 
@@ -39,23 +38,6 @@ namespace LocoOwnership.OwnershipHandler
 
 		#region CACHE HANDLER
 
-		public static TrainCar GetTender(TrainCar selectedCar)
-		{
-			// Check if we're buying S282
-			bool isSteamEngine = CarTypes.IsMUSteamLocomotive(selectedCar.carType);
-			bool hasTender = selectedCar.rearCoupler.IsCoupled() && CarTypes.IsTender(selectedCar.rearCoupler.coupledTo.train.carLivery);
-
-			TrainCar tender = null;
-
-			// Get tender if S282
-			if (isSteamEngine && hasTender)
-			{
-				tender = selectedCar.rearCoupler.coupledTo.train;
-			}
-
-			return tender;
-		}
-
 		public static void ClearCache()
 		{
 			Main.DebugLog("Clearing owned loco list cache.");
@@ -69,8 +51,6 @@ namespace LocoOwnership.OwnershipHandler
 			int maxOwnedLocos = Main.settings.maxLocosLimit;
 
 			// Check if player already has enough owned locos
-			Debug.Log(maxOwnedLocos);
-			Debug.Log(Main.settings.maxLocosLimit);
 			if (ownedLocos.Values.Count(v => v.StartsWith("L-")) >= maxOwnedLocos)
 			{
 				result.MaxOwnedLoc = true;
@@ -80,7 +60,7 @@ namespace LocoOwnership.OwnershipHandler
 			string guid = selectedCar.CarGUID;
 			string locoID = selectedCar.ID;
 
-			TrainCar tender = GetTender(selectedCar);
+			TrainCar tender = CarGetters.GetTender(selectedCar);
 
 			string tenderGuid = "";
 			string tenderID = "";
@@ -110,10 +90,10 @@ namespace LocoOwnership.OwnershipHandler
 				ownedLocos.Add(guid, locoID);
 
 				// Debug lines
-				Debug.Log("Owned locos list:");
+				Main.DebugLog("Owned locos list:");
 				foreach (KeyValuePair<string, string> kvp in ownedLocos)
 				{
-					Debug.Log($"Guid = {kvp.Key}, LocoID = {kvp.Value}");
+					Main.DebugLog($"Guid = {kvp.Key}, LocoID = {kvp.Value}");
 				}
 
 				// Add loco buy price for despawn refund
@@ -137,7 +117,7 @@ namespace LocoOwnership.OwnershipHandler
 
 			string guid = selectedCar.CarGUID;
 
-			TrainCar tender = GetTender(selectedCar);
+			TrainCar tender = CarGetters.GetTender(selectedCar);
 
 			string tenderGuid = "";
 			if (tender != null)

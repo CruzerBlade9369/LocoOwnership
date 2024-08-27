@@ -28,6 +28,21 @@ namespace LocoOwnership
 #else
 			false;
 #endif
+		[Draw("Free locomotive requesting")]
+		public bool freeCarTeleport =
+#if DEBUG
+			true;
+#else
+			false;
+#endif
+
+		[Draw("The funny")]
+		public bool theFunny =
+#if DEBUG
+			true;
+#else
+			false;
+#endif
 
 		[Draw("Maximum number of owned locomotives", Min = 0, Max = 100)]
 		public int maxLocosLimit = 16;

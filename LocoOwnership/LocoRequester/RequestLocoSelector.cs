@@ -1,16 +1,17 @@
 using System;
 using System.Collections.Generic;
 
-using UnityEngine;
-
 using DV;
 using DV.Localization;
 using DV.ServicePenalty;
-using DV.ThingTypes;
+
+using UnityEngine;
 
 using CommsRadioAPI;
 
 using LocoOwnership.OwnershipHandler;
+using LocoOwnership.Shared;
+using DV.ThingTypes;
 
 namespace LocoOwnership.LocoRequester
 {
@@ -20,16 +21,20 @@ namespace LocoOwnership.LocoRequester
 		public static int lastIndex = 0;
 		private int selectedIndex;
 
+		internal TrainCar loco;
+
 		public RequestLocoSelector(int selectedIndex) : base(
 			new CommsRadioState(
 				titleText:"request",
-				contentText: ContentFromIndex(selectedIndex),
-				actionText:"confirm",
+				contentText: $"{LocalizationAPI.L(TrainCarFromIndex(selectedIndex).carLivery.localizationKey)} {TrainCarFromIndex(selectedIndex).ID}",
+				actionText: LocalizationAPI.L("lo/radio/general/confirm"),
 				buttonBehaviour: ButtonBehaviourType.Override
 			)
 		)
 		{
 			lastIndex = this.selectedIndex = selectedIndex;
+
+			loco = TrainCarFromIndex(selectedIndex);
 		}
 
 		public override AStateBehaviour OnAction(CommsRadioUtility utility, InputAction action)
@@ -37,33 +42,39 @@ namespace LocoOwnership.LocoRequester
 			switch (action)
 			{
 				case InputAction.Activate:
-					TrainCarLivery selectedCarLivery = null;
 
-					OwnedCarsStateController ocsc = OwnedCarsStateController.Instance;
-					foreach (ExistingOwnedCarDebt eocd in ocsc.existingOwnedCarStates)
+					TrainCar tender = CarGetters.GetTender(loco);
+
+					if (CarTypes.IsMUSteamLocomotive(loco.carType) && tender is null)
 					{
-						if (eocd.car.CarGUID == requestableOwnedLocos[selectedIndex] && eocd.car.IsLoco)
-						{
-							selectedCarLivery = eocd.car.carLivery;
-						}
+						utility.PlaySound(VanillaSoundCommsRadio.Warning);
+						return new RequestFail(2);
+					}
+					
+					Bounds? locoBounds = loco?.Bounds;
+					Bounds bounds = default(Bounds);
+					if (tender is not null)
+					{
+						Bounds? tenderBounds = tender.Bounds;
+
+						bounds.Encapsulate(locoBounds.Value);
+						bounds.Encapsulate(tenderBounds.Value);
+						bounds.Expand(new Vector3(0f, 0f, 2f));
+					}
+					else
+					{
+						bounds = locoBounds.Value;
 					}
 
-					if (selectedCarLivery == null)
-					{
-						throw new Exception("LocoRequest: selected car livery is null!!");
-					}
-
-					GameObject? prefab = selectedCarLivery.prefab;
-					TrainCar? trainCar = prefab?.GetComponent<TrainCar>();
-					Bounds? carBounds = trainCar?.Bounds;
 					utility.PlaySound(VanillaSoundCommsRadio.Confirm);
-					return new RequestDestinationPicker(selectedIndex, carBounds.Value, utility.SignalOrigin);
+					return new RequestDestinationPicker(loco, bounds, utility.SignalOrigin);
 
 				case InputAction.Up:
 					return new RequestLocoSelector(PreviousIndex());
 
 				case InputAction.Down:
 					return new RequestLocoSelector(NextIndex());
+
 				default:
 					Debug.Log("Request loco selector: why are you here?");
 					throw new Exception($"Unexpected action: {action}");
@@ -105,7 +116,7 @@ namespace LocoOwnership.LocoRequester
 			}
 		}
 
-		private static string ContentFromIndex(int index)
+		private static TrainCar TrainCarFromIndex(int index)
 		{
 			OwnedCarsStateController ocsc = OwnedCarsStateController.Instance;
 			TrainCar loco = null;
@@ -117,17 +128,16 @@ namespace LocoOwnership.LocoRequester
 				if (eocd.car.CarGUID == ownedLocoGuid && eocd.car.IsLoco)
 				{
 					loco = eocd.car;
+					break;
 				}
 			}
 
 			if (loco == null)
 			{
-				Debug.LogError("content from index selector: traincar is null!!");
-				return "ERROR: THE TRAINCAR IS NULL";
+				throw new Exception("content from index selector: traincar is null!!");
 			}
 
-			string name = LocalizationAPI.L(loco.carLivery.localizationKey);
-			return $"{name} {loco.ID}";
+			return loco;
 		}
 	}
 }
