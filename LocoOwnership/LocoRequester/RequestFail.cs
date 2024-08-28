@@ -11,18 +11,18 @@ namespace LocoOwnership.LocoRequester
 {
 	internal class RequestFail : AStateBehaviour
 	{
-		private static readonly string[] failReasons = {
-			"insufficient funds.",
-			"you do not own any locomotives yet.",
-			"unable to deliver the requested locomotive.",
-			"the requested locomotive needs to be on the rails for delivery.",
-		};
+		private static readonly string[] failReasons = [
+			"lo/radio/pfail/content/0",
+			"lo/radio/rfail/content/1",
+			"lo/radio/rfail/content/2",
+			"lo/radio/rfail/content/3",
+		];
 
 		public RequestFail(int failState)
 			: base(new CommsRadioState(
-				titleText: "request",
-				contentText: failReasons[failState],
-				actionText: LocalizationAPI.L("lo/radio/general/confirm"),
+				titleText: LocalizationAPI.L("lo/radio/general/request"),
+				contentText: LocalizationAPI.L(failReasons[failState]),
+				actionText: LocalizationAPI.L("comms/confirm"),
 				buttonBehaviour: ButtonBehaviourType.Override))
 		{
 

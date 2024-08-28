@@ -46,11 +46,11 @@ namespace LocoOwnership.LocoRequester
 			EquiPointSet.Point? spawnPoint = null,
 			bool reverseDirection = false) : base(
 			new CommsRadioState(
-				titleText: "request",
-				contentText: "pick destination",
+				titleText: LocalizationAPI.L("lo/radio/general/request"),
+				contentText: LocalizationAPI.L("comms/work_train_pick_destination"),
 				actionText: IsPlaceable(track, spawnPoint)
-				? LocalizationAPI.L("lo/radio/general/confirm")
-				: LocalizationAPI.L("lo/radio/general/cancel"),
+				? LocalizationAPI.L("comms/confirm")
+				: LocalizationAPI.L("comms/cancel"),
 				arrowState: GetArrowState(signalOrigin, spawnPoint, reverseDirection),
 				buttonBehaviour: ButtonBehaviourType.Override
 			)

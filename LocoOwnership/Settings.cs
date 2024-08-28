@@ -36,7 +36,7 @@ namespace LocoOwnership
 			false;
 #endif
 
-		[Draw("The funny")]
+		[Draw("The funny (enable at your own risk)")]
 		public bool theFunny =
 #if DEBUG
 			true;

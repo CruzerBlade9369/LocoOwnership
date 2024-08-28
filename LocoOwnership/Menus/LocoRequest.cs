@@ -16,9 +16,9 @@ namespace LocoOwnership.Menus
 	{
 		public LocoRequest()
 			: base(new CommsRadioState(
-				titleText: /*LocalizationAPI.L("lo/radio/general/purchase")*/"request",
-				contentText: /*LocalizationAPI.L("lo/radio/locopurchase/content")*/"request a locomotive?",
-				actionText: LocalizationAPI.L("lo/radio/general/confirm"),
+				titleText: LocalizationAPI.L("lo/radio/general/request"),
+				contentText: LocalizationAPI.L("lo/radio/locorequest/content"),
+				actionText: LocalizationAPI.L("comms/confirm"),
 				buttonBehaviour: ButtonBehaviourType.Override))
 		{
 

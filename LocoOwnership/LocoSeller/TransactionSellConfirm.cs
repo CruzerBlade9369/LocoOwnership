@@ -38,8 +38,8 @@ namespace LocoOwnership.LocoSeller
 				titleText: LocalizationAPI.L("lo/radio/general/sell"),
 				contentText: LocalizationAPI.L("lo/radio/sselected/content", selectedCar.ID, carSellPrice.ToString()),
 				actionText: highlighterState
-				? LocalizationAPI.L("lo/radio/general/confirm")
-				: LocalizationAPI.L("lo/radio/general/cancel"),
+				? LocalizationAPI.L("comms/confirm")
+				: LocalizationAPI.L("comms/cancel"),
 				buttonBehaviour: ButtonBehaviourType.Override))
 		{
 			this.selectedCar = selectedCar;
@@ -76,6 +76,7 @@ namespace LocoOwnership.LocoSeller
 
 			if (!highlighterState)
 			{
+				utility.PlaySound(VanillaSoundCommsRadio.Cancel);
 				return new SellPointAtNothing();
 			}
 
@@ -117,7 +118,7 @@ namespace LocoOwnership.LocoSeller
 			// Try to get the train car we're pointing at
 			TrainCar target = TrainCar.Resolve(hit.transform.root);
 
-			if (selectedCar is null)
+			if (target is null)
 			{
 				return this;
 			}

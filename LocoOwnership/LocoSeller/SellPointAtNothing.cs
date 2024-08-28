@@ -27,7 +27,7 @@ namespace LocoOwnership.LocoSeller
 			: base(new CommsRadioState(
 				titleText: LocalizationAPI.L("lo/radio/general/sell"),
 				contentText: LocalizationAPI.L("lo/radio/selling/content"),
-				actionText: LocalizationAPI.L("lo/radio/general/cancel"),
+				actionText: LocalizationAPI.L("comms/cancel"),
 				buttonBehaviour: ButtonBehaviourType.Override))
 		{
 			highlighter = new CarHighlighter();

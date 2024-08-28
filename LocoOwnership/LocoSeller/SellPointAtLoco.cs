@@ -30,7 +30,7 @@ namespace LocoOwnership.LocoSeller
 			: base(new CommsRadioState(
 				titleText: LocalizationAPI.L("lo/radio/general/sell"),
 				contentText: LocalizationAPI.L("lo/radio/selling/content"),
-				actionText: LocalizationAPI.L("lo/radio/general/confirm"),
+				actionText: LocalizationAPI.L("comms/confirm"),
 				buttonBehaviour: ButtonBehaviourType.Override))
 		{
 			this.selectedCar = selectedCar;

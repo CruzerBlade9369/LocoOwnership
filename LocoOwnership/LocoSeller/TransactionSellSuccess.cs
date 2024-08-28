@@ -15,7 +15,7 @@ namespace LocoOwnership.LocoSeller
 			: base(new CommsRadioState(
 				titleText: LocalizationAPI.L("lo/radio/general/sell"),
 				contentText: LocalizationAPI.L("lo/radio/ssuccess/content", selectedCar.ID, sellPrice.ToString()),
-				actionText: LocalizationAPI.L("lo/radio/general/confirm"),
+				actionText: LocalizationAPI.L("comms/confirm"),
 				buttonBehaviour: ButtonBehaviourType.Override))
 		{
 

@@ -25,9 +25,9 @@ namespace LocoOwnership.LocoRequester
 
 		public RequestLocoSelector(int selectedIndex) : base(
 			new CommsRadioState(
-				titleText:"request",
+				titleText: LocalizationAPI.L("lo/radio/general/request"),
 				contentText: $"{LocalizationAPI.L(TrainCarFromIndex(selectedIndex).carLivery.localizationKey)} {TrainCarFromIndex(selectedIndex).ID}",
-				actionText: LocalizationAPI.L("lo/radio/general/confirm"),
+				actionText: LocalizationAPI.L("comms/confirm"),
 				buttonBehaviour: ButtonBehaviourType.Override
 			)
 		)
@@ -50,7 +50,19 @@ namespace LocoOwnership.LocoRequester
 						utility.PlaySound(VanillaSoundCommsRadio.Warning);
 						return new RequestFail(2);
 					}
-					
+
+					if (loco.derailed)
+					{
+						utility.PlaySound(VanillaSoundCommsRadio.Warning);
+						return new RequestFail(3);
+					}
+
+					if (CarTypes.IsMUSteamLocomotive(loco.carType) && loco.rearCoupler.coupledTo.train.derailed)
+					{
+						utility.PlaySound(VanillaSoundCommsRadio.Warning);
+						return new RequestFail(3);
+					}
+
 					Bounds? locoBounds = loco?.Bounds;
 					Bounds bounds = default(Bounds);
 					if (tender is not null)

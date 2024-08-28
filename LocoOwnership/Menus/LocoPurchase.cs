@@ -17,7 +17,7 @@ namespace LocoOwnership.Menus
 			: base(new CommsRadioState(
 				titleText: LocalizationAPI.L("lo/radio/general/purchase"),
 				contentText: LocalizationAPI.L("lo/radio/locopurchase/content"),
-				actionText: LocalizationAPI.L("lo/radio/general/confirm"),
+				actionText: LocalizationAPI.L("comms/confirm"),
 				buttonBehaviour: ButtonBehaviourType.Override))
 		{
 

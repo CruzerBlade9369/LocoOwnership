@@ -75,7 +75,7 @@ namespace LocoOwnership.Shared
 			Vector3 spawnPos = (Vector3)selectedPoint.Value.position + WorldMover.currentMove;
 			float teleDistance = Vector3.Distance(selectedCar.transform.position, spawnPos) * 0.001f;
 
-			carTeleportPrice = Mathf.RoundToInt(teleDistance * 150f) * 6;
+			carTeleportPrice = Mathf.RoundToInt(teleDistance * 200f) * 6;
 
 			if (carTeleportPrice < MIN_TELE_PRICE)
 			{

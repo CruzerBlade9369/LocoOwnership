@@ -11,15 +11,15 @@ namespace LocoOwnership.LocoSeller
 {
 	internal class TransactionSellFail : AStateBehaviour
 	{
-		private static readonly string[] failReasons = {
+		private static readonly string[] failReasons = [
 			"lo/radio/sfail/content/0"
-		};
+		];
 
 		public TransactionSellFail(int failState)
 			: base(new CommsRadioState(
 				titleText: LocalizationAPI.L("lo/radio/general/sell"),
 				contentText: LocalizationAPI.L(failReasons[failState]),
-				actionText: LocalizationAPI.L("lo/radio/general/confirm"),
+				actionText: LocalizationAPI.L("comms/confirm"),
 				buttonBehaviour: ButtonBehaviourType.Override))
 		{
 

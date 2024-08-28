@@ -62,20 +62,6 @@ namespace LocoOwnership.Shared
 			highlighter.transform.SetParent(null);
 		}
 
-		public LCDArrowState GetArrowState(Transform signalOrigin, EquiPointSet.Point? spawnPoint, bool reverseDirection)
-		{
-			if (!spawnPoint.HasValue)
-			{
-				return LCDArrowState.Off;
-			}
-			bool isRight = 0f >= Mathf.Sin(
-				0.0174532924f * Vector3.SignedAngle(
-					reverseDirection ? (-spawnPoint.Value.forward) : spawnPoint.Value.forward,
-					signalOrigin.forward,
-					Vector3.up));
-			return isRight ? LCDArrowState.Right : LCDArrowState.Left;
-		}
-
 		#endregion
 
 		/*-----------------------------------------------------------------------------------------------------------------------*/
