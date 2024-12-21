@@ -9,7 +9,7 @@ namespace LocoOwnership.OwnershipHandler
 {
 	internal class DebtHandling
 	{
-		public SimulatedCarDebtTracker DebtValueStealer(SimController simController)
+		public static SimulatedCarDebtTracker DebtValueStealer(SimController simController)
 		{
 			SimulatedCarDebtTracker debt;
 
@@ -39,7 +39,7 @@ namespace LocoOwnership.OwnershipHandler
 
 		#region FOR LOCO BUY
 
-		public bool RemoveTrackedLocoDebts(SimulatedCarDebtTracker locoDebt, SimulatedCarDebtTracker tenderDebt)
+		private static bool RemoveTrackedLocoDebts(SimulatedCarDebtTracker locoDebt, SimulatedCarDebtTracker tenderDebt)
 		{
 			float totalDebtCheck = 0f;
 
@@ -108,7 +108,7 @@ namespace LocoOwnership.OwnershipHandler
 			return true;
 		}
 
-		public bool SetVehicleToOwned(TrainCar car, TrainCar tender)
+		public static bool SetVehicleToOwned(TrainCar car, TrainCar tender)
 		{
 			SimulatedCarDebtTracker locoDebt;
 			SimulatedCarDebtTracker tenderDebt = null;
@@ -118,7 +118,6 @@ namespace LocoOwnership.OwnershipHandler
 			locoDebt = DebtValueStealer(simController);
 
 			SimController tenderSimController = null;
-
 			if (tender != null)
 			{
 				tenderSimController = tender.GetComponent<SimController>();
@@ -161,7 +160,7 @@ namespace LocoOwnership.OwnershipHandler
 
 		#region FOR LOCO SELL
 
-		public bool RemoveExistingOwnedCarState(SimulatedCarDebtTracker locoDebt, SimulatedCarDebtTracker tenderDebt)
+		public static bool RemoveExistingOwnedCarState(SimulatedCarDebtTracker locoDebt, SimulatedCarDebtTracker tenderDebt)
 		{
 			float totalDebtCheck = 0f;
 
@@ -247,7 +246,7 @@ namespace LocoOwnership.OwnershipHandler
 			return true;
 		}
 
-		public bool RemoveOwnedVehicle(TrainCar car, TrainCar tender)
+		public static bool RemoveOwnedVehicle(TrainCar car, TrainCar tender)
 		{
 			SimulatedCarDebtTracker locoDebt;
 			SimulatedCarDebtTracker tenderDebt = null;

@@ -77,7 +77,7 @@ namespace LocoOwnership.LocoRequester
 		{
 			if (action != InputAction.Activate)
 			{
-				throw new ArgumentException();
+				return this;
 			}
 
 			if (!highlighterState)

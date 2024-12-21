@@ -48,11 +48,10 @@ namespace LocoOwnership.LocoPurchaser
 		{
 			if (action != InputAction.Activate)
 			{
-				throw new ArgumentException();
+				return this;
 			}
 
-			Finances finances = new Finances();
-			carBuyPrice = finances.CalculateBuyPrice(selectedCar);
+			carBuyPrice = Finances.CalculateBuyPrice(selectedCar);
 
 			utility.PlaySound(VanillaSoundCommsRadio.Confirm);
 			return new TransactionPurchaseConfirm(selectedCar, carBuyPrice, carDeleter, highlighter, true);

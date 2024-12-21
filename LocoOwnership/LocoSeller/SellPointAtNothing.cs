@@ -38,7 +38,7 @@ namespace LocoOwnership.LocoSeller
 		{
 			if (action != InputAction.Activate)
 			{
-				throw new ArgumentException();
+				return this;
 			}
 			utility.PlaySound(VanillaSoundCommsRadio.Cancel);
 			return new LocoSell();

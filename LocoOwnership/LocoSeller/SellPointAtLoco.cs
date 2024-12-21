@@ -52,11 +52,10 @@ namespace LocoOwnership.LocoSeller
 		{
 			if (action != InputAction.Activate)
 			{
-				throw new ArgumentException();
+				return this;
 			}
 
-			Finances finances = new Finances();
-			carSellPrice = finances.CalculateSellPrice(selectedCar);
+			carSellPrice = Finances.CalculateSellPrice(selectedCar);
 
 			utility.PlaySound(VanillaSoundCommsRadio.Confirm);
 			return new TransactionSellConfirm(selectedCar, carSellPrice, carDeleter, highlighter, true);

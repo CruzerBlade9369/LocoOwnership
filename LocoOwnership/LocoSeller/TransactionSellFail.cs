@@ -12,7 +12,8 @@ namespace LocoOwnership.LocoSeller
 	internal class TransactionSellFail : AStateBehaviour
 	{
 		private static readonly string[] failReasons = [
-			"lo/radio/sfail/content/0"
+			"lo/radio/sfail/content/0",
+			"lo/radio/sfail/content/1"
 		];
 
 		public TransactionSellFail(int failState)
@@ -29,7 +30,7 @@ namespace LocoOwnership.LocoSeller
 		{
 			if (action != InputAction.Activate)
 			{
-				throw new ArgumentException();
+				return this;
 			}
 
 			utility.PlaySound(VanillaSoundCommsRadio.Confirm);

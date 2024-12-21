@@ -1,1 +1,1 @@
-powershell -executionpolicy bypass .\package.ps1
+dotnet build -c release

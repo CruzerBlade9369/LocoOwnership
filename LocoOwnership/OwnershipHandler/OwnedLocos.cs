@@ -19,20 +19,35 @@ namespace LocoOwnership.OwnershipHandler
 {
 	public class OwnedLocos : MonoBehaviour
 	{
-		DebtHandling debtHandling = new();
-
-		private Finances finances = new();
-
-		public class DebtHandlingResult
-		{
-			public bool MaxOwnedLoc { get; set; }
-			public bool DebtNotZero { get; set; }
-			public bool Success { get; set; }
-		}
+		public static OwnedLocos Instance { get; private set; }
 
 		// This is the cache
 		public static Dictionary<string, string> ownedLocos = new();
 		public static Dictionary<string, float> ownedLocosLicensePrice = new();
+		int len = ownedLocos.Count;
+
+		// makes sure this thing stays as singleton
+		// remind myself to not touch old code if this thing suddenly stops working.
+		private void Awake()
+		{
+			if (Instance != null && Instance != this)
+			{
+				Destroy(this.gameObject);
+				return;
+			}
+
+			Instance = this;
+			DontDestroyOnLoad(this.gameObject);
+		}
+
+		public static void Initialize()
+		{
+			if (Instance == null)
+			{
+				GameObject singletonObject = new GameObject(nameof(OwnedLocos));
+				Instance = singletonObject.AddComponent<OwnedLocos>();
+			}
+		}
 
 		/*-----------------------------------------------------------------------------------------------------------------------*/
 
@@ -45,18 +60,8 @@ namespace LocoOwnership.OwnershipHandler
 			ownedLocosLicensePrice.Clear();
 		}
 
-		public DebtHandlingResult OnLocoBuy(TrainCar selectedCar)
+		public static void BuyLoco(TrainCar selectedCar)
 		{
-			var result = new DebtHandlingResult();
-			int maxOwnedLocos = Main.settings.maxLocosLimit;
-
-			// Check if player already has enough owned locos
-			if (ownedLocos.Values.Count(v => v.StartsWith("L-")) >= maxOwnedLocos)
-			{
-				result.MaxOwnedLoc = true;
-				return result;
-			}
-
 			string guid = selectedCar.CarGUID;
 			string locoID = selectedCar.ID;
 
@@ -70,51 +75,32 @@ namespace LocoOwnership.OwnershipHandler
 				tenderID = tender.ID;
 			}
 
-			if (ownedLocos.ContainsKey(guid))
+			if (tender != null)
 			{
-				throw new Exception("Loco GUID duplicate!");
+				ownedLocos.Add(tenderGuid, tenderID);
 			}
-			else
+			ownedLocos.Add(guid, locoID);
+
+			// Debug lines
+			Main.DebugLog("Owned locos list:");
+			foreach (KeyValuePair<string, string> kvp in ownedLocos)
 			{
-				bool allowOwnVehicle = debtHandling.SetVehicleToOwned(selectedCar, tender);
-				if (!allowOwnVehicle)
-				{
-					result.DebtNotZero = true;
-					return result;
-				}
+				Main.DebugLog($"Guid = {kvp.Key}, LocoID = {kvp.Value}");
+			}
 
-				if (tender != null)
-				{
-					ownedLocos.Add(tenderGuid, tenderID);
-				}
-				ownedLocos.Add(guid, locoID);
+			// Add loco buy price for despawn refund
+			ownedLocosLicensePrice.Add(guid, Finances.CalculateBuyPrice(selectedCar));
 
-				// Debug lines
-				Main.DebugLog("Owned locos list:");
-				foreach (KeyValuePair<string, string> kvp in ownedLocos)
-				{
-					Main.DebugLog($"Guid = {kvp.Key}, LocoID = {kvp.Value}");
-				}
-
-				// Add loco buy price for despawn refund
-				ownedLocosLicensePrice.Add(guid, finances.CalculateBuyPrice(selectedCar));
-
-				// Debug lines
-				Main.DebugLog("Owned locos list, stored loco price:");
-				foreach (KeyValuePair<string, float> kvp in ownedLocosLicensePrice)
-				{
-					Main.DebugLog($"Guid = {kvp.Key}, stored loco price = {kvp.Value}");
-				}
-
-				result.Success = true;
-				return result;
+			// Debug lines
+			Main.DebugLog("Owned locos list, stored loco price:");
+			foreach (KeyValuePair<string, float> kvp in ownedLocosLicensePrice)
+			{
+				Main.DebugLog($"Guid = {kvp.Key}, stored loco price = {kvp.Value}");
 			}
 		}
 
-		public DebtHandlingResult OnLocoSell(TrainCar selectedCar)
+		public static void SellLoco(TrainCar selectedCar)
 		{
-			var result = new DebtHandlingResult();
-
 			string guid = selectedCar.CarGUID;
 
 			TrainCar tender = CarGetters.GetTender(selectedCar);
@@ -125,33 +111,16 @@ namespace LocoOwnership.OwnershipHandler
 				tenderGuid = tender.CarGUID;
 			}
 
-			if (ownedLocos.ContainsKey(guid))
+			if (tender != null)
 			{
-				bool allowSellVehicle = debtHandling.RemoveOwnedVehicle(selectedCar, tender);
-				if (!allowSellVehicle)
-				{
-					result.DebtNotZero = true;
-					return result;
-				}
-
-				if (tender != null)
-				{
-					ownedLocos.Remove(tenderGuid);
-				}
-
-				ownedLocos.Remove(guid);
-				if (ownedLocosLicensePrice.ContainsKey(guid))
-				{
-					ownedLocosLicensePrice.Remove(guid);
-				}
-			}
-			else
-			{
-				throw new Exception("Loco GUID not found!");
+				ownedLocos.Remove(tenderGuid);
 			}
 
-			result.Success = true;
-			return result;
+			ownedLocos.Remove(guid);
+			if (ownedLocosLicensePrice.ContainsKey(guid))
+			{
+				ownedLocosLicensePrice.Remove(guid);
+			}
 		}
 
 		#endregion

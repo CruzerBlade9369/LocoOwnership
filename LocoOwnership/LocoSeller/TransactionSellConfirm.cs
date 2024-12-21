@@ -67,11 +67,22 @@ namespace LocoOwnership.LocoSeller
 			signalOrigin = carDeleter.signalOrigin;
 		}
 
+		private bool IsLocoDebtCleared()
+		{
+			TrainCar tender = CarGetters.GetTender(selectedCar);
+			if (DebtHandling.RemoveOwnedVehicle(selectedCar, tender))
+			{
+				return true;
+			}
+
+			return false;
+		}
+
 		public override AStateBehaviour OnAction(CommsRadioUtility utility, InputAction action)
 		{
 			if (action != InputAction.Activate)
 			{
-				throw new ArgumentException();
+				return this;
 			}
 
 			if (!highlighterState)
@@ -80,18 +91,20 @@ namespace LocoOwnership.LocoSeller
 				return new SellPointAtNothing();
 			}
 
-			OwnedLocos.DebtHandlingResult sellSuccess = Main.ownershipHandler.OnLocoSell(selectedCar);
-			if (sellSuccess.DebtNotZero)
+			if (!OwnedLocos.ownedLocos.ContainsKey(selectedCar.CarGUID))
 			{
-				utility.PlaySound(VanillaSoundCommsRadio.Warning);
+				return new TransactionSellFail(1);
+			}
+
+			if(!IsLocoDebtCleared())
+			{
 				return new TransactionSellFail(0);
 			}
-			else
-			{
-				Inventory.Instance.AddMoney(carSellPrice);
-				utility.PlaySound(VanillaSoundCommsRadio.MoneyRemoved);
-				return new TransactionSellSuccess(selectedCar, carSellPrice);
-			}
+
+			OwnedLocos.SellLoco(selectedCar);
+			Inventory.Instance.AddMoney(carSellPrice);
+			utility.PlaySound(VanillaSoundCommsRadio.MoneyRemoved);
+			return new TransactionSellSuccess(selectedCar, carSellPrice);
 		}
 
 		public override AStateBehaviour OnUpdate(CommsRadioUtility utility)

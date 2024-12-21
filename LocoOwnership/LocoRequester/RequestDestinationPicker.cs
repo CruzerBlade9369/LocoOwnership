@@ -92,8 +92,7 @@ namespace LocoOwnership.LocoRequester
 					{
 						Main.DebugLog($"Selected track: {selectedTrack.logicTrack.ID.FullID}");
 
-						Finances finances = new Finances();
-						float carTeleportPrice = finances.CalculatCarTeleportPrice(loco, selectedPoint);
+						float carTeleportPrice = Finances.CalculatCarTeleportPrice(loco, selectedPoint);
 
 						utility.PlaySound(VanillaSoundCommsRadio.Confirm);
 						return new RequestConfirm(
@@ -205,7 +204,7 @@ namespace LocoOwnership.LocoRequester
 					UpdatePotentialTracks();
 					lastUpdatedTracksWorldPosition = signalOrigin.position - WorldMover.currentMove;
 				}
-				yield return WaitFor.Seconds(UPDATE_TRACKS_PERIOD);
+				yield return new WaitForSeconds(UPDATE_TRACKS_PERIOD);
 			}
 		}
 

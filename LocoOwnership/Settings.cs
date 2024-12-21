@@ -13,43 +13,25 @@ namespace LocoOwnership
 #else
             false;
 #endif
+
 		[Draw("Locomotives cost nothing in sandbox")]
-		public bool freeSandboxOwnership =
-#if DEBUG
-			true;
-#else
-			false;
-#endif
+		public bool freeSandboxOwnership = false;
 
 		[Draw("Locomotives cost nothing at all")]
-		public bool freeOwnership =
-#if DEBUG
-			true;
-#else
-			false;
-#endif
+		public bool freeOwnership = false;
+
 		[Draw("Free locomotive requesting")]
-		public bool freeCarTeleport =
-#if DEBUG
-			true;
-#else
-			false;
-#endif
+		public bool freeCarTeleport = false;
 
 		[Draw("The funny (enable at your own risk)")]
-		public bool theFunny =
-#if DEBUG
-			true;
-#else
-			false;
-#endif
+		public bool theFunny = false;
 
 		[Draw("Maximum number of owned locomotives", Min = 0, Max = 100)]
 		public int maxLocosLimit = 16;
 
 		public override void Save(UnityModManager.ModEntry entry)
 		{
-			Save<Settings>(this, entry);
+			Save(this, entry);
 		}
 
 		public void OnChange() { }

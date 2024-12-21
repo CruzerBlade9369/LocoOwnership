@@ -1,5 +1,3 @@
-using System;
-
 using DV;
 using DV.Localization;
 
@@ -20,9 +18,9 @@ namespace LocoOwnership.Menus
 
 		public override AStateBehaviour OnAction(CommsRadioUtility utility, InputAction action)
 		{
-			if (action != InputAction.Activate)
+			if (action == InputAction.Activate)
 			{
-				throw new ArgumentException();
+				return this;
 			}
 
 			utility.PlaySound(VanillaSoundCommsRadio.Confirm);

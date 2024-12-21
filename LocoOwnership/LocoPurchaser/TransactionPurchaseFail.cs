@@ -17,7 +17,9 @@ namespace LocoOwnership.LocoPurchaser
 			"lo/radio/pfail/content/2",
 			"lo/radio/pfail/content/3",
 			"lo/radio/pfail/content/4",
-			"lo/radio/pfail/content/5"
+			"lo/radio/pfail/content/5",
+			"lo/radio/pfail/content/6",
+			"lo/radio/pfail/content/7",
 		];
 
 		public TransactionPurchaseFail(int failState)
@@ -34,7 +36,7 @@ namespace LocoOwnership.LocoPurchaser
 		{
 			if (action != InputAction.Activate)
 			{
-				throw new ArgumentException();
+				return this;
 			}
 
 			utility.PlaySound(VanillaSoundCommsRadio.Confirm);

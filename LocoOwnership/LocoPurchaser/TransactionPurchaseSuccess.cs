@@ -25,7 +25,7 @@ namespace LocoOwnership.LocoPurchaser
 		{
 			if (action != InputAction.Activate)
 			{
-				throw new ArgumentException();
+				return this;
 			}
 
 			utility.PlaySound(VanillaSoundCommsRadio.Confirm);

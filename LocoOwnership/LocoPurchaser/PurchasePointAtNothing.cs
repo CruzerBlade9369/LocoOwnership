@@ -38,7 +38,7 @@ namespace LocoOwnership.LocoPurchaser
 		{
 			if (action != InputAction.Activate)
 			{
-				throw new ArgumentException();
+				return this;
 			}
 			utility.PlaySound(VanillaSoundCommsRadio.Cancel);
 			return new LocoPurchase();
@@ -83,6 +83,11 @@ namespace LocoOwnership.LocoPurchaser
 			{
 				// Check if loco exists in owned locos cache
 				if (OwnedLocos.ownedLocos.ContainsKey(selectedCar.CarGUID))
+				{
+					return this;
+				}
+
+				if (selectedCar.uniqueCar && selectedCar.playerSpawnedCar)
 				{
 					return this;
 				}

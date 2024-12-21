@@ -1,10 +1,12 @@
 using System;
+using System.Linq;
 
 using DV;
 using DV.Localization;
 using DV.ThingTypes;
 using DV.InventorySystem;
 using DV.ThingTypes.TransitionHelpers;
+using static DV.LocoRestoration.LocoRestorationController;
 
 using UnityEngine;
 
@@ -76,67 +78,105 @@ namespace LocoOwnership.LocoPurchaser
 			signalOrigin = carDeleter.signalOrigin;
 		}
 
+		private bool HasDemonstrator()
+		{
+			var controller = allLocoRestorationControllers.Find(x => x.locoLivery == selectedCar.carLivery);
+			if (controller != null && controller.State >= RestorationState.S9_LocoServiced)
+			{
+				return true;
+			}
+
+			return false;
+		}
+
+		private bool HasEnoughLocos()
+		{
+			int maxOwnedLocos = Main.settings.maxLocosLimit;
+			if (OwnedLocos.ownedLocos.Values.Count(v => v.StartsWith("L-")) > maxOwnedLocos)
+			{
+				return true;
+			}
+
+			return false;
+		}
+
+		private bool IsLocoDebtCleared()
+		{
+			TrainCar tender = CarGetters.GetTender(selectedCar);
+			if (DebtHandling.SetVehicleToOwned(selectedCar, tender))
+			{
+				return true;
+			}
+
+			return false;
+		}
+
 		public override AStateBehaviour OnAction(CommsRadioUtility utility, InputAction action)
 		{
 			if (action != InputAction.Activate)
 			{
-				throw new ArgumentException();
+				return this;
 			}
 
-			// Cancel when not looking at loco
 			if (!highlighterState)
 			{
 				utility.PlaySound(VanillaSoundCommsRadio.Cancel);
 				return new PurchasePointAtNothing();
 			}
 
-			// Check if loco is player spawned
 			if (selectedCar.playerSpawnedCar)
 			{
 				utility.PlaySound(VanillaSoundCommsRadio.Warning);
 				return new TransactionPurchaseFail(5);
 			}
 
-			// Check if player does not have manual service
 			if (!licenseManager.IsGeneralLicenseAcquired(GeneralLicenseType.ManualService.ToV2()))
 			{
 				utility.PlaySound(VanillaSoundCommsRadio.Warning);
 				return new TransactionPurchaseFail(2);
 			}
 
-			// Check if player does not have has license for loco
 			if (!licenseManager.IsGeneralLicenseAcquired(currentLicense))
 			{
 				utility.PlaySound(VanillaSoundCommsRadio.Warning);
 				return new TransactionPurchaseFail(1);
 			}
 
-			// Check if player can afford
-			if (playerMoney >= carBuyPrice)
+			if (!HasDemonstrator())
 			{
-				OwnedLocos.DebtHandlingResult purchaseSuccess = Main.ownershipHandler.OnLocoBuy(selectedCar);
-				if (purchaseSuccess.MaxOwnedLoc)
-				{
-					utility.PlaySound(VanillaSoundCommsRadio.Warning);
-					return new TransactionPurchaseFail(3);
-				}
-				else if (purchaseSuccess.DebtNotZero)
-				{
-					utility.PlaySound(VanillaSoundCommsRadio.Warning);
-					return new TransactionPurchaseFail(4);
-				}
-
-				// Success
-				Inventory.Instance.RemoveMoney(carBuyPrice);
-				utility.PlaySound(VanillaSoundCommsRadio.MoneyRemoved);
-				return new TransactionPurchaseSuccess(selectedCar, carBuyPrice);
+				utility.PlaySound(VanillaSoundCommsRadio.Warning);
+				return new TransactionPurchaseFail(6);
 			}
-			else
+
+			if (OwnedLocos.ownedLocos.ContainsKey(selectedCar.CarGUID))
 			{
-				// Broke ahh
+				utility.PlaySound(VanillaSoundCommsRadio.Warning);
+				return new TransactionPurchaseFail(7);
+			}
+
+			if (playerMoney < carBuyPrice)
+			{
 				utility.PlaySound(VanillaSoundCommsRadio.Warning);
 				return new TransactionPurchaseFail(0);
 			}
+
+			if (HasEnoughLocos())
+			{
+				utility.PlaySound(VanillaSoundCommsRadio.Warning);
+				return new TransactionPurchaseFail(3);
+			}
+
+			if (!IsLocoDebtCleared())
+			{
+				utility.PlaySound(VanillaSoundCommsRadio.Warning);
+				return new TransactionPurchaseFail(4);
+			}
+
+			// Success
+			OwnedLocos.BuyLoco(selectedCar);
+			Inventory.Instance.RemoveMoney(carBuyPrice);
+			utility.PlaySound(VanillaSoundCommsRadio.MoneyRemoved);
+			return new TransactionPurchaseSuccess(selectedCar, carBuyPrice);
 		}
 
 		public override AStateBehaviour OnUpdate(CommsRadioUtility utility)

@@ -11,7 +11,7 @@ namespace LocoOwnership.Shared
 		public const float DE2_ARTIFICIAL_LICENSE_PRICE = 10000f;
 		public const float MIN_TELE_PRICE = 2500f;
 
-		public float CalculateBuyPrice(TrainCar selectedCar)
+		public static float CalculateBuyPrice(TrainCar selectedCar)
 		{
 			float carBuyPrice;
 
@@ -37,7 +37,7 @@ namespace LocoOwnership.Shared
 			return carBuyPrice;
 		}
 
-		public float CalculateSellPrice(TrainCar selectedCar)
+		public static float CalculateSellPrice(TrainCar selectedCar)
 		{
 			float carSellPrice;
 
@@ -63,7 +63,7 @@ namespace LocoOwnership.Shared
 			return carSellPrice;
 		}
 
-		public float CalculatCarTeleportPrice(TrainCar selectedCar, EquiPointSet.Point? selectedPoint)
+		public static float CalculatCarTeleportPrice(TrainCar selectedCar, EquiPointSet.Point? selectedPoint)
 		{
 			float carTeleportPrice;
 
