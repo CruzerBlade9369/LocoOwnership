@@ -18,7 +18,7 @@ namespace LocoOwnership.Menus
 
 		public override AStateBehaviour OnAction(CommsRadioUtility utility, InputAction action)
 		{
-			if (action == InputAction.Activate)
+			if (action != InputAction.Activate)
 			{
 				return this;
 			}
