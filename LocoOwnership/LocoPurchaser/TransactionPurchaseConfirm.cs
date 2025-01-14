@@ -6,6 +6,7 @@ using DV.Localization;
 using DV.ThingTypes;
 using DV.InventorySystem;
 using DV.ThingTypes.TransitionHelpers;
+using DV.UserManagement;
 using static DV.LocoRestoration.LocoRestorationController;
 
 using UnityEngine;
@@ -80,6 +81,11 @@ namespace LocoOwnership.LocoPurchaser
 
 		private bool HasDemonstrator()
 		{
+			if (UserManager.Instance.CurrentUser.CurrentSession.GameMode.Equals("FreeRoam"))
+			{
+				return true;
+			}
+
 			var controller = allLocoRestorationControllers.Find(x => x.locoLivery == selectedCar.carLivery);
 			if (controller != null && controller.State >= RestorationState.S9_LocoServiced)
 			{
