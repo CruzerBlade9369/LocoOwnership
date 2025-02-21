@@ -23,6 +23,7 @@ namespace LocoOwnership.Shared
 		{
 			this.selectedCar = selectedCar;
 			highlighter = carDeleter.trainHighlighter;
+			highlighter.SetActive(false);
 			highlighter.transform.SetParent(null);
 		}
 
