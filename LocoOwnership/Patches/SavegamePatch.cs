@@ -1,6 +1,8 @@
 using HarmonyLib;
 using Newtonsoft.Json.Linq;
 
+using UnityEngine;
+
 using LocoOwnership.OwnershipHandler;
 
 namespace LocoOwnership.Patches
@@ -29,14 +31,23 @@ namespace LocoOwnership.Patches
 
 			JObject savedOwnedLocos = SaveGameManager.Instance.data.GetJObject("MOD_LOCOOWNERSHIP");
 
-			// Clear cache for new game load
+			// clear cache for new game load (here for redundancy)
 			OwnedLocos.ClearCache();
 
 			if (savedOwnedLocos != null)
 			{
-				Main.DebugLog("load savedownedlocos");
 				OwnedLocos.OnGameLoad(savedOwnedLocos);
 			}
+		}
+	}
+
+	[HarmonyPatch(typeof(AStartGameData), MethodType.Constructor)]
+	class CacheResetter
+	{
+		static void Prefix()
+		{
+			// clear cache when attempting to load a save
+			OwnedLocos.ClearCache();
 		}
 	}
 

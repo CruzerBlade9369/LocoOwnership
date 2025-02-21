@@ -16,7 +16,6 @@ using LocoOwnership.OwnershipHandler;
 
 namespace LocoOwnership
 {
-	[EnableReloading]
 	public static class Main
 	{
 		public static bool enabled;
@@ -56,7 +55,6 @@ namespace LocoOwnership
 				translations.AddTranslationsFromWebCsv(localizationUrl);
 
 				ControllerAPI.Ready += StartCommsRadio;
-				OwnershipInit();
 			}
 			catch (Exception ex)
 			{
@@ -87,11 +85,6 @@ namespace LocoOwnership
 		public static void StartCommsRadio()
 		{
 			CommsRadioMode = CommsRadioMode.Create(new MainMenu(), Color.blue, (mode) => mode is CommsRadioCrewVehicle);
-		}
-
-		public static void OwnershipInit()
-		{
-			ownershipHandler = new OwnedLocos();
 		}
 	}
 }

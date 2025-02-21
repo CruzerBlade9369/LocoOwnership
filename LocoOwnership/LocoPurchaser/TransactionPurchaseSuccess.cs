@@ -1,5 +1,3 @@
-using System;
-
 using DV;
 using DV.Localization;
 
@@ -9,7 +7,7 @@ using LocoOwnership.Menus;
 
 namespace LocoOwnership.LocoPurchaser
 {
-	internal class TransactionPurchaseSuccess : AStateBehaviour
+	public class TransactionPurchaseSuccess : AStateBehaviour
 	{
 		public TransactionPurchaseSuccess(TrainCar selectedCar, float buyPrice)
 			: base(new CommsRadioState(

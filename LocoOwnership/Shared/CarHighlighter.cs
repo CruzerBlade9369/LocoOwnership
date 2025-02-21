@@ -5,35 +5,27 @@ using DV;
 using UnityEngine;
 
 using CommsRadioAPI;
-using DV.PointSet;
 
 namespace LocoOwnership.Shared
 {
-	// Shared class for highlighting locos
 	public class CarHighlighter
 	{
 		private static readonly Vector3 HIGHLIGHT_BOUNDS_EXTENSION = new Vector3(0.25f, 0.8f, 0f);
 
-		private int trainCarMask;
-
-		internal TrainCar selectedCar;
-
+		private TrainCar selectedCar;
 		private GameObject highlighter = new();
 
 		/*-----------------------------------------------------------------------------------------------------------------------*/
 
 		#region CAR HIGHLIGHTER FUNCTIONS
 
-		// Accepts 2 arguments: Car to highlight, comms radio deleter state
 		public void InitHighlighter(TrainCar selectedCar, CommsRadioCarDeleter carDeleter)
 		{
 			this.selectedCar = selectedCar;
 			highlighter = carDeleter.trainHighlighter;
-			highlighter.SetActive(false);
 			highlighter.transform.SetParent(null);
 		}
 
-		// Accepts 3 arguments: CommsRadioUtility, AStateBehaviour, material type bool
 		public void StartHighlighter(CommsRadioUtility utility, bool isValid)
 		{
 			MeshRenderer highlighterRenderer = highlighter.GetComponentInChildren<MeshRenderer>(true);
@@ -68,10 +60,10 @@ namespace LocoOwnership.Shared
 
 		#region COMPONENT STEALERS FOR LOCO SELECTOR
 
-		public CommsRadioCarDeleter RefreshCarDeleterComponent()
+		public static CommsRadioCarDeleter RefreshCarDeleterComponent()
 		{
 			ICommsRadioMode? commsRadioMode = ControllerAPI.GetVanillaMode(VanillaMode.Clear);
-			if (commsRadioMode is null)
+			if (commsRadioMode == null)
 			{
 				Main.DebugLog("Could not find CommsRadioCarDeleter");
 				throw new NullReferenceException();
@@ -81,9 +73,9 @@ namespace LocoOwnership.Shared
 			return carDeleter;
 		}
 
-		public int RefreshTrainCarMask()
+		public static int RefreshTrainCarMask()
 		{
-			trainCarMask = LayerMask.GetMask(new string[]
+			int trainCarMask = LayerMask.GetMask(new string[]
 			{
 			"Train_Big_Collider"
 			});

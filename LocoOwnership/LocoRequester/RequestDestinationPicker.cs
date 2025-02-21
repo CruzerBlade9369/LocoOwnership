@@ -16,7 +16,7 @@ using LocoOwnership.Shared;
 
 namespace LocoOwnership.LocoRequester
 {
-	internal class RequestDestinationPicker : AStateBehaviour
+	public class RequestDestinationPicker : AStateBehaviour
 	{
 		private static Coroutine? PotentialTracksUpdateCoroutine;
 		private static CarDestinationHighlighter? cachedDestinationHighlighter;
@@ -36,7 +36,7 @@ namespace LocoOwnership.LocoRequester
 		private bool isSelectedOrientationOppositeTrackDirection;
 		private CarDestinationHighlighter destinationHighlighter;
 
-		internal TrainCar loco;
+		private TrainCar loco;
 
 		public RequestDestinationPicker(
 			TrainCar loco,
@@ -92,7 +92,7 @@ namespace LocoOwnership.LocoRequester
 					{
 						Main.DebugLog($"Selected track: {selectedTrack.logicTrack.ID.FullID}");
 
-						float carTeleportPrice = Finances.CalculatCarTeleportPrice(loco, selectedPoint);
+						float carTeleportPrice = Finances.CalculateCarTeleportPrice(loco, selectedPoint);
 
 						utility.PlaySound(VanillaSoundCommsRadio.Confirm);
 						return new RequestConfirm(
@@ -172,7 +172,7 @@ namespace LocoOwnership.LocoRequester
 				return new RequestDestinationPicker(loco, selectedCarBounds, signalOrigin, null, null, isSelectedOrientationOppositeTrackDirection);
 			}
 
-			// No transition will happen when returning `this`, thus we must manually update the destination highlighter.
+			// no transition will happen when returning `this`, thus we must manually update the destination highlighter.
 			HighlightSpawnPoint(utility);
 			return this;
 		}

@@ -7,7 +7,7 @@ namespace LocoOwnership.Patches
 	[HarmonyPatch(typeof(AStartGameData), nameof(AStartGameData.DestroyAllInstances))]
 	class CarValidatePatch
 	{
-		static void Prefix()
+		static void Postfix()
 		{
 			Main.DebugLog("Beginning validating existence of owned cars");
 			OwnedLocos.ValidateOwnedCars();

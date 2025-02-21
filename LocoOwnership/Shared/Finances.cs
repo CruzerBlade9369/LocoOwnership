@@ -63,7 +63,7 @@ namespace LocoOwnership.Shared
 			return carSellPrice;
 		}
 
-		public static float CalculatCarTeleportPrice(TrainCar selectedCar, EquiPointSet.Point? selectedPoint)
+		public static float CalculateCarTeleportPrice(TrainCar selectedCar, EquiPointSet.Point? selectedPoint)
 		{
 			float carTeleportPrice;
 

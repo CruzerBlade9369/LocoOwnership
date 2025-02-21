@@ -7,7 +7,7 @@ using DV.PointSet;
 
 using UnityEngine;
 
-namespace LocoOwnership.Teleporter
+namespace LocoOwnership.Shared
 {
 	public static class CarTeleporter
 	{
@@ -20,7 +20,7 @@ namespace LocoOwnership.Teleporter
 				Debug.LogError("Cannot teleport train, because another teleport is already in progress");
 				yield break;
 			}
-			if (selectedTrack is null)
+			if (selectedTrack == null)
 			{
 				Debug.LogError("Track not found!");
 				yield break;
@@ -36,7 +36,7 @@ namespace LocoOwnership.Teleporter
 			loco.UncoupleSelf(playAudio: false);
 			MultipleUnitModule.DisconnectCablesIfMultipleUnitSupported(loco);
 
-			if (tender is not null)
+			if (tender != null)
 			{
 				tender.UncoupleSelf(playAudio: false);
 				MultipleUnitModule.DisconnectCablesIfMultipleUnitSupported(tender);
@@ -49,10 +49,10 @@ namespace LocoOwnership.Teleporter
 			Vector3 forward = spawnPoint.Value.forward;
 			if (reverseDirection) { forward *= -1f; }
 
-			if (tender is not null)
+			if (tender != null)
 			{
 				Vector3 s282WorldPos = spawnPos - forward * tender.Bounds.center.z;
-				Vector3 tenderWorldPos = spawnPos - forward * (loco.Bounds.center.z + 1.5f);
+				Vector3 tenderWorldPos = spawnPos - forward * (loco.Bounds.center.z + 1.4f);
 
 				loco.MoveToTrack(selectedTrack, s282WorldPos, forward);
 				loco.GetComponent<TrainCarInteriorPhysics>()?.SyncPosition();
@@ -132,7 +132,7 @@ namespace LocoOwnership.Teleporter
 				carsToTeleport[i].GetComponent<TrainCarInteriorPhysics>()?.SyncPosition();
 
 				// Update currentPos to the position where the next car should be placed
-				currentPos += carForward * carsToTeleport[i].Bounds.size.z;
+				currentPos -= carForward * carsToTeleport[i].Bounds.center.z;
 			}
 
 			isTeleportingTrain = false;

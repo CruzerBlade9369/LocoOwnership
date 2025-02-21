@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 using DV;
 using DV.Localization;
@@ -15,25 +16,22 @@ using DV.ThingTypes;
 
 namespace LocoOwnership.LocoRequester
 {
-	internal class RequestLocoSelector : AStateBehaviour
+	public class RequestLocoSelector : AStateBehaviour
 	{
-		public static List<string> requestableOwnedLocos = new List<string>();
-		public static int lastIndex = 0;
+		public static Dictionary<string, string> requestableOwnedLocos = new();
+		private static int lastIndex = 0;
 		private int selectedIndex;
 
-		internal TrainCar loco;
+		private TrainCar loco;
 
 		public RequestLocoSelector(int selectedIndex) : base(
 			new CommsRadioState(
 				titleText: LocalizationAPI.L("lo/radio/general/request"),
-				contentText: $"{LocalizationAPI.L(TrainCarFromIndex(selectedIndex).carLivery.localizationKey)} {TrainCarFromIndex(selectedIndex).ID}",
+				contentText: requestableOwnedLocos.Values.ElementAt(selectedIndex),
 				actionText: LocalizationAPI.L("comms/confirm"),
-				buttonBehaviour: ButtonBehaviourType.Override
-			)
-		)
+				buttonBehaviour: ButtonBehaviourType.Override))
 		{
 			lastIndex = this.selectedIndex = selectedIndex;
-
 			loco = TrainCarFromIndex(selectedIndex);
 		}
 
@@ -45,7 +43,7 @@ namespace LocoOwnership.LocoRequester
 
 					TrainCar tender = CarGetters.GetTender(loco);
 
-					if (CarTypes.IsMUSteamLocomotive(loco.carType) && tender is null)
+					if (CarTypes.IsMUSteamLocomotive(loco.carType) && tender == null)
 					{
 						utility.PlaySound(VanillaSoundCommsRadio.Warning);
 						return new RequestFail(2);
@@ -65,7 +63,7 @@ namespace LocoOwnership.LocoRequester
 
 					Bounds? locoBounds = loco?.Bounds;
 					Bounds bounds = default(Bounds);
-					if (tender is not null)
+					if (tender != null)
 					{
 						Bounds? tenderBounds = tender.Bounds;
 
@@ -88,7 +86,7 @@ namespace LocoOwnership.LocoRequester
 					return new RequestLocoSelector(NextIndex());
 
 				default:
-					Debug.Log("Request loco selector: why are you here?");
+					Debug.LogError("Request loco selector: why are you here?");
 					throw new Exception($"Unexpected action: {action}");
 			}
 		}
@@ -121,11 +119,19 @@ namespace LocoOwnership.LocoRequester
 
 			foreach (ExistingOwnedCarDebt eocd in ocsc.existingOwnedCarStates)
 			{
-				if (OwnedLocos.ownedLocos.ContainsValue(eocd.ID) && eocd.car.IsLoco)
+				if (OwnedLocos.HasLocoGUIDAsKey(eocd.car.CarGUID) && eocd.car.IsLoco)
 				{
-					requestableOwnedLocos.Add(eocd.car.CarGUID);
+					requestableOwnedLocos.Add(eocd.car.CarGUID, $"{LocalizationAPI.L(eocd.car.carLivery.localizationKey)} {eocd.car.ID}");
 				}
 			}
+
+			SortRequestableLocosList();
+		}
+
+		private static void SortRequestableLocosList()
+		{
+			var sortedDictionary = requestableOwnedLocos.OrderBy(kvp => kvp.Value).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+			requestableOwnedLocos = sortedDictionary;
 		}
 
 		private static TrainCar TrainCarFromIndex(int index)
@@ -133,7 +139,7 @@ namespace LocoOwnership.LocoRequester
 			OwnedCarsStateController ocsc = OwnedCarsStateController.Instance;
 			TrainCar loco = null;
 
-			string ownedLocoGuid = requestableOwnedLocos[index];
+			string ownedLocoGuid = requestableOwnedLocos.Keys.ElementAt(index);
 
 			foreach (ExistingOwnedCarDebt eocd in ocsc.existingOwnedCarStates)
 			{

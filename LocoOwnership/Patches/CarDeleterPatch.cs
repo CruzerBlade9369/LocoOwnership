@@ -17,7 +17,7 @@ namespace LocoOwnership.Patches
 		{
 			TrainCar carToDelete = Traverse.Create(__instance).Field("carToDelete").GetValue<TrainCar>();
 
-			if (carToDelete != null && OwnedLocos.ownedLocos.ContainsKey(carToDelete.CarGUID))
+			if (carToDelete != null && OwnedLocos.HasLocoGUIDAsKey(carToDelete.CarGUID))
 			{
 				__instance.display.SetContent(LocalizationAPI.L("lo/misc/cardeleterpatch"));
 

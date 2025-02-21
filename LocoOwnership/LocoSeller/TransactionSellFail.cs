@@ -1,5 +1,3 @@
-using System;
-
 using DV;
 using DV.Localization;
 
@@ -9,7 +7,7 @@ using LocoOwnership.Menus;
 
 namespace LocoOwnership.LocoSeller
 {
-	internal class TransactionSellFail : AStateBehaviour
+	public class TransactionSellFail : AStateBehaviour
 	{
 		private static readonly string[] failReasons = [
 			"lo/radio/sfail/content/0",

@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -11,47 +10,34 @@ using DV.InventorySystem;
 
 using UnityEngine;
 
-using MessageBox;
-
 using LocoOwnership.Shared;
 
 namespace LocoOwnership.OwnershipHandler
 {
-	public class OwnedLocos : MonoBehaviour
+	public class OwnedLocos
 	{
-		public static OwnedLocos Instance { get; private set; }
-
-		// This is the cache
-		public static Dictionary<string, string> ownedLocos = new();
-		public static Dictionary<string, float> ownedLocosLicensePrice = new();
-		int len = ownedLocos.Count;
-
-		// makes sure this thing stays as singleton
-		// remind myself to not touch old code if this thing suddenly stops working.
-		private void Awake()
-		{
-			if (Instance != null && Instance != this)
-			{
-				Destroy(this.gameObject);
-				return;
-			}
-
-			Instance = this;
-			DontDestroyOnLoad(this.gameObject);
-		}
-
-		public static void Initialize()
-		{
-			if (Instance == null)
-			{
-				GameObject singletonObject = new GameObject(nameof(OwnedLocos));
-				Instance = singletonObject.AddComponent<OwnedLocos>();
-			}
-		}
+		// this is the cache
+		private static Dictionary<string, string> ownedLocos = new();
+		private static Dictionary<string, float> ownedLocosLicensePrice = new();
 
 		/*-----------------------------------------------------------------------------------------------------------------------*/
 
-		#region CACHE HANDLER
+		#region UTILITY
+
+		public static bool HasLocoGUIDAsKey(string key)
+		{
+			if (ownedLocos.ContainsKey(key))
+			{
+				return true;
+			}
+
+			return false;
+		}
+
+		public static int CountLocosOnly()
+		{
+			return ownedLocos.Count(kv => kv.Key.StartsWith("L-"));
+		}
 
 		public static void ClearCache()
 		{
@@ -59,6 +45,12 @@ namespace LocoOwnership.OwnershipHandler
 			ownedLocos.Clear();
 			ownedLocosLicensePrice.Clear();
 		}
+
+		#endregion
+
+		/*-----------------------------------------------------------------------------------------------------------------------*/
+
+		#region OWNED LOCOS HANDLER
 
 		public static void BuyLoco(TrainCar selectedCar)
 		{
@@ -81,22 +73,26 @@ namespace LocoOwnership.OwnershipHandler
 			}
 			ownedLocos.Add(guid, locoID);
 
-			// Debug lines
+			// add loco buy price for despawn refund
+			ownedLocosLicensePrice.Add(guid, Finances.CalculateBuyPrice(selectedCar));
+
+#if DEBUG
+
+			// debug lines
 			Main.DebugLog("Owned locos list:");
 			foreach (KeyValuePair<string, string> kvp in ownedLocos)
 			{
 				Main.DebugLog($"Guid = {kvp.Key}, LocoID = {kvp.Value}");
 			}
 
-			// Add loco buy price for despawn refund
-			ownedLocosLicensePrice.Add(guid, Finances.CalculateBuyPrice(selectedCar));
-
-			// Debug lines
 			Main.DebugLog("Owned locos list, stored loco price:");
 			foreach (KeyValuePair<string, float> kvp in ownedLocosLicensePrice)
 			{
 				Main.DebugLog($"Guid = {kvp.Key}, stored loco price = {kvp.Value}");
 			}
+
+#endif
+
 		}
 
 		public static void SellLoco(TrainCar selectedCar)
@@ -150,10 +146,81 @@ namespace LocoOwnership.OwnershipHandler
 		public static void ValidateOwnedCars()
 		{
 			OwnedCarsStateController ocsc = OwnedCarsStateController.Instance;
+			HashSet<string> eocdGuids = new();
+			HashSet<string> socdIDs = new();
+			HashSet<StagedOwnedCarDebt> socdTemp = new();
+
+			bool carsDeleted = false;
+
+			if (ocsc == null)
+			{
+				return;
+			}
+
+			if (Inventory.Instance == null)
+			{
+				return;
+			}
+
+			// populate temporary list
+			foreach (ExistingOwnedCarDebt eocd in ocsc.existingOwnedCarStates)
+			{
+				eocdGuids.Add(eocd.car.CarGUID);
+			}
+
+			foreach (StagedOwnedCarDebt socd in ocsc.currentlyDestroyedOwnedCarStates)
+			{
+				if (ownedLocos.Values.Contains(socd.ID))
+				{
+					Main.DebugLog($"Adding {socd.ID} into removal list since it exists in owned locos list.");
+					socdTemp.Add(socd);
+				}
+
+				socdIDs.Add(socd.ID);
+			}
+
+			foreach (string guid in ownedLocos.Keys)
+			{
+				Debug.Log(ownedLocos[guid]);
+			}
+
+			// validate cars
+			foreach (string guid in ownedLocos.Keys.ToList())
+			{
+				string carID = ownedLocos[guid];
+
+				if (!eocdGuids.Contains(guid))
+				{
+					carsDeleted = true;
+
+					Debug.LogError($"Car {carID} is gone! Refunding license cost and deleting from lists.");
+					Inventory.Instance.AddMoney(ownedLocosLicensePrice[guid]);
+					ownedLocos.Remove(guid);
+				}
+			}
+
+			// remove from socd
+			foreach (StagedOwnedCarDebt socd in socdTemp)
+			{
+				ocsc.currentlyDestroyedOwnedCarStates.Remove(socd);
+			}
+
+			if (carsDeleted)
+			{
+				CarDeletedNotif.ShowOK(LocalizationAPI.L("lo/popupapi/okmsg/carvalidate"));
+			}
+
+			Main.DebugLog("Completed validation of existence of owned cars");
+		}
+
+		/*public static void ValidateOwnedCarsOld()
+		{
+			OwnedCarsStateController ocsc = OwnedCarsStateController.Instance;
 			List<StagedOwnedCarDebt> ownedCarsToDestage = new();
 			List<string> modOwnedCarsToRemove = new();
+			List<string> actualOwnedCars = new();
 
-			// Remove missing cars from vanilla owned locos list
+			// populate temporary lists
 			foreach (StagedOwnedCarDebt socd in ocsc.currentlyDestroyedOwnedCarStates)
 			{
 				if (ownedLocos.ContainsValue(socd.ID))
@@ -163,12 +230,18 @@ namespace LocoOwnership.OwnershipHandler
 				}
 			}
 
+			foreach (ExistingOwnedCarDebt eocd in ocsc.existingOwnedCarStates)
+			{
+				actualOwnedCars.Add(eocd.car.CarGUID);
+			}
+
+			// remove from destroyed owned car states
 			foreach (StagedOwnedCarDebt socd in ownedCarsToDestage)
 			{
 				ocsc.currentlyDestroyedOwnedCarStates.Remove(socd);
 			}
 
-			// Refund missing cars from mod owned locos list and remove
+			// refund missing cars from mod owned locos list and remove
 			foreach (string id in modOwnedCarsToRemove)
 			{
 				var keysToRemove = ownedLocos.Where(pair => pair.Value == id).Select(pair => pair.Key).ToList();
@@ -188,13 +261,25 @@ namespace LocoOwnership.OwnershipHandler
 				}
 			}
 
+			// if there are data in owned locos list that don't exist in vanilla owned vehicles
+			foreach (string guid in ownedLocos.Keys.ToList())
+			{
+				if (!actualOwnedCars.Contains(guid))
+				{
+					ownedLocos.TryGetValue(guid, out string value);
+					Debug.LogError($"Car {value} does not exist in vanilla owned vehicles list! Removing from cache.");
+					ownedLocos.Remove(guid);
+					ownedLocosLicensePrice.Remove(guid);
+				}
+			}
+
 			if (modOwnedCarsToRemove.Any())
 			{
-				PopupAPI.ShowOk(LocalizationAPI.L("lo/popupapi/okmsg/carvalidate"));
+				CarDeletedNotif.ShowOK(LocalizationAPI.L("lo/popupapi/okmsg/carvalidate"));
 			}
 
 			Main.DebugLog("Completed validation of existence of owned cars");
-		}
+		}*/
 
 		#endregion
 
@@ -202,7 +287,7 @@ namespace LocoOwnership.OwnershipHandler
 
 		#region LOAD/SAVE HANDLER
 
-		// Convert JObject of owned locos back into dict and apply to cache
+		// convert JObject of owned locos back into dict and apply to cache
 		public static void OnGameLoad(JObject savedOwnedLocos)
 		{
 			JObject[] jobjectArray = savedOwnedLocos.GetJObjectArray("savedOwnedLocos");
@@ -237,7 +322,7 @@ namespace LocoOwnership.OwnershipHandler
 			}
 		}
 
-		// Convert owned locos dict cache into JObjects for savegame
+		// convert owned locos dict cache into JObjects for savegame
 		public static JObject OnGameSaved()
 		{
 			JObject savedOwnedLocos = new();

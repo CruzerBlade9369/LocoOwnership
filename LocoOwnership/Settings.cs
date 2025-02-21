@@ -23,6 +23,9 @@ namespace LocoOwnership
 		[Draw("Free locomotive requesting")]
 		public bool freeCarTeleport = false;
 
+		[Draw("Purchasing locomotives does not require demonstrator restoration")]
+		public bool skipDemonstrator = false;
+
 		[Draw("The funny (enable at your own risk)")]
 		public bool theFunny = false;
 

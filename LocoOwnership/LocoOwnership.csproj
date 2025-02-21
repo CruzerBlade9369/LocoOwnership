@@ -102,9 +102,6 @@
 		<Reference Include="DVLangHelper.Runtime">
 		  <HintPath>..\..\..\..\..\Programs\Steam\steamapps\common\Derail Valley\Mods\DVLangHelper\DVLangHelper.Runtime.dll</HintPath>
 		</Reference>
-		<Reference Include="MessageBox">
-		  <HintPath>..\..\..\..\..\Programs\Steam\steamapps\common\Derail Valley\Mods\MessageBox\MessageBox.dll</HintPath>
-		</Reference>
 		<Reference Include="net.smkd.vector3d">
 		  <HintPath>..\..\..\..\..\Programs\Steam\steamapps\common\Derail Valley\DerailValley_Data\Managed\net.smkd.vector3d.dll</HintPath>
 		</Reference>
@@ -112,7 +109,7 @@
 		  <HintPath>..\..\..\..\..\Programs\Steam\steamapps\common\Derail Valley\DerailValley_Data\Managed\Newtonsoft.Json.dll</HintPath>
 		</Reference>
 		<Reference Include="RSG.Promise">
-		  <HintPath>..\..\..\..\..\Programs\Steam\steamapps\common\Derail Valley\Mods\MessageBox\RSG.Promise.dll</HintPath>
+		  <HintPath>..\build\RSG.Promise.dll</HintPath>
 		</Reference>
 		<Reference Include="Unity.TextMeshPro">
 		  <HintPath>..\..\..\..\..\Programs\Steam\steamapps\common\Derail Valley\DerailValley_Data\Managed\Unity.TextMeshPro.dll</HintPath>

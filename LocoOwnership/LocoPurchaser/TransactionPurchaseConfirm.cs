@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 
 using DV;
 using DV.Localization;
@@ -18,17 +17,17 @@ using LocoOwnership.OwnershipHandler;
 
 namespace LocoOwnership.LocoPurchaser
 {
-	internal class TransactionPurchaseConfirm : AStateBehaviour
+	public class TransactionPurchaseConfirm : AStateBehaviour
 	{
 		private const float SIGNAL_RANGE = 200f;
 
-		private int trainCarMask;
+		
 		private float carBuyPrice;
 		private double playerMoney;
-
 		private bool highlighterState;
+		private TrainCar selectedCar;
 
-		internal TrainCar selectedCar;
+		private int trainCarMask;
 		private Transform signalOrigin;
 		private CommsRadioCarDeleter carDeleter;
 		private CarHighlighter highlighter;
@@ -36,51 +35,51 @@ namespace LocoOwnership.LocoPurchaser
 		private GeneralLicenseType_v2 currentLicense;
 		LicenseManager licenseManager;
 
-		public TransactionPurchaseConfirm(
-			TrainCar selectedCar,
-			float carBuyPrice,
-			CommsRadioCarDeleter carDeleter,
-			CarHighlighter highlighter,
-			bool highlighterState
-			)
+		public TransactionPurchaseConfirm(TrainCar selectedCar, bool highlighterState)
 			: base(new CommsRadioState(
 				titleText: LocalizationAPI.L("lo/radio/general/purchase"),
-				contentText: LocalizationAPI.L("lo/radio/pselected/content", selectedCar.ID, carBuyPrice.ToString()),
+				contentText: LocalizationAPI.L("lo/radio/pselected/content", selectedCar.ID, Finances.CalculateBuyPrice(selectedCar).ToString()),
 				actionText: highlighterState
 				? LocalizationAPI.L("comms/confirm")
 				: LocalizationAPI.L("comms/cancel"),
 				buttonBehaviour: ButtonBehaviourType.Override))
 		{
 			this.selectedCar = selectedCar;
-			this.carBuyPrice = carBuyPrice;
-			this.carDeleter = carDeleter;
-			this.highlighter = highlighter;
 			this.highlighterState = highlighterState;
 
-			signalOrigin = carDeleter.signalOrigin;
-			playerMoney = Inventory.Instance.PlayerMoney;
-			licenseManager = LicenseManager.Instance;
-			currentLicense = selectedCar.carLivery.requiredLicense;
+			if (highlighter == null)
+			{
+				highlighter = new CarHighlighter();
+			}
 
-			if (this.selectedCar is null)
+			if (this.selectedCar == null)
 			{
 				Main.DebugLog("selectedCar is null");
 				throw new ArgumentNullException(nameof(selectedCar));
 			}
 
-			highlighter.InitHighlighter(selectedCar, carDeleter);
+			carBuyPrice = Finances.CalculateBuyPrice(selectedCar);
+			playerMoney = Inventory.Instance.PlayerMoney;
+			licenseManager = LicenseManager.Instance;
+			currentLicense = selectedCar.carLivery.requiredLicense;
+
 			RefreshRadioComponent();
 		}
 
 		private void RefreshRadioComponent()
 		{
-			trainCarMask = highlighter.RefreshTrainCarMask();
-			carDeleter = highlighter.RefreshCarDeleterComponent();
+			trainCarMask = CarHighlighter.RefreshTrainCarMask();
+			carDeleter = CarHighlighter.RefreshCarDeleterComponent();
 			signalOrigin = carDeleter.signalOrigin;
 		}
 
 		private bool HasDemonstrator()
 		{
+			if (Main.settings.skipDemonstrator)
+			{
+				return true;
+			}
+
 			if (UserManager.Instance.CurrentUser.CurrentSession.GameMode.Equals("FreeRoam"))
 			{
 				return true;
@@ -98,7 +97,7 @@ namespace LocoOwnership.LocoPurchaser
 		private bool HasEnoughLocos()
 		{
 			int maxOwnedLocos = Main.settings.maxLocosLimit;
-			if (OwnedLocos.ownedLocos.Values.Count(v => v.StartsWith("L-")) > maxOwnedLocos)
+			if (OwnedLocos.CountLocosOnly() >= maxOwnedLocos)
 			{
 				return true;
 			}
@@ -154,7 +153,7 @@ namespace LocoOwnership.LocoPurchaser
 				return new TransactionPurchaseFail(6);
 			}
 
-			if (OwnedLocos.ownedLocos.ContainsKey(selectedCar.CarGUID))
+			if (OwnedLocos.HasLocoGUIDAsKey(selectedCar.CarGUID))
 			{
 				utility.PlaySound(VanillaSoundCommsRadio.Warning);
 				return new TransactionPurchaseFail(7);
@@ -178,7 +177,6 @@ namespace LocoOwnership.LocoPurchaser
 				return new TransactionPurchaseFail(4);
 			}
 
-			// Success
 			OwnedLocos.BuyLoco(selectedCar);
 			Inventory.Instance.RemoveMoney(carBuyPrice);
 			utility.PlaySound(VanillaSoundCommsRadio.MoneyRemoved);
@@ -187,40 +185,37 @@ namespace LocoOwnership.LocoPurchaser
 
 		public override AStateBehaviour OnUpdate(CommsRadioUtility utility)
 		{
-			while (signalOrigin is null)
+			while (signalOrigin == null)
 			{
 				Main.DebugLog("signalOrigin is null for some reason");
 				RefreshRadioComponent();
 			}
 
 			RaycastHit hit;
-
-			// If we're not pointing at anything
 			if (!Physics.Raycast(signalOrigin.position, signalOrigin.forward, out hit, SIGNAL_RANGE, trainCarMask))
 			{
+				// if no longer looking at the locomotive
 				if (highlighterState)
 				{
-					return new TransactionPurchaseConfirm(selectedCar, carBuyPrice, carDeleter, highlighter, false);
+					return new TransactionPurchaseConfirm(selectedCar, false);
 				}
 
 				return this;
 			}
 
-			// Try to get the train car we're pointing at
 			TrainCar target = TrainCar.Resolve(hit.transform.root);
-
-			if (target is null)
+			if (target == null)
 			{
 				return this;
 			}
 
-			// If we're pointing at the same locomotive
-			if (target.ID == selectedCar.ID && selectedCar.carLivery.requiredLicense is not null)
+			// if pointing at the selected locomotive
+			if (target.CarGUID == selectedCar.CarGUID && selectedCar.carLivery.requiredLicense != null)
 			{
 				if (!highlighterState)
 				{
 					utility.PlaySound(VanillaSoundCommsRadio.HoverOver);
-					return new TransactionPurchaseConfirm(selectedCar, carBuyPrice, carDeleter, highlighter, true);
+					return new TransactionPurchaseConfirm(selectedCar, true);
 				}
 			}
 
@@ -230,8 +225,8 @@ namespace LocoOwnership.LocoPurchaser
 		public override void OnEnter(CommsRadioUtility utility, AStateBehaviour? previous)
 		{
 			base.OnEnter(utility, previous);
-			trainCarMask = highlighter.RefreshTrainCarMask();
-			highlighter.StartHighlighter(utility, highlighterState);
+			highlighter.InitHighlighter(selectedCar, carDeleter);
+			highlighter.StartHighlighter(utility, true);
 		}
 
 		public override void OnLeave(CommsRadioUtility utility, AStateBehaviour? next)

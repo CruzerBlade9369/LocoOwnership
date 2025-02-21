@@ -1,5 +1,3 @@
-using System;
-
 using DV;
 using DV.Localization;
 
@@ -13,15 +11,13 @@ using LocoOwnership.OwnershipHandler;
 
 namespace LocoOwnership.LocoSeller
 {
-	// this class detects what we're pointing at
-	internal class SellPointAtNothing : AStateBehaviour
+	public class SellPointAtNothing : AStateBehaviour
 	{
 		private const float SIGNAL_RANGE = 100f;
 
 		private int trainCarMask;
 		private Transform signalOrigin;
 		private CommsRadioCarDeleter carDeleter;
-		private CarHighlighter highlighter;
 
 		public SellPointAtNothing()
 			: base(new CommsRadioState(
@@ -30,8 +26,14 @@ namespace LocoOwnership.LocoSeller
 				actionText: LocalizationAPI.L("comms/cancel"),
 				buttonBehaviour: ButtonBehaviourType.Override))
 		{
-			highlighter = new CarHighlighter();
 			RefreshRadioComponent();
+		}
+
+		private void RefreshRadioComponent()
+		{
+			trainCarMask = CarHighlighter.RefreshTrainCarMask();
+			carDeleter = CarHighlighter.RefreshCarDeleterComponent();
+			signalOrigin = carDeleter.signalOrigin;
 		}
 
 		public override AStateBehaviour OnAction(CommsRadioUtility utility, InputAction action)
@@ -44,54 +46,42 @@ namespace LocoOwnership.LocoSeller
 			return new LocoSell();
 		}
 
-		private void RefreshRadioComponent()
-		{
-			trainCarMask = highlighter.RefreshTrainCarMask();
-			carDeleter = highlighter.RefreshCarDeleterComponent();
-			signalOrigin = carDeleter.signalOrigin;
-		}
-
-		// Detecting what we're looking at
 		public override AStateBehaviour OnUpdate(CommsRadioUtility utility)
 		{
-			while (signalOrigin is null)
+			while (signalOrigin == null)
 			{
 				Main.DebugLog("signalOrigin is null for some reason");
 				RefreshRadioComponent();
 			}
 
 			RaycastHit hit;
-
-			// If we're not pointing at anything
 			if (!Physics.Raycast(signalOrigin.position, signalOrigin.forward, out hit, SIGNAL_RANGE, trainCarMask))
 			{
 				return this;
 			}
 
-			// Try to get the car we're pointing at
+			// try to get the car we're pointing at
 			TrainCar selectedCar = TrainCar.Resolve(hit.transform.root);
-
-			// If we aren't pointing at a car
-			if (selectedCar is null)
+			if (selectedCar == null)
 			{
 				return this;
 			}
 
-			// Check if the car we're pointing at exists in owned locos cache
-			if (selectedCar.IsLoco)
-			{
-				if (OwnedLocos.ownedLocos.ContainsKey(selectedCar.CarGUID))
-				{
-					if (selectedCar.carLivery.requiredLicense is not null)
-					{
-						utility.PlaySound(VanillaSoundCommsRadio.HoverOver);
-						return new SellPointAtLoco(selectedCar, carDeleter, highlighter);
-					}
-				}
-			}
-			else
+			// check if the car we're pointing at is valid to sell
+			if (!selectedCar.IsLoco)
 			{
 				return this;
+			}
+
+			if (selectedCar.carLivery.requiredLicense == null)
+			{
+				return this;
+			}
+
+			if (OwnedLocos.HasLocoGUIDAsKey(selectedCar.CarGUID))
+			{
+				utility.PlaySound(VanillaSoundCommsRadio.HoverOver);
+				return new SellPointAtLoco(selectedCar);
 			}
 
 			return this;

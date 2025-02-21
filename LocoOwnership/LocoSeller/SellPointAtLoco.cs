@@ -11,22 +11,18 @@ using LocoOwnership.Shared;
 
 namespace LocoOwnership.LocoSeller
 {
-	internal class SellPointAtLoco : AStateBehaviour
+	public class SellPointAtLoco : AStateBehaviour
 	{
 		private const float SIGNAL_RANGE = 200f;
 
-		private float carSellPrice;
+		private TrainCar selectedCar;
+
 		private int trainCarMask;
-		internal TrainCar selectedCar;
 		private Transform signalOrigin;
 		private CommsRadioCarDeleter carDeleter;
 		private CarHighlighter highlighter;
 
-		public SellPointAtLoco(
-			TrainCar selectedCar,
-			CommsRadioCarDeleter carDeleter,
-			CarHighlighter highlighter
-			)
+		public SellPointAtLoco(TrainCar selectedCar)
 			: base(new CommsRadioState(
 				titleText: LocalizationAPI.L("lo/radio/general/sell"),
 				contentText: LocalizationAPI.L("lo/radio/selling/content"),
@@ -34,18 +30,26 @@ namespace LocoOwnership.LocoSeller
 				buttonBehaviour: ButtonBehaviourType.Override))
 		{
 			this.selectedCar = selectedCar;
-			this.carDeleter = carDeleter;
-			this.highlighter = highlighter;
 
-			signalOrigin = carDeleter.signalOrigin;
+			if (highlighter == null)
+			{
+				highlighter = new CarHighlighter();
+			}
 
-			if (this.selectedCar is null)
+			if (this.selectedCar == null)
 			{
 				Main.DebugLog("selectedCar is null");
 				throw new ArgumentNullException(nameof(selectedCar));
 			}
 
-			highlighter.InitHighlighter(selectedCar, carDeleter);
+			RefreshRadioComponent();
+		}
+
+		private void RefreshRadioComponent()
+		{
+			trainCarMask = CarHighlighter.RefreshTrainCarMask();
+			carDeleter = CarHighlighter.RefreshCarDeleterComponent();
+			signalOrigin = carDeleter.signalOrigin;
 		}
 
 		public override AStateBehaviour OnAction(CommsRadioUtility utility, InputAction action)
@@ -55,22 +59,20 @@ namespace LocoOwnership.LocoSeller
 				return this;
 			}
 
-			carSellPrice = Finances.CalculateSellPrice(selectedCar);
-
 			utility.PlaySound(VanillaSoundCommsRadio.Confirm);
-			return new TransactionSellConfirm(selectedCar, carSellPrice, carDeleter, highlighter, true);
+			return new TransactionSellConfirm(selectedCar, true);
 		}
 
 		public override AStateBehaviour OnUpdate(CommsRadioUtility utility)
 		{
 			RaycastHit hit;
-			//if we're not pointing at anything
 			if (!Physics.Raycast(signalOrigin.position, signalOrigin.forward, out hit, SIGNAL_RANGE, trainCarMask))
 			{
 				return new SellPointAtNothing();
 			}
+
 			TrainCar target = TrainCar.Resolve(hit.transform.root);
-			if (target is null || target != selectedCar)
+			if (target == null || target != selectedCar)
 			{
 				//if we stopped pointing at selectedCar and are now pointing at either
 				//nothing or another train car, then go back to PointingAtNothing so
@@ -83,7 +85,7 @@ namespace LocoOwnership.LocoSeller
 		public override void OnEnter(CommsRadioUtility utility, AStateBehaviour? previous)
 		{
 			base.OnEnter(utility, previous);
-			trainCarMask = highlighter.RefreshTrainCarMask();
+			highlighter.InitHighlighter(selectedCar, carDeleter);
 			highlighter.StartHighlighter(utility, true);
 		}
 

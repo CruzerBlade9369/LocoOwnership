@@ -7,13 +7,10 @@ using DV.Utils;
 
 namespace LocoOwnership.OwnershipHandler
 {
-	internal class DebtHandling
+	public class DebtHandling
 	{
-		public static SimulatedCarDebtTracker DebtValueStealer(SimController simController)
+		private static SimulatedCarDebtTracker DebtValueStealer(SimController simController)
 		{
-			SimulatedCarDebtTracker debt;
-
-			// Use reflection to steal the private 'debt' field
 			if (simController == null)
 			{
 				throw new Exception("SimController not found on the specified TrainCar!");
@@ -26,7 +23,7 @@ namespace LocoOwnership.OwnershipHandler
 				throw new Exception("Field 'debt' not found in SimController!");
 			}
 
-			debt = (SimulatedCarDebtTracker)debtField.GetValue(simController);
+			SimulatedCarDebtTracker debt = (SimulatedCarDebtTracker)debtField.GetValue(simController);
 			if (debt == null)
 			{
 				throw new Exception("Value of locoDebt is null!");
@@ -43,14 +40,14 @@ namespace LocoOwnership.OwnershipHandler
 		{
 			float totalDebtCheck = 0f;
 
-			// Steal debt controller component
+			// steal debt controller component
 			LocoDebtController locoDebtController = LocoDebtController.Instance;
 			if (locoDebtController == null)
 			{
 				throw new Exception("LocoDebtController instance is null!");
 			}
 
-			// Find the traincar in tracked loco debts to remove
+			// find the traincar in tracked loco debts to remove
 			int num = locoDebtController.trackedLocosDebts.FindIndex
 				((ExistingLocoDebt debt) => debt.locoDebtTracker == locoDebt);
 			if (num == -1)
@@ -61,7 +58,7 @@ namespace LocoOwnership.OwnershipHandler
 			existingLocoDebt.UpdateDebtState();
 			totalDebtCheck += existingLocoDebt.GetTotalPrice();
 
-			// If tender is there find debt for tender too
+			// if tender is there find debt for tender too
 			ExistingLocoDebt existingTenderDebt = null;
 			int num2 = -1;
 			if (tenderDebt != null)
@@ -77,17 +74,17 @@ namespace LocoOwnership.OwnershipHandler
 				totalDebtCheck += existingTenderDebt.GetTotalPrice();
 			}
 
-			// If the (total) debt isn't 0 don't allow to buy loco
+			// if the (total) debt isn't 0 don't allow to buy loco
 			if (totalDebtCheck > 0f)
 			{
 				return false;
 			}
 
-			// Remove car from tracked debts
+			// remove car from tracked debts
 			if (existingTenderDebt != null)
 			{
-				// If the tender has a smaller index than the main loco, reduce the index of the main loco by 1
-				// to account for the index shift
+				// if the tender has a smaller index than the main loco, reduce the index of the main loco by 1
+				// to account for the index shift since the tender is handled first
 				if (num2 < num)
 				{
 					num--;
@@ -113,7 +110,7 @@ namespace LocoOwnership.OwnershipHandler
 			SimulatedCarDebtTracker locoDebt;
 			SimulatedCarDebtTracker tenderDebt = null;
 
-			// Get car's sim controller component and steal debt component
+			// get car's sim controller component and steal debt component
 			SimController simController = car.GetComponent<SimController>();
 			locoDebt = DebtValueStealer(simController);
 
@@ -124,14 +121,14 @@ namespace LocoOwnership.OwnershipHandler
 				tenderDebt = DebtValueStealer(tenderSimController);
 			}
 
-			// Remove car(s) from tracked loco debts
+			// remove car(s) from tracked loco debts
 			bool success = RemoveTrackedLocoDebts(locoDebt, tenderDebt);
 			if (!success)
 			{
 				return false;
 			}
 
-			// Invoke OnLogicCarInitialized with new uniqueCar value to register to owned vehicles list
+			// invoke OnLogicCarInitialized with new uniqueCar value to register to owned vehicles list
 			MethodInfo onLogicCarInitializedMethod = typeof(SimController).GetMethod("OnLogicCarInitialized",
 				BindingFlags.NonPublic | BindingFlags.Instance);
 			if (onLogicCarInitializedMethod != null)
@@ -160,11 +157,11 @@ namespace LocoOwnership.OwnershipHandler
 
 		#region FOR LOCO SELL
 
-		public static bool RemoveExistingOwnedCarState(SimulatedCarDebtTracker locoDebt, SimulatedCarDebtTracker tenderDebt)
+		private static bool RemoveExistingOwnedCarState(SimulatedCarDebtTracker locoDebt, SimulatedCarDebtTracker tenderDebt)
 		{
 			float totalDebtCheck = 0f;
 
-			// Find the traincar in owned car states to remove
+			// find the traincar in owned car states to remove
 			OwnedCarsStateController ownedCarsStateController = OwnedCarsStateController.Instance;
 			if (ownedCarsStateController == null)
 			{
@@ -183,7 +180,7 @@ namespace LocoOwnership.OwnershipHandler
 			bool isLocoDebtOnlyEnv = existingLocoDebt.carDebtTrackerBase.IsDebtOnlyEnvironmental();
 			totalDebtCheck += existingLocoDebt.GetTotalPrice();
 
-			// If tender is there find debt for tender too
+			// if tender is there find debt for tender too
 			ExistingOwnedCarDebt existingTenderDebt = null;
 			bool isTenderDebtOnlyEnv = false;
 			int num2 = -1;
@@ -202,7 +199,7 @@ namespace LocoOwnership.OwnershipHandler
 				totalDebtCheck += existingTenderDebt.GetTotalPrice();
 			}
 
-			// If has unpaid debts or debts arent only environmental then dont sell loco
+			// if has unpaid debts or debts arent only environmental then dont sell loco
 			if (existingTenderDebt != null)
 			{
 				if (totalDebtCheck > 0f)
@@ -251,7 +248,7 @@ namespace LocoOwnership.OwnershipHandler
 			SimulatedCarDebtTracker locoDebt;
 			SimulatedCarDebtTracker tenderDebt = null;
 
-			// Get car's sim controller component and steal debt component
+			// get the car's sim controller component and steal debt component
 			SimController simController = car.GetComponent<SimController>();
 			locoDebt = DebtValueStealer(simController);
 
@@ -263,14 +260,14 @@ namespace LocoOwnership.OwnershipHandler
 				tenderDebt = DebtValueStealer(tenderSimController);
 			}
 
-			// Remove car(s) from tracked woned car state
+			// remove car(s) from tracked woned car state
 			bool success = RemoveExistingOwnedCarState(locoDebt, tenderDebt);
 			if (!success)
 			{
 				return false;
 			}
 
-			// Invoke OnLogicCarInitialized with new uniqueCar value to remove from owned vehicles list
+			// invoke OnLogicCarInitialized with new uniqueCar value to remove from owned vehicles list
 			MethodInfo onLogicCarInitializedMethod = typeof(SimController).GetMethod("OnLogicCarInitialized",
 				BindingFlags.NonPublic | BindingFlags.Instance);
 			if (onLogicCarInitializedMethod != null)

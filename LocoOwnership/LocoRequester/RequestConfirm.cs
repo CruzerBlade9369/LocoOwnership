@@ -14,11 +14,10 @@ using CommsRadioAPI;
 
 using LocoOwnership.Menus;
 using LocoOwnership.Shared;
-using LocoOwnership.Teleporter;
 
 namespace LocoOwnership.LocoRequester
 {
-	internal class RequestConfirm : AStateBehaviour
+	public class RequestConfirm : AStateBehaviour
 	{
 		private double playerMoney;
 		private float carTeleportPrice;
@@ -37,7 +36,7 @@ namespace LocoOwnership.LocoRequester
 
 		private bool highlighterState;
 
-		internal TrainCar loco;
+		private TrainCar loco;
 
 		public RequestConfirm(
 			TrainCar loco,
@@ -88,7 +87,7 @@ namespace LocoOwnership.LocoRequester
 
 			if (playerMoney >= carTeleportPrice)
 			{
-				// Teleporting loco
+				// teleporting loco
 				if (Physics.Raycast(signalOrigin.position, signalOrigin.forward, SIGNAL_RANGE, laserPointerMask))
 				{
 					try

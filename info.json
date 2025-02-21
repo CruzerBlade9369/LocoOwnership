@@ -1,12 +1,11 @@
 {
 	"Id": "LocoOwnership",
-	"Version": "1.3.2",
+	"Version": "1.4.0",
 	"DisplayName": "LocoOwnership",
 	"Author": "Cruzer",
 	"EntryMethod": "LocoOwnership.Main.Load",
 	"Requirements": [
 		"CommsRadioAPI",
-		"MessageBox",
 		"DVLangHelper"
 	],
 	"ManagerVersion": "0.27.3",
