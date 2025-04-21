@@ -6,6 +6,7 @@ using System.Diagnostics.CodeAnalysis;
 using DV;
 using DV.PointSet;
 using DV.Localization;
+using DV.OriginShift;
 
 using UnityEngine;
 
@@ -90,7 +91,7 @@ namespace LocoOwnership.LocoRequester
 				case InputAction.Activate:
 					if (IsPlaceable(selectedTrack, selectedPoint))
 					{
-						Main.DebugLog($"Selected track: {selectedTrack.logicTrack.ID.FullID}");
+						Main.DebugLog($"Selected track: {selectedTrack.LogicTrack().ID.FullID}");
 
 						float carTeleportPrice = Finances.CalculateCarTeleportPrice(loco, selectedPoint);
 
@@ -158,7 +159,7 @@ namespace LocoOwnership.LocoRequester
 					EquiPointSet.Point? pointWithinRangeWithYOffset = RailTrack.GetPointWithinRangeWithYOffset(railTrack, point, MAX_DISTANCE_FROM_TRACK_POINT, TRACK_POINT_POSITION_Y_OFFSET);
 					if (pointWithinRangeWithYOffset.HasValue)
 					{
-						EquiPointSet.Point[] trackPoints = railTrack.GetPointSet(0f).points;
+						EquiPointSet.Point[] trackPoints = railTrack.GetKinkedPointSet().points;
 						int index = pointWithinRangeWithYOffset.Value.index;
 						EquiPointSet.Point? closestSpawnablePoint = CarSpawner.FindClosestValidPointForCarStartingFromIndex(trackPoints, index, selectedCarBounds.extents);
 
@@ -199,10 +200,10 @@ namespace LocoOwnership.LocoRequester
 			Vector3 lastUpdatedTracksWorldPosition = Vector3.positiveInfinity;
 			while (true)
 			{
-				if ((signalOrigin.position - WorldMover.currentMove - lastUpdatedTracksWorldPosition).magnitude > SIGNAL_RANGE)
+				if ((signalOrigin.transform.AbsolutePosition() - lastUpdatedTracksWorldPosition).magnitude > SIGNAL_RANGE)
 				{
 					UpdatePotentialTracks();
-					lastUpdatedTracksWorldPosition = signalOrigin.position - WorldMover.currentMove;
+					lastUpdatedTracksWorldPosition = signalOrigin.transform.AbsolutePosition();
 				}
 				yield return new WaitForSeconds(UPDATE_TRACKS_PERIOD);
 			}

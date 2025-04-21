@@ -9,7 +9,7 @@ using LocoOwnership.OwnershipHandler;
 namespace LocoOwnership.Patches
 {
 	[HarmonyPatch(typeof(CarVisitChecker), "IsRecentlyVisited", MethodType.Getter)]
-	public static class CarVisitCheckerPatch
+	class CarVisitCheckerPatch
 	{
 		static bool Prefix(CarVisitChecker __instance, ref bool __result)
 		{

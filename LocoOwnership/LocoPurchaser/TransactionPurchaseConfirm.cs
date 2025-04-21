@@ -20,7 +20,6 @@ namespace LocoOwnership.LocoPurchaser
 	public class TransactionPurchaseConfirm : AStateBehaviour
 	{
 		private const float SIGNAL_RANGE = 200f;
-
 		
 		private float carBuyPrice;
 		private double playerMoney;
@@ -226,7 +225,7 @@ namespace LocoOwnership.LocoPurchaser
 		{
 			base.OnEnter(utility, previous);
 			highlighter.InitHighlighter(selectedCar, carDeleter);
-			highlighter.StartHighlighter(utility, true);
+			highlighter.StartHighlighter(utility, highlighterState);
 		}
 
 		public override void OnLeave(CommsRadioUtility utility, AStateBehaviour? next)

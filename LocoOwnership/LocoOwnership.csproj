@@ -54,11 +54,17 @@
 		<Reference Include="DV.NAudio">
 		  <HintPath>..\..\..\..\..\Programs\Steam\steamapps\common\Derail Valley\DerailValley_Data\Managed\DV.NAudio.dll</HintPath>
 		</Reference>
+		<Reference Include="DV.OriginShiftInfo">
+		  <HintPath>..\..\..\..\..\Programs\Steam\steamapps\common\Derail Valley\DerailValley_Data\Managed\DV.OriginShiftInfo.dll</HintPath>
+		</Reference>
 		<Reference Include="DV.PointSet">
 		  <HintPath>..\..\..\..\..\Programs\Steam\steamapps\common\Derail Valley\DerailValley_Data\Managed\DV.PointSet.dll</HintPath>
 		</Reference>
 		<Reference Include="DV.RadioPlayer">
 		  <HintPath>..\..\..\..\..\Programs\Steam\steamapps\common\Derail Valley\DerailValley_Data\Managed\DV.RadioPlayer.dll</HintPath>
+		</Reference>
+		<Reference Include="DV.RailTrack">
+		  <HintPath>..\..\..\..\..\Programs\Steam\steamapps\common\Derail Valley\DerailValley_Data\Managed\DV.RailTrack.dll</HintPath>
 		</Reference>
 		<Reference Include="DV.Scenarios.CRUD">
 		  <HintPath>..\..\..\..\..\Programs\Steam\steamapps\common\Derail Valley\DerailValley_Data\Managed\DV.Scenarios.CRUD.dll</HintPath>
@@ -129,6 +135,9 @@
 	<ItemGroup>
 		<Reference Include="UnityModManager">
 		  <HintPath>..\..\..\..\Steam\steamapps\common\Derail Valley\DerailValley_Data\Managed\UnityModManager\UnityModManager.dll</HintPath>
+		</Reference>
+		<Reference Include="WorldStreamer">
+		  <HintPath>..\..\..\..\..\Programs\Steam\steamapps\common\Derail Valley\DerailValley_Data\Managed\WorldStreamer.dll</HintPath>
 		</Reference>
 	</ItemGroup>
 
