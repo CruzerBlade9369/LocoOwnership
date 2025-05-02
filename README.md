@@ -27,4 +27,3 @@ Known issues:
 
 Some known incompatibilities with other mods:
 - [Rolling Stock Ownership](https://github.com/fauxnik/dv-rolling-stock-ownership) (conflicting features)
-- [Leasable Locos](https://github.com/wwwDayDream/LeasableLocos) (conflicting features)
