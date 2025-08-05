@@ -32,6 +32,12 @@ namespace LocoOwnership
 		[Draw("Maximum number of owned locomotives", Min = 0, Max = 100)]
 		public int maxLocosLimit = 16;
 
+		[Draw("Purchase price multiplier", Min = 1)]
+		public float purchasePriceMultiplier = 2f;
+
+		[Draw("Sell price multiplier", Min = 0, Max = 1)]
+		public float sellPriceMultiplier = .5f;
+
 		public override void Save(UnityModManager.ModEntry entry)
 		{
 			Save(this, entry);

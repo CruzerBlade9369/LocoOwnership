@@ -27,11 +27,11 @@ namespace LocoOwnership.Shared
 
 			if (selectedCar.carType == TrainCarType.LocoShunter)
 			{
-				carBuyPrice = DE2_ARTIFICIAL_LICENSE_PRICE * 2f;
+				carBuyPrice = DE2_ARTIFICIAL_LICENSE_PRICE * Main.settings.purchasePriceMultiplier;
 			}
 			else
 			{
-				carBuyPrice = selectedCar.carLivery.requiredLicense.price * 2f;
+				carBuyPrice = selectedCar.carLivery.requiredLicense.price * Main.settings.purchasePriceMultiplier;
 			}
 
 			return carBuyPrice;
@@ -53,11 +53,11 @@ namespace LocoOwnership.Shared
 
 			if (selectedCar.carType == TrainCarType.LocoShunter)
 			{
-				carSellPrice = DE2_ARTIFICIAL_LICENSE_PRICE / 2f;
+				carSellPrice = DE2_ARTIFICIAL_LICENSE_PRICE * Main.settings.sellPriceMultiplier;
 			}
 			else
 			{
-				carSellPrice = selectedCar.carLivery.requiredLicense.price / 2f;
+				carSellPrice = selectedCar.carLivery.requiredLicense.price * Main.settings.sellPriceMultiplier;
 			}
 
 			return carSellPrice;
