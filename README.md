@@ -11,7 +11,7 @@ Not to be confused with [Rolling Stock Ownership](https://github.com/fauxnik/dv-
 - Owned locomotives don't despawn and won't contribute to your fee count.
 - Sell locomotives when you don't want them anymore.
 
-Locomotive prices are based on their license price, with purchase set at twice the license price and sell set at half license price. DE2 specifically has an artificial license price of $10000 as its actual license price is $0.
+Locomotive purchase price is based on listed price in the locomotive catalog, and selling price is set at 75% purchase price with deductions based on locomotive wear. Optionally, purchase and selling price calculation can be switched to use a simpler, more tiered system.
 
 Some conditions you have to fulfill to be able to purchase a locomotive:
 - Sufficient funds (duh).
