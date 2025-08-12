@@ -24,7 +24,6 @@ Some conditions you have to fulfill to be able to purchase a locomotive:
 
 Known issues:
 - Locomotives may still despawn during the "game has been updated" event.
-- (**MAJOR**) In rare cases, an owned locomotive might remove and replace the demonstrator loco of the same type. This issue is currently being investigated.
 
 Some known incompatibilities with other mods:
 - [Rolling Stock Ownership](https://github.com/fauxnik/dv-rolling-stock-ownership) (conflicting features)
