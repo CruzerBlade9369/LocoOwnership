@@ -13,15 +13,13 @@ using DVLangHelper.Runtime;
 
 using LocoOwnership.Menus;
 using LocoOwnership.OwnershipHandler;
+using LocoOwnership.Shared;
 
 namespace LocoOwnership
 {
 	public static class Main
 	{
-		public static bool enabled;
 		public static UnityModManager.ModEntry? mod;
-
-		public static OwnedLocos ownershipHandler;
 
 		public static Settings settings { get; private set; }
 		public static CommsRadioMode CommsRadioMode { get; private set; }
@@ -47,14 +45,15 @@ namespace LocoOwnership
 				harmony.PatchAll(Assembly.GetExecutingAssembly());
 				DebugLog("Attempting patch.");
 
-				modEntry.OnGUI = OnGui;
-				modEntry.OnSaveGUI = OnSaveGui;
+				modEntry.OnGUI = settings.DrawGUI;
+				modEntry.OnSaveGUI = settings.Save;
 
 				var translations = new TranslationInjector("cruzer.locoownership");
 				string localizationUrl = "https://docs.google.com/spreadsheets/d/1UyoJuIiUykiHizaiM1qkxH4ji-em7NU-4MTgiHIyJeE/export?format=csv";
 				translations.AddTranslationsFromWebCsv(localizationUrl);
 
 				ControllerAPI.Ready += StartCommsRadio;
+				OwnedLocosManager.Initialize();
 			}
 			catch (Exception ex)
 			{
@@ -64,16 +63,6 @@ namespace LocoOwnership
 			}
 
 			return true;
-		}
-
-		static void OnGui(UnityModManager.ModEntry modEntry)
-		{
-			settings.Draw(modEntry);
-		}
-
-		static void OnSaveGui(UnityModManager.ModEntry modEntry)
-		{
-			settings.Save(modEntry);
 		}
 
 		public static void DebugLog(string message)

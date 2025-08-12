@@ -17,19 +17,14 @@ namespace LocoOwnership.LocoSeller
 	{
 		private const float SIGNAL_RANGE = 200f;
 
-		private int trainCarMask;
 		private float carSellPrice;
 		private bool highlighterState;
 		private TrainCar selectedCar;
 
-		private Transform signalOrigin;
-		private CommsRadioCarDeleter carDeleter;
-		private CarHighlighter highlighter;
-
 		public TransactionSellConfirm(TrainCar selectedCar, bool highlighterState)
 			: base(new CommsRadioState(
 				titleText: LocalizationAPI.L("lo/radio/general/sell"),
-				contentText: LocalizationAPI.L("lo/radio/sselected/content", selectedCar.ID, Finances.CalculateSellPrice(selectedCar).ToString()),
+				contentText: LocalizationAPI.L("lo/radio/sselected/content", selectedCar.ID, PricesCalc.CalculateSellPrice(selectedCar).ToString()),
 				actionText: highlighterState
 				? LocalizationAPI.L("comms/confirm")
 				: LocalizationAPI.L("comms/cancel"),
@@ -38,31 +33,17 @@ namespace LocoOwnership.LocoSeller
 			this.selectedCar = selectedCar;
 			this.highlighterState = highlighterState;
 
-			if (highlighter == null)
-			{
-				highlighter = new CarHighlighter();
-			}
-
 			if (this.selectedCar == null)
 			{
 				Main.DebugLog("selectedCar is null");
 				throw new ArgumentNullException(nameof(selectedCar));
 			}
-
-			RefreshRadioComponent();
-		}
-
-		private void RefreshRadioComponent()
-		{
-			trainCarMask = CarHighlighter.RefreshTrainCarMask();
-			carDeleter = CarHighlighter.RefreshCarDeleterComponent();
-			signalOrigin = carDeleter.signalOrigin;
 		}
 
 		private bool IsLocoDebtCleared()
 		{
 			TrainCar tender = CarGetters.GetTender(selectedCar);
-			if (DebtHandling.RemoveOwnedVehicle(selectedCar, tender))
+			if (DebtHandling.CheckLocoDebtSell(selectedCar, tender))
 			{
 				return true;
 			}
@@ -83,18 +64,18 @@ namespace LocoOwnership.LocoSeller
 				return new SellPointAtNothing();
 			}
 
-			if (!OwnedLocos.HasLocoGUIDAsKey(selectedCar.CarGUID))
+			if (!OwnedLocosManager.HasLocoGUIDAsKey(selectedCar.CarGUID))
 			{
 				return new TransactionSellFail(1);
 			}
 
-			if(!IsLocoDebtCleared())
+			if(!IsLocoDebtCleared() && !Main.settings.advancedEco)
 			{
 				return new TransactionSellFail(0);
 			}
 
-			carSellPrice = Finances.CalculateSellPrice(selectedCar);
-			OwnedLocos.SellLoco(selectedCar);
+			carSellPrice = PricesCalc.CalculateSellPrice(selectedCar);
+			OwnedLocosManager.SellLoco(selectedCar);
 			Inventory.Instance.AddMoney(carSellPrice);
 			utility.PlaySound(VanillaSoundCommsRadio.MoneyRemoved);
 			return new TransactionSellSuccess(selectedCar, carSellPrice);
@@ -102,14 +83,8 @@ namespace LocoOwnership.LocoSeller
 
 		public override AStateBehaviour OnUpdate(CommsRadioUtility utility)
 		{
-			while (signalOrigin == null)
-			{
-				Main.DebugLog("signalOrigin is null for some reason");
-				RefreshRadioComponent();
-			}
-
 			RaycastHit hit;
-			if (!Physics.Raycast(signalOrigin.position, signalOrigin.forward, out hit, SIGNAL_RANGE, trainCarMask))
+			if (!Physics.Raycast(utility.SignalOrigin.position, utility.SignalOrigin.forward, out hit, SIGNAL_RANGE, CarHighlighter.trainCarMask))
 			{
 				if (highlighterState)
 				{
@@ -141,14 +116,13 @@ namespace LocoOwnership.LocoSeller
 		public override void OnEnter(CommsRadioUtility utility, AStateBehaviour? previous)
 		{
 			base.OnEnter(utility, previous);
-			highlighter.InitHighlighter(selectedCar, carDeleter);
-			highlighter.StartHighlighter(utility, highlighterState);
+			CarHighlighter.StartSelectorHighlighter(utility, selectedCar, highlighterState);
 		}
 
 		public override void OnLeave(CommsRadioUtility utility, AStateBehaviour? next)
 		{
 			base.OnLeave(utility, next);
-			highlighter.StopHighlighter();
+			CarHighlighter.StopSelectorHighlighter();
 		}
 	}
 }

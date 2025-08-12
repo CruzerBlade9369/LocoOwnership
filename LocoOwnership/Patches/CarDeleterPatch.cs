@@ -1,6 +1,3 @@
-using System;
-using System.Reflection;
-
 using HarmonyLib;
 
 using DV;
@@ -15,19 +12,10 @@ namespace LocoOwnership.Patches
 	{
 		static bool Prefix(CommsRadioCarDeleter __instance)
 		{
-			TrainCar carToDelete = Traverse.Create(__instance).Field("carToDelete").GetValue<TrainCar>();
-
-			if (carToDelete != null && OwnedLocos.HasLocoGUIDAsKey(carToDelete.CarGUID))
+			if (__instance.carToDelete != null && OwnedLocosManager.HasLocoGUIDAsKey(__instance.carToDelete.CarGUID))
 			{
 				__instance.display.SetContent(LocalizationAPI.L("lo/misc/cardeleterpatch"));
-
-				MethodInfo setStateMethod = typeof(CommsRadioCarDeleter).GetMethod("SetState", BindingFlags.NonPublic | BindingFlags.Instance);
-				if (setStateMethod != null)
-				{
-					var stateEnum = typeof(CommsRadioCarDeleter).GetNestedType(nameof(CommsRadioCarDeleter.State), BindingFlags.Public);
-					var cancelDeleteState = Enum.Parse(stateEnum, nameof(CommsRadioCarDeleter.State.CancelDelete));
-					setStateMethod.Invoke(__instance, new object[] { cancelDeleteState });
-				}
+				__instance.SetState(CommsRadioCarDeleter.State.CancelDelete);
 
 				return false;
 			}

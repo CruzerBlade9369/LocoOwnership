@@ -25,47 +25,38 @@ namespace LocoOwnership.LocoRequester
 		private static LayerMask laserPointerMask = LayerMask.GetMask("Laser_Pointer_Target");
 		private RailTrack selectedTrack;
 		private EquiPointSet.Point? selectedPoint;
-		private CarDestinationHighlighter destinationHighlighter;
 		private CommsRadioCrewVehicle? summoner;
 		private const float SIGNAL_RANGE = 100f;
-		private const float INVALID_DESTINATION_HIGHLIGHTER_DISTANCE = 20f;
 
 		private Bounds selectedCarBounds;
-		private Transform signalOrigin;
 		private bool isSelectedOrientationOppositeTrackDirection;
 
 		private bool highlighterState;
 
-		private TrainCar loco;
+		private TrainCar selectedCar;
 
 		public RequestConfirm(
-			TrainCar loco,
+			TrainCar selectedCar,
 			float carTeleportPrice,
-			Transform signalOrigin,
 			RailTrack track,
 			Bounds carBounds,
 			EquiPointSet.Point? spawnPoint,
-			CarDestinationHighlighter highlighter,
 			bool reverseDirection,
 			bool highlighterState
 			)
 			: base(new CommsRadioState(
 				titleText: LocalizationAPI.L("lo/radio/general/request"),
-				contentText: LocalizationAPI.L("lo/radio/rselected/content", loco.carLivery.localizationKey, loco.ID, carTeleportPrice.ToString()),
+				contentText: LocalizationAPI.L("lo/radio/rselected/content", selectedCar.carLivery.localizationKey, selectedCar.ID, carTeleportPrice.ToString()),
 				actionText: LocalizationAPI.L("comms/confirm"),
 				buttonBehaviour: ButtonBehaviourType.Override))
 		{
-			this.loco = loco;
+			this.selectedCar = selectedCar;
 			this.carTeleportPrice = carTeleportPrice;
 			this.highlighterState = highlighterState;
 			selectedTrack = track;
 			selectedCarBounds = carBounds;
 			selectedPoint = spawnPoint;
 			isSelectedOrientationOppositeTrackDirection = reverseDirection;
-			destinationHighlighter = highlighter;
-			this.signalOrigin = signalOrigin;
-
-			
 
 			playerMoney = Inventory.Instance.PlayerMoney;
 
@@ -82,17 +73,17 @@ namespace LocoOwnership.LocoRequester
 			if (!highlighterState)
 			{
 				utility.PlaySound(VanillaSoundCommsRadio.Cancel);
-				return new LocoRequest();
+				return new OwnershipMenus(2);
 			}
 
 			if (playerMoney >= carTeleportPrice)
 			{
 				// teleporting loco
-				if (Physics.Raycast(signalOrigin.position, signalOrigin.forward, SIGNAL_RANGE, laserPointerMask))
+				if (Physics.Raycast(utility.SignalOrigin.position, utility.SignalOrigin.forward, SIGNAL_RANGE, laserPointerMask))
 				{
 					try
 					{
-						utility.StartCoroutine(TeleportLoco(loco));
+						utility.StartCoroutine(TeleportLoco(selectedCar));
 					}
 					catch (Exception ex)
 					{
@@ -102,12 +93,12 @@ namespace LocoOwnership.LocoRequester
 					}
 				}
 
-				utility.PlayVehicleSound(VanillaSoundVehicle.SpawnVehicle, loco);
+				utility.PlayVehicleSound(VanillaSoundVehicle.SpawnVehicle, selectedCar);
 				if (!Main.settings.freeCarTeleport)
 				{
 					utility.PlaySound(VanillaSoundCommsRadio.MoneyRemoved);
 				}
-				return new LocoRequest();
+				return new OwnershipMenus(2);
 			}
 			else
 			{
@@ -119,7 +110,7 @@ namespace LocoOwnership.LocoRequester
 		public override AStateBehaviour OnUpdate(CommsRadioUtility utility)
 		{
 			RaycastHit hit;
-			if (Physics.Raycast(signalOrigin.position, signalOrigin.forward, out hit, SIGNAL_RANGE, laserPointerMask))
+			if (Physics.Raycast(utility.SignalOrigin.position, utility.SignalOrigin.forward, out hit, SIGNAL_RANGE, laserPointerMask))
 			{
 				Transform transform = hit.collider.transform;
 
@@ -128,28 +119,24 @@ namespace LocoOwnership.LocoRequester
 				if (flag && !highlighterState)
 				{
 					return new RequestConfirm(
-						loco,
+						selectedCar,
 						carTeleportPrice,
-						signalOrigin,
 						selectedTrack,
 						selectedCarBounds,
 						selectedPoint,
-						destinationHighlighter,
 						isSelectedOrientationOppositeTrackDirection,
 						true
 						);
 				}
 			}
-			else if (!Physics.Raycast(signalOrigin.position, signalOrigin.forward, out hit, SIGNAL_RANGE, laserPointerMask) && highlighterState)
+			else if (!Physics.Raycast(utility.SignalOrigin.position, utility.SignalOrigin.forward, out hit, SIGNAL_RANGE, laserPointerMask) && highlighterState)
 			{
 				return new RequestConfirm(
-					loco,
+					selectedCar,
 					carTeleportPrice,
-					signalOrigin,
 					selectedTrack,
 					selectedCarBounds,
 					selectedPoint,
-					destinationHighlighter,
 					isSelectedOrientationOppositeTrackDirection,
 					false
 					);
@@ -161,38 +148,22 @@ namespace LocoOwnership.LocoRequester
 		public override void OnEnter(CommsRadioUtility utility, AStateBehaviour? previous)
 		{
 			base.OnEnter(utility, previous);
-			HighlightSpawnPoint(utility);
+			CarHighlighter.StartSpawnerHighlighter
+				(
+				utility,
+				selectedPoint,
+				selectedCarBounds,
+				highlighterState,
+				isSelectedOrientationOppositeTrackDirection,
+				true
+				);
 		}
 
 		public override void OnLeave(CommsRadioUtility utility, AStateBehaviour? next)
 		{
 			base.OnLeave(utility, next);
 			if (!(next is RequestConfirm))
-				destinationHighlighter.TurnOff();
-		}
-
-		private void HighlightSpawnPoint(CommsRadioUtility utility)
-		{
-			Vector3 position, direction;
-			Material? highlightMaterial;
-
-			position = (Vector3)selectedPoint.Value.position + WorldMover.currentMove;
-			direction = selectedPoint.Value.forward;
-
-			if (highlighterState)
-			{
-				if (isSelectedOrientationOppositeTrackDirection) { direction *= -1f; }
-				highlightMaterial = utility.GetMaterial(VanillaMaterial.Valid);
-			}
-			else
-			{
-				highlightMaterial = utility.GetMaterial(VanillaMaterial.Invalid);
-			}
-
-			if (highlightMaterial != null)
-				destinationHighlighter.Highlight(position, direction, selectedCarBounds, highlightMaterial);
-			else
-				destinationHighlighter.TurnOff();
+				CarHighlighter.StopSpawnerHighlighter();
 		}
 
 		private IEnumerator TeleportLoco(TrainCar car)

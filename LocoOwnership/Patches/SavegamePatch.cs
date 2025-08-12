@@ -1,8 +1,6 @@
 using HarmonyLib;
 using Newtonsoft.Json.Linq;
 
-using UnityEngine;
-
 using LocoOwnership.OwnershipHandler;
 
 namespace LocoOwnership.Patches
@@ -12,7 +10,7 @@ namespace LocoOwnership.Patches
 	{
 		static void Prefix(SaveGameManager __instance)
 		{
-			JObject savedOwnedLocos = OwnedLocos.OnGameSaved();
+			JObject savedOwnedLocos = OwnedLocosManager.OnGameSaved();
 
 			SaveGameManager.Instance.data.SetJObject("MOD_LOCOOWNERSHIP", savedOwnedLocos);
 		}
@@ -31,27 +29,16 @@ namespace LocoOwnership.Patches
 
 			JObject savedOwnedLocos = SaveGameManager.Instance.data.GetJObject("MOD_LOCOOWNERSHIP");
 
-			// clear cache for new game load (here for redundancy)
-			OwnedLocos.ClearCache();
+			OwnedLocosManager.ClearCache();
 
 			if (savedOwnedLocos != null)
 			{
-				OwnedLocos.OnGameLoad(savedOwnedLocos);
+				OwnedLocosManager.OnGameLoad(savedOwnedLocos);
 			}
 		}
 	}
 
-	[HarmonyPatch(typeof(AStartGameData), MethodType.Constructor)]
-	class CacheResetter
-	{
-		static void Prefix()
-		{
-			// clear cache when attempting to load a save
-			OwnedLocos.ClearCache();
-		}
-	}
-
-	class OwnedLocosSaveData
+	/*class OwnedLocosSaveData
 	{
 		public string guid;
 		public string locoID;
@@ -61,5 +48,5 @@ namespace LocoOwnership.Patches
 			this.guid = guid;
 			this.locoID = locoID;
 		}
-	}
+	}*/
 }

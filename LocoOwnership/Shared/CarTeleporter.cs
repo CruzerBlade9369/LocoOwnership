@@ -9,7 +9,7 @@ using UnityEngine;
 
 namespace LocoOwnership.Shared
 {
-	public static class CarTeleporter
+	public class CarTeleporter
 	{
 		private static bool isTeleportingTrain;
 
@@ -66,10 +66,6 @@ namespace LocoOwnership.Shared
 				if (coupler.IsCoupled() && coupler.coupledTo.train == tender)
 				{
 					MultipleUnitModule.ConnectCablesOfConnectedCouplersIfMultipleUnitSupported(coupler, coupler.coupledTo);
-				}
-				else
-				{
-					Debug.LogError("Unexpected error, cars weren't properly coupled!!", loco);
 				}
 			}
 			else

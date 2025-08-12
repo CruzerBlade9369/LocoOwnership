@@ -34,7 +34,7 @@ namespace LocoOwnership.LocoRequester
 			}
 
 			utility.PlaySound(VanillaSoundCommsRadio.Confirm);
-			return new LocoRequest();
+			return new OwnershipMenus(2);
 		}
 	}
 }

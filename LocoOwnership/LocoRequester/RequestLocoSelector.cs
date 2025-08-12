@@ -18,21 +18,20 @@ namespace LocoOwnership.LocoRequester
 {
 	public class RequestLocoSelector : AStateBehaviour
 	{
-		public static Dictionary<string, string> requestableOwnedLocos = new();
-		private static int lastIndex = 0;
+		private static Dictionary<string, string> requestableOwnedLocos = new();
+
 		private int selectedIndex;
+		private TrainCar selectedCar;
 
-		private TrainCar loco;
-
-		public RequestLocoSelector(int selectedIndex) : base(
+		public RequestLocoSelector(int selectedIndex = 0) : base(
 			new CommsRadioState(
 				titleText: LocalizationAPI.L("lo/radio/general/request"),
 				contentText: requestableOwnedLocos.Values.ElementAt(selectedIndex),
 				actionText: LocalizationAPI.L("comms/confirm"),
 				buttonBehaviour: ButtonBehaviourType.Override))
 		{
-			lastIndex = this.selectedIndex = selectedIndex;
-			loco = TrainCarFromIndex(selectedIndex);
+			this.selectedIndex = selectedIndex;
+			selectedCar = TrainCarFromIndex(selectedIndex);
 		}
 
 		public override AStateBehaviour OnAction(CommsRadioUtility utility, InputAction action)
@@ -41,27 +40,28 @@ namespace LocoOwnership.LocoRequester
 			{
 				case InputAction.Activate:
 
-					TrainCar tender = CarGetters.GetTender(loco);
+					TrainCar tender = CarGetters.GetTender(selectedCar);
 
-					if (CarTypes.IsMUSteamLocomotive(loco.carType) && tender == null)
+					if (CarTypes.IsMUSteamLocomotive(selectedCar.carType) && tender == null)
 					{
 						utility.PlaySound(VanillaSoundCommsRadio.Warning);
 						return new RequestFail(2);
 					}
 
-					if (loco.derailed)
+					if (selectedCar.derailed)
 					{
 						utility.PlaySound(VanillaSoundCommsRadio.Warning);
 						return new RequestFail(3);
 					}
 
-					if (CarTypes.IsMUSteamLocomotive(loco.carType) && loco.rearCoupler.coupledTo.train.derailed)
+					if (CarTypes.IsMUSteamLocomotive(selectedCar.carType) && selectedCar.rearCoupler.coupledTo.train.derailed)
 					{
 						utility.PlaySound(VanillaSoundCommsRadio.Warning);
 						return new RequestFail(3);
 					}
 
-					Bounds? locoBounds = loco?.Bounds;
+					// Get car bounds
+					Bounds? locoBounds = selectedCar?.Bounds;
 					Bounds bounds = default(Bounds);
 					if (tender != null)
 					{
@@ -77,7 +77,7 @@ namespace LocoOwnership.LocoRequester
 					}
 
 					utility.PlaySound(VanillaSoundCommsRadio.Confirm);
-					return new RequestDestinationPicker(loco, bounds, utility.SignalOrigin);
+					return new RequestDestinationPicker(selectedCar, bounds, utility.SignalOrigin);
 
 				case InputAction.Up:
 					return new RequestLocoSelector(PreviousIndex());
@@ -111,30 +111,7 @@ namespace LocoOwnership.LocoRequester
 			return previousIndex;
 		}
 
-		public static void RefreshRequestableLocos()
-		{
-			requestableOwnedLocos.Clear();
-
-			OwnedCarsStateController ocsc = OwnedCarsStateController.Instance;
-
-			foreach (ExistingOwnedCarDebt eocd in ocsc.existingOwnedCarStates)
-			{
-				if (OwnedLocos.HasLocoGUIDAsKey(eocd.car.CarGUID) && eocd.car.IsLoco)
-				{
-					requestableOwnedLocos.Add(eocd.car.CarGUID, $"{LocalizationAPI.L(eocd.car.carLivery.localizationKey)} {eocd.car.ID}");
-				}
-			}
-
-			SortRequestableLocosList();
-		}
-
-		private static void SortRequestableLocosList()
-		{
-			var sortedDictionary = requestableOwnedLocos.OrderBy(kvp => kvp.Value).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
-			requestableOwnedLocos = sortedDictionary;
-		}
-
-		private static TrainCar TrainCarFromIndex(int index)
+		private TrainCar TrainCarFromIndex(int index)
 		{
 			OwnedCarsStateController ocsc = OwnedCarsStateController.Instance;
 			TrainCar loco = null;
@@ -156,6 +133,29 @@ namespace LocoOwnership.LocoRequester
 			}
 
 			return loco;
+		}
+
+		public static int GetRequestableLocosCount()
+		{
+			return requestableOwnedLocos.Count;
+		}
+
+		public static void RefreshRequestableLocos()
+		{
+			requestableOwnedLocos.Clear();
+			var tempDict = new Dictionary<string, string>();
+
+			OwnedCarsStateController ocsc = OwnedCarsStateController.Instance;
+
+			foreach (ExistingOwnedCarDebt eocd in ocsc.existingOwnedCarStates)
+			{
+				if (OwnedLocosManager.HasLocoGUIDAsKey(eocd.car.CarGUID) && eocd.car.IsLoco)
+				{
+					tempDict.Add(eocd.car.CarGUID, $"{LocalizationAPI.L(eocd.car.carLivery.localizationKey)} {eocd.car.ID}");
+				}
+			}
+
+			requestableOwnedLocos = tempDict.OrderBy(kvp => kvp.Value).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
 		}
 	}
 }

@@ -15,26 +15,13 @@ namespace LocoOwnership.LocoPurchaser
 	{
 		private const float SIGNAL_RANGE = 100f;
 
-		private int trainCarMask;
-		private Transform signalOrigin;
-		private CommsRadioCarDeleter carDeleter;
-
 		public PurchasePointAtNothing()
 			: base(new CommsRadioState(
 				titleText: LocalizationAPI.L("lo/radio/general/purchase"),
 				contentText: LocalizationAPI.L("lo/radio/purchasing/content"),
 				actionText: LocalizationAPI.L("comms/cancel"),
 				buttonBehaviour: ButtonBehaviourType.Override))
-		{
-			RefreshRadioComponent();
-		}
-
-		private void RefreshRadioComponent()
-		{
-			trainCarMask = CarHighlighter.RefreshTrainCarMask();
-			carDeleter = CarHighlighter.RefreshCarDeleterComponent();
-			signalOrigin = carDeleter.signalOrigin;
-		}
+		{ }
 
 		public override AStateBehaviour OnAction(CommsRadioUtility utility, InputAction action)
 		{
@@ -43,19 +30,13 @@ namespace LocoOwnership.LocoPurchaser
 				return this;
 			}
 			utility.PlaySound(VanillaSoundCommsRadio.Cancel);
-			return new LocoPurchase();
+			return new OwnershipMenus(0);
 		}
 
 		public override AStateBehaviour OnUpdate(CommsRadioUtility utility)
 		{
-			while (signalOrigin == null)
-			{
-				Main.DebugLog("signalOrigin is null for some reason");
-				RefreshRadioComponent();
-			}
-
 			RaycastHit hit;
-			if (!Physics.Raycast(signalOrigin.position, signalOrigin.forward, out hit, SIGNAL_RANGE, trainCarMask))
+			if (!Physics.Raycast(utility.SignalOrigin.position, utility.SignalOrigin.forward, out hit, SIGNAL_RANGE, CarHighlighter.trainCarMask))
 			{
 				return this;
 			}
@@ -75,7 +56,7 @@ namespace LocoOwnership.LocoPurchaser
 			}
 
 			// check if loco exists in owned locos cache
-			if (OwnedLocos.HasLocoGUIDAsKey(selectedCar.CarGUID))
+			if (OwnedLocosManager.HasLocoGUIDAsKey(selectedCar.CarGUID))
 			{
 				return this;
 			}

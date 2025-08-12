@@ -1,35 +1,50 @@
-using System;
-
 using DV;
 
 using UnityEngine;
 
 using CommsRadioAPI;
+using DV.PointSet;
 
 namespace LocoOwnership.Shared
 {
 	public class CarHighlighter
 	{
 		private static readonly Vector3 HIGHLIGHT_BOUNDS_EXTENSION = new Vector3(0.25f, 0.8f, 0f);
+		private const float INVALID_DESTINATION_HIGHLIGHTER_DISTANCE = 20f;
 
-		private TrainCar selectedCar;
-		private GameObject highlighter = new();
+		private static GameObject deleterHighlighter;
+		private static CarDestinationHighlighter summoner;
+
+		public static int trainCarMask = LayerMask.GetMask(new string[] { "Train_Big_Collider" });
+		public static LayerMask trackMask = LayerMask.GetMask(new string[] { "Default" });
 
 		/*-----------------------------------------------------------------------------------------------------------------------*/
 
 		#region CAR HIGHLIGHTER FUNCTIONS
 
-		public void InitHighlighter(TrainCar selectedCar, CommsRadioCarDeleter carDeleter)
+		public static void RefreshCarDeleterComponent()
 		{
-			this.selectedCar = selectedCar;
-			highlighter = carDeleter.trainHighlighter;
-			highlighter.SetActive(false);
-			highlighter.transform.SetParent(null);
+			ICommsRadioMode? commsRadioMode = ControllerAPI.GetVanillaMode(VanillaMode.Clear);
+			if (commsRadioMode == null)
+			{
+				Debug.LogError("Could not find CommsRadioCarDeleter");
+				return;
+			}
+			CommsRadioCarDeleter carDeleter = (CommsRadioCarDeleter)commsRadioMode;
+
+			deleterHighlighter = carDeleter.trainHighlighter;
+			deleterHighlighter.SetActive(false);
+			deleterHighlighter.transform.SetParent(null);
 		}
 
-		public void StartHighlighter(CommsRadioUtility utility, bool isValid)
+		public static void StartSelectorHighlighter(CommsRadioUtility utility, TrainCar car, bool isValid = true)
 		{
-			MeshRenderer highlighterRenderer = highlighter.GetComponentInChildren<MeshRenderer>(true);
+			if (deleterHighlighter == null)
+			{
+				RefreshCarDeleterComponent();
+			}
+
+			MeshRenderer highlighterRenderer = deleterHighlighter.GetComponentInChildren<MeshRenderer>(true);
 			if (isValid)
 			{
 				highlighterRenderer.material = utility.GetMaterial(VanillaMaterial.Valid);
@@ -39,54 +54,87 @@ namespace LocoOwnership.Shared
 				highlighterRenderer.material = utility.GetMaterial(VanillaMaterial.Invalid);
 			}
 
-			highlighter.transform.localScale = selectedCar.Bounds.size + HIGHLIGHT_BOUNDS_EXTENSION;
-			Vector3 b = selectedCar.transform.up * (highlighter.transform.localScale.y / 2f);
-			Vector3 b2 = selectedCar.transform.forward * selectedCar.Bounds.center.z;
-			Vector3 position = selectedCar.transform.position + b + b2;
+			deleterHighlighter.transform.localScale = car.Bounds.size + HIGHLIGHT_BOUNDS_EXTENSION;
+			Vector3 b = car.transform.up * (deleterHighlighter.transform.localScale.y / 2f);
+			Vector3 b2 = car.transform.forward * car.Bounds.center.z;
+			Vector3 position = car.transform.position + b + b2;
 
-			highlighter.transform.SetPositionAndRotation(position, selectedCar.transform.rotation);
-			highlighter.SetActive(true);
-			highlighter.transform.SetParent(selectedCar.transform, true);
+			deleterHighlighter.transform.SetPositionAndRotation(position, car.transform.rotation);
+			deleterHighlighter.SetActive(true);
+			deleterHighlighter.transform.SetParent(car.transform, true);
 		}
 
-		public void StopHighlighter()
+		public static void StopSelectorHighlighter()
 		{
-			highlighter.SetActive(false);
-			highlighter.transform.SetParent(null);
+			deleterHighlighter.SetActive(false);
+			deleterHighlighter.transform.SetParent(null);
 		}
 
 		#endregion
 
 		/*-----------------------------------------------------------------------------------------------------------------------*/
 
-		#region COMPONENT STEALERS FOR LOCO SELECTOR
+		#region DESTINATION HIGHLIGHTER
 
-		public static CommsRadioCarDeleter RefreshCarDeleterComponent()
+		public static void RefreshSummonerComponent()
 		{
-			ICommsRadioMode? commsRadioMode = ControllerAPI.GetVanillaMode(VanillaMode.Clear);
+			ICommsRadioMode? commsRadioMode = ControllerAPI.GetVanillaMode(VanillaMode.SummonCrewVehicle);
 			if (commsRadioMode == null)
 			{
-				Main.DebugLog("Could not find CommsRadioCarDeleter");
-				throw new NullReferenceException();
+				Debug.LogError("Could not find CommsRadioCarSpawner");
+				return;
 			}
-			CommsRadioCarDeleter carDeleter = (CommsRadioCarDeleter)commsRadioMode;
+			CommsRadioCrewVehicle crewVehicleMode = (CommsRadioCrewVehicle)commsRadioMode;
 
-			return carDeleter;
+			summoner = crewVehicleMode.destHighlighter;
+			summoner.TurnOff();
 		}
 
-		public static int RefreshTrainCarMask()
+		public static void StartSpawnerHighlighter(CommsRadioUtility utility, EquiPointSet.Point? selectedPoint, Bounds selectedCarBounds, bool isPlaceable, bool isOppositeTrackDir, bool isSpawnerConfirm)
 		{
-			int trainCarMask = LayerMask.GetMask(new string[]
-			{
-			"Train_Big_Collider"
-			});
+			RefreshSummonerComponent();
+			Vector3 position, direction;
+			Material? highlightMaterial;
 
-			return trainCarMask;
+			if (isPlaceable)
+			{
+				position = (Vector3)selectedPoint.Value.position + WorldMover.currentMove;
+				direction = isOppositeTrackDir ? selectedPoint.Value.forward * -1f : selectedPoint.Value.forward;
+				highlightMaterial = utility.GetMaterial(VanillaMaterial.Valid);
+			}
+			else
+			{
+				if (isSpawnerConfirm)
+				{
+					position = (Vector3)selectedPoint.Value.position + WorldMover.currentMove;
+					direction = selectedPoint.Value.forward;
+					highlightMaterial = utility.GetMaterial(VanillaMaterial.Invalid);
+				}
+				else
+				{
+					position = utility.SignalOrigin.position + utility.SignalOrigin.forward * INVALID_DESTINATION_HIGHLIGHTER_DISTANCE;
+					direction = utility.SignalOrigin.right;
+					highlightMaterial = utility.GetMaterial(VanillaMaterial.Invalid);
+				}
+			}
+
+			if (summoner == null)
+			{
+				Debug.LogError("Summoner highlight is null for some reason, skipping highlighting");
+				return;
+			}
+
+			if (highlightMaterial != null)
+				summoner.Highlight(position, direction, selectedCarBounds, highlightMaterial);
+			else
+				summoner.TurnOff();
+		}
+
+		public static void StopSpawnerHighlighter()
+		{
+			summoner.TurnOff();
 		}
 
 		#endregion
-
-		/*-----------------------------------------------------------------------------------------------------------------------*/
-
 	}
 }

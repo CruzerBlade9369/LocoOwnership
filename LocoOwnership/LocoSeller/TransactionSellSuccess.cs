@@ -27,7 +27,7 @@ namespace LocoOwnership.LocoSeller
 			}
 
 			utility.PlaySound(VanillaSoundCommsRadio.Confirm);
-			return new LocoSell();
+			return new OwnershipMenus(1);
 		}
 	}
 }

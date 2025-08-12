@@ -1,42 +1,98 @@
-using System;
-using System.Reflection;
+using System.Linq;
+
+using UnityEngine;
 
 using DV.ServicePenalty;
 using DV.Simulation.Cars;
-using DV.Utils;
+
 
 namespace LocoOwnership.OwnershipHandler
 {
 	public class DebtHandling
 	{
-		private static SimulatedCarDebtTracker DebtValueStealer(SimController simController)
+		public static bool CheckLocoDebtBuy(TrainCar car, TrainCar tender = null)
 		{
-			if (simController == null)
+			var locoDebtController = LocoDebtController.Instance;
+			float totalDebtCheck = 0f;
+
+			// get debt
+			var locoDebt = car.GetComponent<SimController>().debt;
+			ExistingLocoDebt existingLocoDebt = locoDebtController.trackedLocosDebts
+				.FirstOrDefault(debt => debt.locoDebtTracker == locoDebt);
+			if (existingLocoDebt == null)
 			{
-				throw new Exception("SimController not found on the specified TrainCar!");
+				Debug.LogError("CheckLocoDebtBuy: Loco debt not found!");
+				return false;
+			}
+			existingLocoDebt.UpdateDebtState();
+			totalDebtCheck += existingLocoDebt.GetTotalPrice();
+
+			// check tender debt if present
+			if (tender != null)
+			{
+				var tenderDebt = tender.GetComponent<SimController>().debt;
+				if (tenderDebt != null)
+				{
+					ExistingLocoDebt existingTenderDebt = locoDebtController.trackedLocosDebts
+						.FirstOrDefault(debt => debt.locoDebtTracker == tenderDebt);
+					if (existingTenderDebt == null)
+					{
+						Debug.LogError("CheckLocoDebtBuy: Tender debt not found!");
+						return false;
+					}
+					existingTenderDebt.UpdateDebtState();
+					totalDebtCheck += existingTenderDebt.GetTotalPrice();
+				}
 			}
 
-			FieldInfo debtField = typeof(SimController).GetField("debt",
-				BindingFlags.NonPublic | BindingFlags.Instance);
-			if (debtField == null)
-			{
-				throw new Exception("Field 'debt' not found in SimController!");
-			}
+			Main.DebugLog($"Check total debt: {totalDebtCheck}");
 
-			SimulatedCarDebtTracker debt = (SimulatedCarDebtTracker)debtField.GetValue(simController);
-			if (debt == null)
-			{
-				throw new Exception("Value of locoDebt is null!");
-			}
-
-			return debt;
+			return totalDebtCheck <= 0f;
 		}
 
-		/*-----------------------------------------------------------------------------------------------------------------------*/
+		public static bool CheckLocoDebtSell(TrainCar car, TrainCar tender = null)
+		{
+			var ownedCarsStateController = OwnedCarsStateController.Instance;
+			float totalDebtCheck = 0f;
 
-		#region FOR LOCO BUY
+			// get debt
+			var locoDebt = car.GetComponent<SimController>().debt;
+			var existingLocoDebt = ownedCarsStateController.existingOwnedCarStates
+				.FirstOrDefault(debt => debt.carDebtTrackerBase == locoDebt);
+			if (existingLocoDebt == null)
+			{
+				Debug.LogError("CheckLocoDebtSell: Loco debt not found!");
+				return false;
+			}
+			existingLocoDebt.UpdateDebtState();
+			totalDebtCheck += existingLocoDebt.GetTotalPrice();
 
-		private static bool RemoveTrackedLocoDebts(SimulatedCarDebtTracker locoDebt, SimulatedCarDebtTracker tenderDebt)
+			// check tender debt if present
+			if (tender != null)
+			{
+				var tenderDebt = tender.GetComponent<SimController>().debt;
+				var existingTenderDebt = ownedCarsStateController.existingOwnedCarStates
+					.FirstOrDefault(debt => debt.carDebtTrackerBase == tenderDebt);
+				if (existingTenderDebt == null)
+				{
+					Debug.LogError("CheckLocoDebtSell: Tender debt not found!");
+					return false;
+				}
+				existingTenderDebt.UpdateDebtState();
+				totalDebtCheck += existingTenderDebt.GetTotalPrice();
+			}
+
+			// if has unpaid debts or debts arent only environmental then dont sell loco
+			if (totalDebtCheck > 0f)
+			{
+				return false;
+			}
+
+			return true;
+		}
+
+		// old code, keep just in case
+		/*private static bool RemoveTrackedLocoDebts(SimulatedCarDebtTracker locoDebt, SimulatedCarDebtTracker tenderDebt)
 		{
 			float totalDebtCheck = 0f;
 
@@ -120,7 +176,7 @@ namespace LocoOwnership.OwnershipHandler
 				tenderSimController = tender.GetComponent<SimController>();
 				tenderDebt = DebtValueStealer(tenderSimController);
 			}
-
+			
 			// remove car(s) from tracked loco debts
 			bool success = RemoveTrackedLocoDebts(locoDebt, tenderDebt);
 			if (!success)
@@ -149,15 +205,9 @@ namespace LocoOwnership.OwnershipHandler
 			}
 
 			return true;
-		}
+		}*/
 
-		#endregion
-
-		/*-----------------------------------------------------------------------------------------------------------------------*/
-
-		#region FOR LOCO SELL
-
-		private static bool RemoveExistingOwnedCarState(SimulatedCarDebtTracker locoDebt, SimulatedCarDebtTracker tenderDebt)
+		/*private static bool RemoveExistingOwnedCarState(SimulatedCarDebtTracker locoDebt, SimulatedCarDebtTracker tenderDebt)
 		{
 			float totalDebtCheck = 0f;
 
@@ -288,10 +338,6 @@ namespace LocoOwnership.OwnershipHandler
 			}
 
 			return true;
-		}
-
-		#endregion
-
-		/*-----------------------------------------------------------------------------------------------------------------------*/
+		}*/
 	}
 }

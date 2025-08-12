@@ -20,24 +20,15 @@ namespace LocoOwnership.LocoPurchaser
 	public class TransactionPurchaseConfirm : AStateBehaviour
 	{
 		private const float SIGNAL_RANGE = 200f;
-		
+
 		private float carBuyPrice;
-		private double playerMoney;
 		private bool highlighterState;
 		private TrainCar selectedCar;
 
-		private int trainCarMask;
-		private Transform signalOrigin;
-		private CommsRadioCarDeleter carDeleter;
-		private CarHighlighter highlighter;
-
-		private GeneralLicenseType_v2 currentLicense;
-		LicenseManager licenseManager;
-
-		public TransactionPurchaseConfirm(TrainCar selectedCar, bool highlighterState)
+		public TransactionPurchaseConfirm(TrainCar selectedCar, bool highlighterState = true)
 			: base(new CommsRadioState(
 				titleText: LocalizationAPI.L("lo/radio/general/purchase"),
-				contentText: LocalizationAPI.L("lo/radio/pselected/content", selectedCar.ID, Finances.CalculateBuyPrice(selectedCar).ToString()),
+				contentText: LocalizationAPI.L("lo/radio/pselected/content", selectedCar.ID, PricesCalc.CalculateBuyPrice(selectedCar).ToString()),
 				actionText: highlighterState
 				? LocalizationAPI.L("comms/confirm")
 				: LocalizationAPI.L("comms/cancel"),
@@ -46,30 +37,12 @@ namespace LocoOwnership.LocoPurchaser
 			this.selectedCar = selectedCar;
 			this.highlighterState = highlighterState;
 
-			if (highlighter == null)
-			{
-				highlighter = new CarHighlighter();
-			}
-
 			if (this.selectedCar == null)
 			{
-				Main.DebugLog("selectedCar is null");
 				throw new ArgumentNullException(nameof(selectedCar));
 			}
 
-			carBuyPrice = Finances.CalculateBuyPrice(selectedCar);
-			playerMoney = Inventory.Instance.PlayerMoney;
-			licenseManager = LicenseManager.Instance;
-			currentLicense = selectedCar.carLivery.requiredLicense;
-
-			RefreshRadioComponent();
-		}
-
-		private void RefreshRadioComponent()
-		{
-			trainCarMask = CarHighlighter.RefreshTrainCarMask();
-			carDeleter = CarHighlighter.RefreshCarDeleterComponent();
-			signalOrigin = carDeleter.signalOrigin;
+			carBuyPrice = PricesCalc.CalculateBuyPrice(selectedCar);
 		}
 
 		private bool HasDemonstrator()
@@ -95,8 +68,7 @@ namespace LocoOwnership.LocoPurchaser
 
 		private bool HasEnoughLocos()
 		{
-			int maxOwnedLocos = Main.settings.maxLocosLimit;
-			if (OwnedLocos.CountLocosOnly() >= maxOwnedLocos)
+			if (OwnedLocosManager.CountLocosOnly() >= Main.settings.maxLocosLimit)
 			{
 				return true;
 			}
@@ -107,7 +79,7 @@ namespace LocoOwnership.LocoPurchaser
 		private bool IsLocoDebtCleared()
 		{
 			TrainCar tender = CarGetters.GetTender(selectedCar);
-			if (DebtHandling.SetVehicleToOwned(selectedCar, tender))
+			if (DebtHandling.CheckLocoDebtBuy(selectedCar, tender))
 			{
 				return true;
 			}
@@ -134,13 +106,13 @@ namespace LocoOwnership.LocoPurchaser
 				return new TransactionPurchaseFail(5);
 			}
 
-			if (!licenseManager.IsGeneralLicenseAcquired(GeneralLicenseType.ManualService.ToV2()))
+			if (!LicenseManager.Instance.IsGeneralLicenseAcquired(GeneralLicenseType.ManualService.ToV2()))
 			{
 				utility.PlaySound(VanillaSoundCommsRadio.Warning);
 				return new TransactionPurchaseFail(2);
 			}
 
-			if (!licenseManager.IsGeneralLicenseAcquired(currentLicense))
+			if (!LicenseManager.Instance.IsGeneralLicenseAcquired(selectedCar.carLivery.requiredLicense))
 			{
 				utility.PlaySound(VanillaSoundCommsRadio.Warning);
 				return new TransactionPurchaseFail(1);
@@ -152,13 +124,13 @@ namespace LocoOwnership.LocoPurchaser
 				return new TransactionPurchaseFail(6);
 			}
 
-			if (OwnedLocos.HasLocoGUIDAsKey(selectedCar.CarGUID))
+			if (OwnedLocosManager.HasLocoGUIDAsKey(selectedCar.CarGUID))
 			{
 				utility.PlaySound(VanillaSoundCommsRadio.Warning);
 				return new TransactionPurchaseFail(7);
 			}
 
-			if (playerMoney < carBuyPrice)
+			if (Inventory.Instance.PlayerMoney < carBuyPrice)
 			{
 				utility.PlaySound(VanillaSoundCommsRadio.Warning);
 				return new TransactionPurchaseFail(0);
@@ -176,7 +148,7 @@ namespace LocoOwnership.LocoPurchaser
 				return new TransactionPurchaseFail(4);
 			}
 
-			OwnedLocos.BuyLoco(selectedCar);
+			OwnedLocosManager.BuyLoco(selectedCar);
 			Inventory.Instance.RemoveMoney(carBuyPrice);
 			utility.PlaySound(VanillaSoundCommsRadio.MoneyRemoved);
 			return new TransactionPurchaseSuccess(selectedCar, carBuyPrice);
@@ -184,14 +156,8 @@ namespace LocoOwnership.LocoPurchaser
 
 		public override AStateBehaviour OnUpdate(CommsRadioUtility utility)
 		{
-			while (signalOrigin == null)
-			{
-				Main.DebugLog("signalOrigin is null for some reason");
-				RefreshRadioComponent();
-			}
-
 			RaycastHit hit;
-			if (!Physics.Raycast(signalOrigin.position, signalOrigin.forward, out hit, SIGNAL_RANGE, trainCarMask))
+			if (!Physics.Raycast(utility.SignalOrigin.position, utility.SignalOrigin.forward, out hit, SIGNAL_RANGE, CarHighlighter.trainCarMask))
 			{
 				// if no longer looking at the locomotive
 				if (highlighterState)
@@ -224,14 +190,13 @@ namespace LocoOwnership.LocoPurchaser
 		public override void OnEnter(CommsRadioUtility utility, AStateBehaviour? previous)
 		{
 			base.OnEnter(utility, previous);
-			highlighter.InitHighlighter(selectedCar, carDeleter);
-			highlighter.StartHighlighter(utility, highlighterState);
+			CarHighlighter.StartSelectorHighlighter(utility, selectedCar, highlighterState);
 		}
 
 		public override void OnLeave(CommsRadioUtility utility, AStateBehaviour? next)
 		{
 			base.OnLeave(utility, next);
-			highlighter.StopHighlighter();
+			CarHighlighter.StopSelectorHighlighter();
 		}
 	}
 }
