@@ -2,16 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Collections;
 using System.Diagnostics.CodeAnalysis;
-
 using DV;
 using DV.PointSet;
 using DV.Localization;
 using DV.OriginShift;
-
 using UnityEngine;
-
 using CommsRadioAPI;
-
 using LocoOwnership.Menus;
 using LocoOwnership.Shared;
 

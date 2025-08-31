@@ -1,18 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-
 using Newtonsoft.Json.Linq;
-
 using DV.Localization;
 using DV.JObjectExtstensions;
 using DV.ServicePenalty;
 using DV.InventorySystem;
 using DV.Simulation.Cars;
 using DV.Utils;
-
 using UnityEngine;
-
 using LocoOwnership.Shared;
 using System.Collections;
 
@@ -37,6 +33,32 @@ namespace LocoOwnership.OwnershipHandler
 
 		#region UTILITY
 
+		public static void PrintAllOwnedLocos()
+		{
+			if (ownedLocos.Count <= 0 || ownedLocosLicensePrice.Count <= 0)
+			{
+				Debug.Log("You don't have owned locos yet or you haven't loaded into a save!");
+			}
+			else
+			{
+				Debug.Log("Owned locos list:");
+				foreach (KeyValuePair<string, string> kvp in ownedLocos)
+				{
+					Debug.Log($"Guid = {kvp.Key}, LocoID = {kvp.Value}");
+				}
+
+				Debug.Log("Owned locos list, stored loco price:");
+				foreach (KeyValuePair<string, float> kvp in ownedLocosLicensePrice)
+				{
+					Debug.Log($"Guid = {kvp.Key}, stored loco price = {kvp.Value}");
+				}
+
+				Debug.Log("-----");
+				Debug.Log($"Found {ownedLocos.Count} vehicles, {CountLocosOnly()} being locos");
+				Debug.Log($"Found {ownedLocosLicensePrice.Count} loco price data");
+			}
+		}
+
 		public static bool HasLocoGUIDAsKey(string key)
 		{
 			if (ownedLocos.ContainsKey(key))
@@ -45,6 +67,27 @@ namespace LocoOwnership.OwnershipHandler
 			}
 
 			return false;
+		}
+
+		public static int CountLocosAsSets()
+		{
+			List<string> workingList = ownedLocos.Keys.ToList();
+			int count = 0;
+
+			while (workingList.Count > 0)
+			{
+				TrainCar car = OwnedCarsStateController.Instance.existingOwnedCarStates.Find(
+					debt => debt.car.CarGUID == workingList[0]).car;
+
+				List<TrainCar> trainSet = CarUtils.GetCCLTrainsetOrLocoAndTender(car);
+
+				var setGuids = new HashSet<string>(trainSet.Select(tc => tc.CarGUID));
+				workingList.RemoveAll(g => setGuids.Contains(g));
+
+				count++;
+			}
+
+			return count;
 		}
 
 		public static int CountLocosOnly()
@@ -63,215 +106,100 @@ namespace LocoOwnership.OwnershipHandler
 
 		/*-----------------------------------------------------------------------------------------------------------------------*/
 
-		#region OWNED LOCOS HANDLER
+		#region OWNED LOCOS HANDLER\
 
-		private static void SetToOwned(TrainCar car, TrainCar tender = null)
+		private static void SetToOwned(TrainCar car)
 		{
 			var locoDebtController = LocoDebtController.Instance;
 			var simController = car.GetComponent<SimController>();
-			var locoDebt = simController.debt;
+			SimulatedCarDebtTracker locoDebt = simController.debt;
+			List<ExistingLocoDebt> debts = locoDebtController.trackedLocosDebts;
 
-			SimController tenderSimController = null;
-			SimulatedCarDebtTracker tenderDebt = null;
-			if (tender != null)
+			if (locoDebt == null)
 			{
-				tenderSimController = tender.GetComponent<SimController>();
-				tenderDebt = tenderSimController.debt;
-			}
-
-			// find indices and entries is one loop
-			int locoIndex = -1, tenderIndex = -1;
-			ExistingLocoDebt locoDebtEntry = null, tenderDebtEntry = null;
-			var debts = locoDebtController.trackedLocosDebts;
-			for (int i = 0; i < debts.Count && (locoIndex == -1 || (tenderDebt != null && tenderIndex == -1)); i++)
-			{
-				if (debts[i].locoDebtTracker == locoDebt)
-				{
-					locoIndex = i;
-					locoDebtEntry = debts[i];
-				}
-				else if (tenderDebt != null && debts[i].locoDebtTracker == tenderDebt)
-				{
-					tenderIndex = i;
-					tenderDebtEntry = debts[i];
-				}
-			}
-
-			if (locoIndex == -1)
-			{
-				Debug.LogError("SetToOwned: loco debt not found!");
-				return;
-			}
-			if (tenderDebt != null && tenderIndex == -1)
-			{
-				Debug.LogError($"SetToOwned: tender debt not found!");
+				Debug.LogWarning($"Debt for {car.ID} is missing, cannot continue own operation for this one");
 				return;
 			}
 
-			// remove tender debt first if present
-			if (tenderDebtEntry != null)
-			{
-				Main.DebugLog("Prepare unregister tender debt");
-				debts.RemoveAt(tenderIndex);
-				SingletonBehaviour<CareerManagerDebtController>.Instance.UnregisterDebt(tenderDebtEntry);
-				Main.DebugLog("Unregistered tender debt");
-				tenderDebtEntry.UpdateDebtState();
+			ExistingLocoDebt locoDebtEntry = debts.Find(debt => debt.locoDebtTracker == locoDebt);
 
-				// adjust loco index if tender was before loco
-				if (tenderIndex < locoIndex)
-					locoIndex--;
+			if (locoDebtEntry != null)
+			{
+				Main.DebugLog($"Preparing unregister existing debt for {car.ID}");
+				debts.Remove(locoDebtEntry);
+				SingletonBehaviour<CareerManagerDebtController>.Instance.UnregisterDebt(locoDebtEntry);
+				Main.DebugLog($"Successfully unregistered debt for {car.ID}");
+				locoDebtEntry.UpdateDebtState();
+			}
+			else
+			{
+				Debug.LogWarning($"{car.ID} does not have existing loco debt, skipping removal");
 			}
 
-			Main.DebugLog("Prepare unregister loco debt");
-			debts.RemoveAt(locoIndex);
-			SingletonBehaviour<CareerManagerDebtController>.Instance.UnregisterDebt(locoDebtEntry);
-			Main.DebugLog("Unregistered loco debt");
-			locoDebtEntry.UpdateDebtState();
-
-			if (tenderSimController != null)
-			{
-				tender.uniqueCar = true;
-				SingletonBehaviour<OwnedCarsStateController>.Instance.RegisterCarStateTracker(tender, tenderDebt);
-				Main.DebugLog("Registered tender debt as owned");
-			}
+			Main.DebugLog($"Preparing to register {car.ID} as owned");
 			car.uniqueCar = true;
 			SingletonBehaviour<OwnedCarsStateController>.Instance.RegisterCarStateTracker(car, locoDebt);
-			Main.DebugLog("Registered loco debt as owned");
+			Main.DebugLog($"Registered {car.ID} as owned");
 		}
 
-		private static void UnsetOwned(TrainCar car, TrainCar tender)
+		private static void UnsetOwned(TrainCar car)
 		{
 			var ownedCarsStateController = OwnedCarsStateController.Instance;
-			var locoDebtController = LocoDebtController.Instance;
 			var simController = car.GetComponent<SimController>();
-			var locoDebt = simController.debt;
+			SimulatedCarDebtTracker locoDebt = simController.debt;
+			List<ExistingOwnedCarDebt> debts = ownedCarsStateController.existingOwnedCarStates;
 
-			SimController tenderSimController = null;
-			SimulatedCarDebtTracker tenderDebt = null;
-			if (tender != null)
+			if (locoDebt == null)
 			{
-				tenderSimController = tender.GetComponent<SimController>();
-				tenderDebt = tenderSimController.debt;
-			}
-
-			// Find both indices and entries in one loop
-			int locoIndex = -1, tenderIndex = -1;
-			ExistingOwnedCarDebt locoDebtEntry = null, tenderDebtEntry = null;
-			var ownedStates = ownedCarsStateController.existingOwnedCarStates;
-			for (int i = 0; i < ownedStates.Count && (locoIndex == -1 || (tenderDebt != null && tenderIndex == -1)); i++)
-			{
-				if (ownedStates[i].carDebtTrackerBase == locoDebt)
-				{
-					locoIndex = i;
-					locoDebtEntry = ownedStates[i];
-				}
-				else if (tenderDebt != null && ownedStates[i].carDebtTrackerBase == tenderDebt)
-				{
-					tenderIndex = i;
-					tenderDebtEntry = ownedStates[i];
-				}
-			}
-
-			if (locoIndex == -1)
-			{
-				Debug.LogError($"UnsetOwned: loco debt not found!");
-				return;
-			}
-			if (tenderDebt != null && tenderIndex == -1)
-			{
-				Debug.LogError($"UnsetOwned: tender debt not found!");
+				Debug.LogWarning($"Debt for {car.ID} is missing, cannot continue un-own operation for this one");
 				return;
 			}
 
-			// Remove tender first if present
-			if (tenderDebtEntry != null)
-			{
-				Main.DebugLog("Removing tender from owned cars list");
-				tenderDebtEntry.car.uniqueCar = false;
-				ownedStates.RemoveAt(tenderIndex);
-				Main.DebugLog("Removed tender from owned cars list");
-				tenderDebtEntry.UpdateDebtState();
+			ExistingOwnedCarDebt locoDebtEntry = debts.Find(debt => debt.carDebtTrackerBase == locoDebt);
 
-				// adjust loco index if tender was before loco
-				if (tenderIndex < locoIndex)
-					locoIndex--;
+			if (locoDebtEntry != null)
+			{
+				Main.DebugLog("Removing loco from owned cars list");
+				debts.Remove(locoDebtEntry);
+				Main.DebugLog("Removed loco from owned cars list");
+				locoDebtEntry.UpdateDebtState();
+			}
+			else
+			{
+				Debug.LogWarning($"{car.ID} does not have existing owned car debt, skipping removal");
 			}
 
-			Main.DebugLog("Removing loco from owned cars list");
-			locoDebtEntry.car.uniqueCar = false;
-			ownedStates.RemoveAt(locoIndex);
-			Main.DebugLog("Removed loco from owned cars list");
-			locoDebtEntry.UpdateDebtState();
-
-			// Register as DVRT
-			if (tenderSimController != null)
-			{
-				tender.uniqueCar = false;
-				SingletonBehaviour<LocoDebtController>.Instance.RegisterLocoDebtTracker(tender, tenderDebt);
-				Main.DebugLog("Registered tender debt as DVRT");
-			}
+			// Register as regular DVRT loco
+			Main.DebugLog($"Preparing to register {car.ID} as DVRT");
 			car.uniqueCar = false;
 			SingletonBehaviour<LocoDebtController>.Instance.RegisterLocoDebtTracker(car, locoDebt);
-			Main.DebugLog("Registered loco debt as DVRT");
+			Main.DebugLog($"Registered {car.ID} as DVRT");
 		}
 
 		public static void BuyLoco(TrainCar selectedCar)
 		{
-			string guid = selectedCar.CarGUID;
-			string locoID = selectedCar.ID;
+			List<TrainCar> trainSet = CarUtils.GetCCLTrainsetOrLocoAndTender(selectedCar);
 
-			TrainCar tender = CarGetters.GetTender(selectedCar);
-
-			string tenderGuid = "";
-			string tenderID = "";
-			if (tender != null)
+			// process loco purchase
+			foreach (TrainCar car in trainSet)
 			{
-				tenderGuid = tender.CarGUID;
-				tenderID = tender.ID;
+				ownedLocos.Add(car.CarGUID, car.ID);
+				ownedLocosLicensePrice.Add(car.CarGUID, PricesCalc.CalculateBuyPrice(car, getTotalTrainsetPrice: false));
+				SetToOwned(car);
 			}
-
-			// add to owned locos list
-			if (tender != null)
-			{
-				ownedLocos.Add(tenderGuid, tenderID);
-			}
-			ownedLocos.Add(guid, locoID);
-
-			// add loco buy price for despawn refund
-			ownedLocosLicensePrice.Add(guid, PricesCalc.CalculateBuyPrice(selectedCar));
-
-			// mark vehicle as owned
-			SetToOwned(selectedCar, tender);
-
 		}
 
 		public static void SellLoco(TrainCar selectedCar)
 		{
-			string guid = selectedCar.CarGUID;
+			List<TrainCar> trainSet = CarUtils.GetCCLTrainsetOrLocoAndTender(selectedCar);
 
-			TrainCar tender = CarGetters.GetTender(selectedCar);
-
-			string tenderGuid = "";
-			if (tender != null)
+			// process loco sell
+			foreach (TrainCar car in trainSet)
 			{
-				tenderGuid = tender.CarGUID;
+				UnsetOwned(car);
+				ownedLocos.Remove(car.CarGUID);
+				ownedLocosLicensePrice.Remove(car.CarGUID);
 			}
-
-			// remove from owned locos list
-			if (tender != null)
-			{
-				ownedLocos.Remove(tenderGuid);
-			}
-			ownedLocos.Remove(guid);
-
-			// remove loco price
-			if (ownedLocosLicensePrice.ContainsKey(guid))
-			{
-				ownedLocosLicensePrice.Remove(guid);
-			}
-
-			// mark vehicle back to DVRT
-			UnsetOwned(selectedCar, tender);
 		}
 
 		#endregion
@@ -322,12 +250,13 @@ namespace LocoOwnership.OwnershipHandler
 				// validate owned cars against existing state
 				foreach (var guid in ownedLocos.Keys.ToList())
 				{
+					// if existing owned car states dont have whats in ownedLocos
 					if (!eocdGuids.Contains(guid))
 					{
 						carsDeleted = true;
 						string carID = ownedLocos[guid];
 
-						Debug.LogWarning($"Car {carID} (GUID: {guid}) no longer exists! Refunding license");
+						Debug.LogWarning($"Car {carID} (GUID: {guid}) no longer exists! Refunding purchase");
 
 						if (ownedLocosLicensePrice.TryGetValue(guid, out var price))
 						{
@@ -335,7 +264,7 @@ namespace LocoOwnership.OwnershipHandler
 						}
 						else
 						{
-							Debug.LogError($"Error: no license price found for car {carID} (GUID: {guid})");
+							Debug.LogError($"Error: no purchase price found for car {carID} (GUID: {guid})");
 						}
 
 						ownedLocos.Remove(guid);
@@ -343,20 +272,9 @@ namespace LocoOwnership.OwnershipHandler
 					}
 				}
 
-				// orphaned data is stuff that exists in the LO lists but not in the ingame list
-				// different from the previous checks where those have the associated staged cars data
-				// but here there is no associated staged data
-
-				// clean up orphaned loco data
-				var orphanedLocos = ownedLocos.Keys
-					.Where(guid => !eocdGuids.Contains(guid))
-					.ToList();
-
-				foreach (var guid in orphanedLocos)
-				{
-					Debug.LogWarning($"Removing orphaned loco data: {guid}, {ownedLocos[guid]}");
-					ownedLocos.Remove(guid);
-				}
+				// orphaned data is stuff that does not have valid relations to any past existing locos
+				// added this because back then i forgot to add something to remove purchase price entries
+				// in selling logic
 
 				// clean up orphaned license prices
 				var orphanedPrices = ownedLocosLicensePrice.Keys
@@ -369,7 +287,7 @@ namespace LocoOwnership.OwnershipHandler
 					ownedLocosLicensePrice.Remove(guid);
 				}
 
-				Debug.Log($"Owned cars validation completed. Removed {carsToStagedDelete.Count} disappeared locomotives and {orphanedPrices.Count} orphaned prices");
+				Debug.Log($"Owned cars validation complete");
 
 				if (carsDeleted)
 				{
@@ -389,73 +307,14 @@ namespace LocoOwnership.OwnershipHandler
 			CarDeletedNotif.ShowOK(LocalizationAPI.L("lo/popupapi/okmsg/carvalidate"));
 		}
 
-		/*public static void ValidateOwnedCarsOld()
-		{
-			OwnedCarsStateController ocsc = OwnedCarsStateController.Instance;
-			List<StagedOwnedCarDebt> ownedCarsToDestage = new();
-			List<string> modOwnedCarsToRemove = new();
-			List<string> actualOwnedCars = new();
+		#endregion
 
-			// populate temporary lists
-			foreach (StagedOwnedCarDebt socd in ocsc.currentlyDestroyedOwnedCarStates)
-			{
-				if (ownedLocos.ContainsValue(socd.ID))
-				{
-					ownedCarsToDestage.Add(socd);
-					modOwnedCarsToRemove.Add(socd.ID);
-				}
-			}
+		/*-----------------------------------------------------------------------------------------------------------------------*/
 
-			foreach (ExistingOwnedCarDebt eocd in ocsc.existingOwnedCarStates)
-			{
-				actualOwnedCars.Add(eocd.car.CarGUID);
-			}
 
-			// remove from destroyed owned car states
-			foreach (StagedOwnedCarDebt socd in ownedCarsToDestage)
-			{
-				ocsc.currentlyDestroyedOwnedCarStates.Remove(socd);
-			}
+		#region LOAD/SAVE HANDLER V2
 
-			// refund missing cars from mod owned locos list and remove
-			foreach (string id in modOwnedCarsToRemove)
-			{
-				var keysToRemove = ownedLocos.Where(pair => pair.Value == id).Select(pair => pair.Key).ToList();
 
-				foreach (var key in keysToRemove)
-				{
-					if (ownedLocosLicensePrice.ContainsKey(key))
-					{
-						ownedLocosLicensePrice.TryGetValue(key, out float price);
-						Inventory.Instance.AddMoney(price);
-						Debug.Log($"Refunded purchase for despawned locomotive {id}, ${price}");
-						ownedLocosLicensePrice.Remove(key);
-					}
-
-					ownedLocos.Remove(key);
-					Debug.LogError($"Car {id} is detected to be destroyed! Removed from mod and vanilla owned cars list.");
-				}
-			}
-
-			// if there are data in owned locos list that don't exist in vanilla owned vehicles
-			foreach (string guid in ownedLocos.Keys.ToList())
-			{
-				if (!actualOwnedCars.Contains(guid))
-				{
-					ownedLocos.TryGetValue(guid, out string value);
-					Debug.LogError($"Car {value} does not exist in vanilla owned vehicles list! Removing from cache.");
-					ownedLocos.Remove(guid);
-					ownedLocosLicensePrice.Remove(guid);
-				}
-			}
-
-			if (modOwnedCarsToRemove.Any())
-			{
-				CarDeletedNotif.ShowOK(LocalizationAPI.L("lo/popupapi/okmsg/carvalidate"));
-			}
-
-			Main.DebugLog("Completed validation of existence of owned cars");
-		}*/
 
 		#endregion
 

@@ -1,17 +1,13 @@
 using System;
 using System.Collections;
-
 using DV;
 using DV.InventorySystem;
 using DV.Localization;
 using DV.PointSet;
 using DV.Simulation.Cars;
 using DV.ThingTypes;
-
 using UnityEngine;
-
 using CommsRadioAPI;
-
 using LocoOwnership.Menus;
 using LocoOwnership.Shared;
 
@@ -94,7 +90,7 @@ namespace LocoOwnership.LocoRequester
 				}
 
 				utility.PlayVehicleSound(VanillaSoundVehicle.SpawnVehicle, selectedCar);
-				if (!Main.settings.freeCarTeleport)
+				if (!Main.Settings.freeCarTeleport)
 				{
 					utility.PlaySound(VanillaSoundCommsRadio.MoneyRemoved);
 				}
@@ -176,7 +172,7 @@ namespace LocoOwnership.LocoRequester
 				yield break;
 			}
 
-			TrainCar tender = CarGetters.GetTender(loco);
+			TrainCar tender = CarUtils.GetTender(loco);
 
 			yield return null;
 			Debug.Log("Teleporting locomotive '" + loco.name + "'", loco);
@@ -185,7 +181,7 @@ namespace LocoOwnership.LocoRequester
 			controls.Handbrake?.Set(1f);
 			controls.Throttle?.Set(0f);
 			controls.Reverser?.Set(0.5f);
-			if (CarTypes.IsMUSteamLocomotive(loco.carType) && Main.settings.theFunny)
+			if (CarTypes.IsMUSteamLocomotive(loco.carType) && Main.Settings.theFunny)
 			{
 				yield return CarTeleporter.Kekw(loco, tender, selectedPoint, selectedTrack);
 			}

@@ -1,4 +1,5 @@
 using LocoOwnership.OwnershipHandler;
+using LocoOwnership.Shared;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityModManagerNet;
@@ -75,28 +76,7 @@ namespace LocoOwnership
 
 				if (GUILayout.Button("Print all owned cars data to console"))
 				{
-					if (OwnedLocosManager.OwnedLocos.Count <= 0 || OwnedLocosManager.OwnedLocosLicensePrice.Count <= 0)
-					{
-						Debug.Log("You don't have owned locos yet or you haven't loaded into a save!");
-					}
-					else
-					{
-						Debug.Log("Owned locos list:");
-						foreach (KeyValuePair<string, string> kvp in OwnedLocosManager.OwnedLocos)
-						{
-							Debug.Log($"Guid = {kvp.Key}, LocoID = {kvp.Value}");
-						}
-
-						Debug.Log("Owned locos list, stored loco price:");
-						foreach (KeyValuePair<string, float> kvp in OwnedLocosManager.OwnedLocosLicensePrice)
-						{
-							Debug.Log($"Guid = {kvp.Key}, stored loco price = {kvp.Value}");
-						}
-
-						Debug.Log("-----");
-						Debug.Log($"Found {OwnedLocosManager.OwnedLocos.Count} locos, {OwnedLocosManager.CountLocosOnly()} without tender");
-						Debug.Log($"Found {OwnedLocosManager.OwnedLocosLicensePrice.Count} loco price data");
-					}
+					OwnedLocosManager.PrintAllOwnedLocos();
 				}
 			}
 

@@ -1,19 +1,17 @@
-using System;
-
+using CommsRadioAPI;
 using DV;
-using DV.Localization;
-using DV.ThingTypes;
 using DV.InventorySystem;
+using DV.Localization;
+using DV.LocoRestoration;
+using DV.ThingTypes;
 using DV.ThingTypes.TransitionHelpers;
 using DV.UserManagement;
-using static DV.LocoRestoration.LocoRestorationController;
-
-using UnityEngine;
-
-using CommsRadioAPI;
-
-using LocoOwnership.Shared;
 using LocoOwnership.OwnershipHandler;
+using LocoOwnership.Shared;
+using System;
+using System.Collections.Generic;
+using UnityEngine;
+using static DV.LocoRestoration.LocoRestorationController;
 
 namespace LocoOwnership.LocoPurchaser
 {
@@ -28,7 +26,7 @@ namespace LocoOwnership.LocoPurchaser
 		public TransactionPurchaseConfirm(TrainCar selectedCar, bool highlighterState = true)
 			: base(new CommsRadioState(
 				titleText: LocalizationAPI.L("lo/radio/general/purchase"),
-				contentText: LocalizationAPI.L("lo/radio/pselected/content", selectedCar.ID, PricesCalc.CalculateBuyPrice(selectedCar).ToString()),
+				contentText: LocalizationAPI.L("lo/radio/pselected/content", selectedCar.ID, PricesCalc.CalculateBuyPrice(selectedCar, getTotalTrainsetPrice: true).ToString()),
 				actionText: highlighterState
 				? LocalizationAPI.L("comms/confirm")
 				: LocalizationAPI.L("comms/cancel"),
@@ -42,33 +40,25 @@ namespace LocoOwnership.LocoPurchaser
 				throw new ArgumentNullException(nameof(selectedCar));
 			}
 
-			carBuyPrice = PricesCalc.CalculateBuyPrice(selectedCar);
+			carBuyPrice = PricesCalc.CalculateBuyPrice(selectedCar, getTotalTrainsetPrice: true);
 		}
 
 		private bool HasDemonstrator()
 		{
-			if (Main.settings.skipDemonstrator)
-			{
-				return true;
-			}
+			if (Main.Settings.skipDemonstrator) return true;
+			if (UserManager.Instance.CurrentUser.CurrentSession.GameMode.Equals("FreeRoam")) return true;
 
-			if (UserManager.Instance.CurrentUser.CurrentSession.GameMode.Equals("FreeRoam"))
-			{
-				return true;
-			}
+			LocoRestorationController controller = allLocoRestorationControllers.Find(x => x.locoLivery == selectedCar.carLivery);
 
-			var controller = allLocoRestorationControllers.Find(x => x.locoLivery == selectedCar.carLivery);
-			if (controller != null && controller.State >= RestorationState.S9_LocoServiced)
-			{
-				return true;
-			}
+			if (controller == null) return true;
+			if (controller.State >= RestorationState.S9_LocoServiced) return true;
 
 			return false;
 		}
 
 		private bool HasEnoughLocos()
 		{
-			if (OwnedLocosManager.CountLocosOnly() >= Main.settings.maxLocosLimit)
+			if (OwnedLocosManager.CountLocosOnly() >= Main.Settings.maxLocosLimit)
 			{
 				return true;
 			}
@@ -78,13 +68,9 @@ namespace LocoOwnership.LocoPurchaser
 
 		private bool IsLocoDebtCleared()
 		{
-			TrainCar tender = CarGetters.GetTender(selectedCar);
-			if (DebtHandling.CheckLocoDebtBuy(selectedCar, tender))
-			{
-				return true;
-			}
-
-			return false;
+			List<TrainCar> trainSet = CarUtils.GetCCLTrainsetOrLocoAndTender(selectedCar);
+			foreach (TrainCar car in trainSet) if (!DebtHandling.IsDebtClearForBuy(car)) return false;
+			return true;
 		}
 
 		public override AStateBehaviour OnAction(CommsRadioUtility utility, InputAction action)
@@ -104,6 +90,12 @@ namespace LocoOwnership.LocoPurchaser
 			{
 				utility.PlaySound(VanillaSoundCommsRadio.Warning);
 				return new TransactionPurchaseFail(5);
+			}
+
+			if (!CarUtils.IsTrainsetValidForLoco(selectedCar))
+			{
+				utility.PlaySound(VanillaSoundCommsRadio.Warning);
+				return new TransactionPurchaseFail(7);
 			}
 
 			if (!LicenseManager.Instance.IsGeneralLicenseAcquired(GeneralLicenseType.ManualService.ToV2()))

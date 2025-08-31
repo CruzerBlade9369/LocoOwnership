@@ -1,12 +1,8 @@
 using System;
-
 using DV;
 using DV.Localization;
-
 using UnityEngine;
-
 using CommsRadioAPI;
-
 using LocoOwnership.LocoPurchaser;
 using LocoOwnership.LocoSeller;
 using LocoOwnership.LocoRequester;
@@ -24,7 +20,7 @@ namespace LocoOwnership.Menus
 				("lo/radio/general/sell", "lo/radio/locosell/content")
 			};
 
-			if (!Main.settings.noLocoRequest)
+			if (!Main.Settings.noLocoRequest)
 			{
 				items.Add(("lo/radio/general/request", "lo/radio/locorequest/content"));
 			}

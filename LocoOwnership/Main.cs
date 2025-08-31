@@ -1,19 +1,14 @@
-using System;
-using System.Reflection;
-
-using HarmonyLib;
-using UnityModManagerNet;
-
-using DV;
-
-using UnityEngine;
-
 using CommsRadioAPI;
+using DV;
 using DVLangHelper.Runtime;
-
+using HarmonyLib;
 using LocoOwnership.Menus;
 using LocoOwnership.OwnershipHandler;
-using LocoOwnership.Shared;
+using System;
+using System.Linq;
+using System.Reflection;
+using UnityEngine;
+using UnityModManagerNet;
 
 namespace LocoOwnership
 {
@@ -21,8 +16,10 @@ namespace LocoOwnership
 	{
 		public static UnityModManager.ModEntry? mod;
 
-		public static Settings settings { get; private set; }
+		public static Settings Settings { get; private set; }
 		public static CommsRadioMode CommsRadioMode { get; private set; }
+
+		public static bool IsCCLLoaded { get; private set; }
 
 		private static bool Load(UnityModManager.ModEntry modEntry)
 		{
@@ -32,12 +29,12 @@ namespace LocoOwnership
 			{
 				try
 				{
-					settings = Settings.Load<Settings>(modEntry);
+					Settings = Settings.Load<Settings>(modEntry);
 				}
 				catch
 				{
 					Debug.LogWarning("Unabled to load mod settings. Using defaults instead.");
-					settings = new Settings();
+					Settings = new Settings();
 				}
 				mod = modEntry;
 
@@ -45,12 +42,20 @@ namespace LocoOwnership
 				harmony.PatchAll(Assembly.GetExecutingAssembly());
 				DebugLog("Attempting patch.");
 
-				modEntry.OnGUI = settings.DrawGUI;
-				modEntry.OnSaveGUI = settings.Save;
+				modEntry.OnGUI = Settings.DrawGUI;
+				modEntry.OnSaveGUI = Settings.Save;
 
 				var translations = new TranslationInjector("cruzer.locoownership");
 				string localizationUrl = "https://docs.google.com/spreadsheets/d/1UyoJuIiUykiHizaiM1qkxH4ji-em7NU-4MTgiHIyJeE/export?format=csv";
 				translations.AddTranslationsFromWebCsv(localizationUrl);
+
+				// detect if ccl is loaded
+				var ccl = UnityModManager.modEntries.FirstOrDefault(mod => mod.Info.Id == "DVCustomCarLoader");
+				if (ccl != null && ccl.Active)
+				{
+					IsCCLLoaded = true;
+				}
+				Debug.Log($"Loco Ownership CCL integration: CCL is loaded? {IsCCLLoaded}");
 
 				ControllerAPI.Ready += StartCommsRadio;
 				OwnedLocosManager.Initialize();
@@ -67,7 +72,7 @@ namespace LocoOwnership
 
 		public static void DebugLog(string message)
 		{
-			if (settings.isLoggingEnabled)
+			if (Settings.isLoggingEnabled)
 				mod?.Logger.Log(message);
 		}
 

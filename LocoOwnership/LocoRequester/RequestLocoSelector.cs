@@ -1,15 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-
 using DV;
 using DV.Localization;
 using DV.ServicePenalty;
-
 using UnityEngine;
-
 using CommsRadioAPI;
-
 using LocoOwnership.OwnershipHandler;
 using LocoOwnership.Shared;
 using DV.ThingTypes;
@@ -40,7 +36,7 @@ namespace LocoOwnership.LocoRequester
 			{
 				case InputAction.Activate:
 
-					TrainCar tender = CarGetters.GetTender(selectedCar);
+					TrainCar tender = CarUtils.GetTender(selectedCar);
 
 					if (CarTypes.IsMUSteamLocomotive(selectedCar.carType) && tender == null)
 					{

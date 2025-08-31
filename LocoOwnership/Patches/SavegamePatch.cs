@@ -1,6 +1,5 @@
 using HarmonyLib;
 using Newtonsoft.Json.Linq;
-
 using LocoOwnership.OwnershipHandler;
 
 namespace LocoOwnership.Patches
@@ -37,16 +36,4 @@ namespace LocoOwnership.Patches
 			}
 		}
 	}
-
-	/*class OwnedLocosSaveData
-	{
-		public string guid;
-		public string locoID;
-
-		public OwnedLocosSaveData(string guid, string locoID)
-		{
-			this.guid = guid;
-			this.locoID = locoID;
-		}
-	}*/
 }

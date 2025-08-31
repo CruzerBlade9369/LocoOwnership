@@ -1,15 +1,12 @@
-using System;
-
-using DV;
-using DV.Localization;
-using DV.InventorySystem;
-
-using UnityEngine;
-
 using CommsRadioAPI;
-
-using LocoOwnership.Shared;
+using DV;
+using DV.InventorySystem;
+using DV.Localization;
+using LocoOwnership.LocoPurchaser;
 using LocoOwnership.OwnershipHandler;
+using LocoOwnership.Shared;
+using System;
+using UnityEngine;
 
 namespace LocoOwnership.LocoSeller
 {
@@ -42,8 +39,8 @@ namespace LocoOwnership.LocoSeller
 
 		private bool IsLocoDebtCleared()
 		{
-			TrainCar tender = CarGetters.GetTender(selectedCar);
-			if (DebtHandling.CheckLocoDebtSell(selectedCar, tender))
+			TrainCar tender = CarUtils.GetTender(selectedCar);
+			if (DebtHandling.IsDebtClearForSell(selectedCar, tender))
 			{
 				return true;
 			}
@@ -64,12 +61,18 @@ namespace LocoOwnership.LocoSeller
 				return new SellPointAtNothing();
 			}
 
+			if (!CarUtils.IsTrainsetValidForLoco(selectedCar))
+			{
+				utility.PlaySound(VanillaSoundCommsRadio.Warning);
+				return new TransactionSellFail(1);
+			}
+
 			if (!OwnedLocosManager.HasLocoGUIDAsKey(selectedCar.CarGUID))
 			{
 				return new TransactionSellFail(1);
 			}
 
-			if(!IsLocoDebtCleared() && !Main.settings.advancedEco)
+			if(!IsLocoDebtCleared() && !Main.Settings.advancedEco)
 			{
 				return new TransactionSellFail(0);
 			}
