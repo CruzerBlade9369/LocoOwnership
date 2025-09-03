@@ -11,7 +11,7 @@ Not to be confused with [Rolling Stock Ownership](https://github.com/fauxnik/dv-
 - Owned locomotives don't despawn and won't contribute to your fee count.
 - Sell locomotives when you don't want them anymore.
 
-Read the [wiki](https://github.com/CruzerBlade9369/LocoOwnership/wiki) for more information.
+Visit the [wiki](https://github.com/CruzerBlade9369/LocoOwnership/wiki) for more information on all the mod's features.
 
 Known issues:
 - Locomotives may still despawn during the "game has been updated" event.
