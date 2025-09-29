@@ -6,6 +6,7 @@ using LocoOwnership.LocoPurchaser;
 using LocoOwnership.OwnershipHandler;
 using LocoOwnership.Shared;
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace LocoOwnership.LocoSeller
@@ -39,13 +40,9 @@ namespace LocoOwnership.LocoSeller
 
 		private bool IsLocoDebtCleared()
 		{
-			TrainCar tender = CarUtils.GetTender(selectedCar);
-			if (DebtHandling.IsDebtClearForSell(selectedCar, tender))
-			{
-				return true;
-			}
-
-			return false;
+			List<TrainCar> trainSet = CarUtils.GetCCLTrainsetOrLocoAndTender(selectedCar);
+			foreach (TrainCar car in trainSet) if (!DebtHandling.IsDebtClearForSell(car)) return false;
+			return true;
 		}
 
 		public override AStateBehaviour OnAction(CommsRadioUtility utility, InputAction action)
@@ -61,7 +58,7 @@ namespace LocoOwnership.LocoSeller
 				return new SellPointAtNothing();
 			}
 
-			if (!CarUtils.IsTrainsetValidForLoco(selectedCar))
+			if (!CarUtils.IsLocoOrLocosetValid(selectedCar))
 			{
 				utility.PlaySound(VanillaSoundCommsRadio.Warning);
 				return new TransactionSellFail(1);

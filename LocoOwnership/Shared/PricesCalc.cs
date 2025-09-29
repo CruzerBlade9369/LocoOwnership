@@ -12,7 +12,7 @@ namespace LocoOwnership.Shared
 	public class PricesCalc
 	{
 		private const float DE2_ARTIFICIAL_LICENSE_PRICE = 10000f;
-		private const float MIN_TELE_PRICE = 2500f;
+		private const float MIN_TELE_PRICE = 5000f;
 
 		public static float CalculateBuyPrice(TrainCar selectedCar, bool getTotalTrainsetPrice = false)
 		{
@@ -30,30 +30,11 @@ namespace LocoOwnership.Shared
 			// when using catalog price
 			if (Main.Settings.locoCatPrices)
 			{
-				if (getTotalTrainsetPrice)
-				{
-					return GetTotalTrainsetCatalogPrice(selectedCar);
-				}
-
-				TrainCarType_v2 carParentType = selectedCar.carLivery.parentType;
-				return carParentType.damage.bodyPrice + carParentType.damage.wheelsPrice + carParentType.damage.electricalPowertrainPrice + carParentType.damage.mechanicalPowertrainPrice;
+				return GetPriceWhenBuyingWithCatalog(selectedCar, getTotalTrainsetPrice);
 			}
 
-			if (selectedCar.carType == TrainCarType.LocoShunter)
-			{
-				if (selectedCar.carLivery.requiredLicense.price > 0)
-				{
-					return selectedCar.carLivery.requiredLicense.price * Main.Settings.priceMultiplier;
-				}
-				else
-				{
-					return DE2_ARTIFICIAL_LICENSE_PRICE * Main.Settings.priceMultiplier;
-				}
-			}
-			else
-			{
-				return selectedCar.carLivery.requiredLicense.price * Main.Settings.priceMultiplier;
-			}
+			// when using license price, split the price and distribute between all units
+			return GetPriceWhenBuyingWithLicense(selectedCar, getTotalTrainsetPrice);
 		}
 
 		public static float CalculateSellPrice(TrainCar selectedCar)
@@ -68,62 +49,78 @@ namespace LocoOwnership.Shared
 				return 0f;
 			}
 
-			// when using catalog price
-			if (Main.Settings.locoCatPrices)
-			{
-				if (Main.Settings.advancedEco)
-				{
-					return GetTotalTrainsetSellPrice(selectedCar, considerWear: true);
-				}
-
-				return GetTotalTrainsetSellPrice(selectedCar, considerWear: false) / Main.Settings.priceMultiplier;
-			}
-
-			// old system replaced with calculation using purchase price dict
-			// kinda makes no sense for selling price to be based on license price instead of purchase price eh
+			// legacy system revised, now new locos purchased with license price gets the price split up between all units
 
 			if (Main.Settings.advancedEco)
 			{
-				return GetSellPriceWithWear(selectedCar);
+				return GetTotalTrainsetSellPrice(selectedCar, considerWear: true);
 			}
 
-			return OwnedLocosManager.OwnedLocosLicensePrice[selectedCar.CarGUID] / Main.Settings.priceMultiplier;
+			return GetTotalTrainsetSellPrice(selectedCar, considerWear: false) / Main.Settings.priceMultiplier;
 		}
 
 		public static float CalculateCarTeleportPrice(TrainCar selectedCar, EquiPointSet.Point? selectedPoint)
 		{
-			float carTeleportPrice;
-
 			if (Main.Settings.freeCarTeleport)
 			{
 				return 0f;
 			}
 
 			Vector3 spawnPos = (Vector3)selectedPoint.Value.position + WorldMover.currentMove;
-			float teleDistance = Vector3.Distance(selectedCar.transform.position, spawnPos) * 0.001f;
+			float teleDistanceKm = Vector3.Distance(selectedCar.transform.position, spawnPos) * 0.001f;
 
-			carTeleportPrice = Mathf.RoundToInt(teleDistance * 200f) * 6;
-
-			if (carTeleportPrice < MIN_TELE_PRICE)
+			if (teleDistanceKm < 2f )
 			{
 				return MIN_TELE_PRICE;
 			}
 
-			return carTeleportPrice;
+			return ((teleDistanceKm - 2f) * Main.Settings.requestPriceRate) + MIN_TELE_PRICE;
 		}
 
-		private static float GetTotalTrainsetCatalogPrice(TrainCar selectedCar)
+		private static float GetPriceWhenBuyingWithCatalog(TrainCar selectedCar, bool getTotalPrice)
 		{
-			List<TrainCar> trainSet = CarUtils.GetCCLTrainsetOrLocoAndTender(selectedCar);
+			if (!getTotalPrice)
+			{
+				return GetUnitCatalogPrice(selectedCar);
+			}
 
+			List<TrainCar> trainSet = CarUtils.GetCCLTrainsetOrLocoAndTender(selectedCar);
 			float totalTrainsetCatalogPrice = 0f;
 			foreach (TrainCar car in trainSet)
 			{
-				TrainCarType_v2 carParentType = car.carLivery.parentType;
-				totalTrainsetCatalogPrice += carParentType.damage.bodyPrice + carParentType.damage.wheelsPrice + carParentType.damage.electricalPowertrainPrice + carParentType.damage.mechanicalPowertrainPrice;
+				totalTrainsetCatalogPrice += GetUnitCatalogPrice(car);
 			}
 
 			return totalTrainsetCatalogPrice;
+		}
+
+		private static float GetUnitCatalogPrice(TrainCar selectedCar)
+		{
+			TrainCarType_v2 carParentType = selectedCar.carLivery.parentType;
+			return carParentType.damage.bodyPrice + carParentType.damage.wheelsPrice + carParentType.damage.electricalPowertrainPrice + carParentType.damage.mechanicalPowertrainPrice;
+		}
+
+		private static float GetPriceWhenBuyingWithLicense(TrainCar selectedCar, bool getTotalPrice)
+		{
+			float totalPrice;
+
+			if (selectedCar.carType == TrainCarType.LocoShunter && selectedCar.carLivery.requiredLicense.price <= 0)
+			{
+				totalPrice = DE2_ARTIFICIAL_LICENSE_PRICE * Main.Settings.priceMultiplier;
+			}
+			else
+			{
+				totalPrice = selectedCar.carLivery.requiredLicense.price * Main.Settings.priceMultiplier;
+			}
+
+			if (getTotalPrice)
+			{
+				return totalPrice;
+			}
+
+			float numberOfCars = CarUtils.GetCCLTrainsetOrLocoAndTender(selectedCar).Count;
+
+			return totalPrice / numberOfCars;
 		}
 
 		private static float GetTotalTrainsetSellPrice(TrainCar selectedCar, bool considerWear)
@@ -135,21 +132,30 @@ namespace LocoOwnership.Shared
 			{
 				if (considerWear)
 				{
-					totalTrainsetSellPrice += GetSellPriceWithWear(car);
+					totalTrainsetSellPrice += GetUnitSellPriceWithWear(car);
 				}
 				else
 				{
-					totalTrainsetSellPrice += OwnedLocosManager.OwnedLocosLicensePrice[car.CarGUID];
+					totalTrainsetSellPrice += GetStoredPriceOrDefault(car);
 				}
 			}
 
 			return totalTrainsetSellPrice;
 		}
 
-		private static float GetSellPriceWithWear(TrainCar selectedCar)
+		private static float GetUnitSellPriceWithWear(TrainCar selectedCar)
 		{
 			float wearFactor = CalculateWearFactor(selectedCar.GetComponent<DamageController>());
-			return OwnedLocosManager.OwnedLocosLicensePrice[selectedCar.CarGUID] * (0.75f - wearFactor);
+			return GetStoredPriceOrDefault(selectedCar) * (0.75f - wearFactor);
+		}
+
+		private static float GetStoredPriceOrDefault(TrainCar car)
+		{
+			if (OwnedLocosManager.OwnedLocosLicensePrice.TryGetValue(car.CarGUID, out float storedPrice))
+			{
+				if (storedPrice > 0f) return storedPrice;
+			}
+			return 0f;
 		}
 
 		private static float CalculateWearFactor(DamageController carDmg)

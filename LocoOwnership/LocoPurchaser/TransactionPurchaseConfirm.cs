@@ -58,10 +58,7 @@ namespace LocoOwnership.LocoPurchaser
 
 		private bool HasEnoughLocos()
 		{
-			if (OwnedLocosManager.CountLocosOnly() >= Main.Settings.maxLocosLimit)
-			{
-				return true;
-			}
+			if (OwnedLocosManager.CountLocosAsSets() >= Main.Settings.maxLocosLimit) return true;
 
 			return false;
 		}
@@ -92,7 +89,7 @@ namespace LocoOwnership.LocoPurchaser
 				return new TransactionPurchaseFail(5);
 			}
 
-			if (!CarUtils.IsTrainsetValidForLoco(selectedCar))
+			if (!CarUtils.IsLocoOrLocosetValid(selectedCar))
 			{
 				utility.PlaySound(VanillaSoundCommsRadio.Warning);
 				return new TransactionPurchaseFail(7);

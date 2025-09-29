@@ -42,19 +42,16 @@ namespace LocoOwnership.OwnershipHandler
 			else
 			{
 				Debug.Log("Owned locos list:");
-				foreach (KeyValuePair<string, string> kvp in ownedLocos)
+				for (int i = 0; i < ownedLocos.Count; i++)
 				{
-					Debug.Log($"Guid = {kvp.Key}, LocoID = {kvp.Value}");
-				}
-
-				Debug.Log("Owned locos list, stored loco price:");
-				foreach (KeyValuePair<string, float> kvp in ownedLocosLicensePrice)
-				{
-					Debug.Log($"Guid = {kvp.Key}, stored loco price = {kvp.Value}");
+					string guid = ownedLocos.Keys.ToList()[i];
+					string id = ownedLocos.Values.ToList()[i];
+					string purchasePrice = ownedLocosLicensePrice[guid].ToString();
+					Debug.Log($"{i}. Guid = {guid}, LocoID = {id}, purchase price = {purchasePrice}");
 				}
 
 				Debug.Log("-----");
-				Debug.Log($"Found {ownedLocos.Count} vehicles, {CountLocosOnly()} being locos");
+				Debug.Log($"Found {ownedLocos.Count} vehicles, {CountLocosAsSets()} being locos");
 				Debug.Log($"Found {ownedLocosLicensePrice.Count} loco price data");
 			}
 		}
@@ -71,28 +68,23 @@ namespace LocoOwnership.OwnershipHandler
 
 		public static int CountLocosAsSets()
 		{
-			List<string> workingList = ownedLocos.Keys.ToList();
-			int count = 0;
+			return ownedLocos
+				.Where(kvp => kvp.Value.StartsWith("L-"))
+				.Select(kvp =>
+				{
+					var car = TrainCarRegistry.Instance.GetTrainCarByCarGuid(kvp.Key);
+					var set = CarUtils.GetCCLTrainsetOrLocoAndTender(car);
+					return new HashSet<string>(set.Select(tc => tc.CarGUID));
+				})
+				.Distinct(HashSet<string>.CreateSetComparer())
+				.Count();
 
-			while (workingList.Count > 0)
-			{
-				TrainCar car = OwnedCarsStateController.Instance.existingOwnedCarStates.Find(
-					debt => debt.car.CarGUID == workingList[0]).car;
-
-				List<TrainCar> trainSet = CarUtils.GetCCLTrainsetOrLocoAndTender(car);
-
-				var setGuids = new HashSet<string>(trainSet.Select(tc => tc.CarGUID));
-				workingList.RemoveAll(g => setGuids.Contains(g));
-
-				count++;
-			}
-
-			return count;
+			// thanks Zeibach for helping with this part!
 		}
 
-		public static int CountLocosOnly()
+		public static int CountIndividualLocoUnits()
 		{
-			return ownedLocos.Count(kv => kv.Value.StartsWith("L-"));
+			return ownedLocos.Count(kvp => kvp.Value.StartsWith("L-"));
 		}
 
 		public static void ClearCache()

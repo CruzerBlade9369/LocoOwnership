@@ -8,7 +8,7 @@ namespace LocoOwnership.OwnershipHandler
 {
 	public class DebtHandling
 	{
-		public static bool IsDebtClearForBuy(TrainCar car, TrainCar tender = null)
+		public static bool IsDebtClearForBuy(TrainCar car)
 		{
 			var locoDebtController = LocoDebtController.Instance;
 			float totalDebtCheck = 0f;
@@ -26,7 +26,7 @@ namespace LocoOwnership.OwnershipHandler
 			totalDebtCheck += existingLocoDebt.GetTotalPrice();
 
 			// check tender debt if present
-			if (tender != null)
+			/*if (tender != null)
 			{
 				var tenderDebt = tender.GetComponent<SimController>().debt;
 				if (tenderDebt != null)
@@ -41,12 +41,12 @@ namespace LocoOwnership.OwnershipHandler
 					existingTenderDebt.UpdateDebtState();
 					totalDebtCheck += existingTenderDebt.GetTotalPrice();
 				}
-			}
+			}*/
 
 			return totalDebtCheck <= 0f;
 		}
 
-		public static bool IsDebtClearForSell(TrainCar car, TrainCar tender = null)
+		public static bool IsDebtClearForSell(TrainCar car)
 		{
 			var ownedCarsStateController = OwnedCarsStateController.Instance;
 			float totalDebtCheck = 0f;
@@ -64,7 +64,7 @@ namespace LocoOwnership.OwnershipHandler
 			totalDebtCheck += existingLocoDebt.GetTotalPrice();
 
 			// check tender debt if present
-			if (tender != null)
+			/*if (tender != null)
 			{
 				var tenderDebt = tender.GetComponent<SimController>().debt;
 				var existingTenderDebt = ownedCarsStateController.existingOwnedCarStates
@@ -76,7 +76,7 @@ namespace LocoOwnership.OwnershipHandler
 				}
 				existingTenderDebt.UpdateDebtState();
 				totalDebtCheck += existingTenderDebt.GetTotalPrice();
-			}
+			}*/
 
 			// if has unpaid debts or debts arent only environmental then dont sell loco
 			if (totalDebtCheck > 0f)

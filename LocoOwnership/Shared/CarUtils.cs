@@ -7,8 +7,6 @@ namespace LocoOwnership.Shared
 {
 	public class CarUtils
 	{
-		public static Dictionary<string, string> requestableOwnedLocos = new();
-
 		public static TrainCar GetTender(TrainCar selectedCar)
 		{
 			// check if we're buying S282
@@ -26,7 +24,19 @@ namespace LocoOwnership.Shared
 			return tender;
 		}
 
-		public static bool IsTrainsetValidForLoco(TrainCar car)
+		public static bool IsAnyLocoInSetDerailed(TrainCar car)
+		{
+			List<TrainCar> trainSet = GetCCLTrainsetOrLocoAndTender(car);
+
+			foreach (TrainCar trainCar in trainSet)
+			{
+				if (trainCar.derailed) return true;
+			}
+
+			return false;
+		}
+
+		public static bool IsLocoOrLocosetValid(TrainCar car)
 		{
 			// add check for CCL trainset validation here, to be implemented
 

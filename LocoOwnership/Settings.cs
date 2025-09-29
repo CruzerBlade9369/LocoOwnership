@@ -1,6 +1,4 @@
 using LocoOwnership.OwnershipHandler;
-using LocoOwnership.Shared;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityModManagerNet;
 
@@ -36,10 +34,13 @@ namespace LocoOwnership
 		[Draw("The funny (enable at your own risk)")]
 		public bool theFunny = false;
 
-		[Draw("Maximum number of owned locomotives", Min = 0, Max = 100)]
+		[Draw("Maximum number of owned locomotives", Min = 1, Max = 30)]
 		public int maxLocosLimit = 16;
 
-		[Draw("Locomotive buy/sell price multiplier (Does not apply when dynamic resell price is on)", Min = 2f, Max = 100f)]
+		[Draw("Loco requesting price rate per km", Min = 1250f, Max = 10000f)]
+		public float requestPriceRate = 2500f;
+
+		[Draw("Locomotive buy/sell price multiplier (Does not apply on catalog prices or dynamic resell price)", Min = 2f, Max = 100f)]
 		public float priceMultiplier = 2f;
 
 		[Draw("Use locomotive catalog prices for purchase")]
@@ -77,6 +78,16 @@ namespace LocoOwnership
 				if (GUILayout.Button("Print all owned cars data to console"))
 				{
 					OwnedLocosManager.PrintAllOwnedLocos();
+				}
+
+				if (GUILayout.Button("Count trainsets"))
+				{
+					Debug.Log(OwnedLocosManager.CountLocosAsSets() + " locos as sets");
+				}
+
+				if (GUILayout.Button("Count individual loco units"))
+				{
+					Debug.Log(OwnedLocosManager.CountIndividualLocoUnits() + " individual loco units");
 				}
 			}
 
