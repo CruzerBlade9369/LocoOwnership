@@ -16,17 +16,17 @@ namespace LocoOwnership.LocoRequester
 	{
 		private static Dictionary<string, string> requestableOwnedLocos = new();
 
-		public static int selectedIndex;
+		private int selectedIndex;
 		private TrainCar selectedCar;
 
 		public RequestLocoSelector(int index = 0) : base(
 			new CommsRadioState(
 				titleText: LocalizationAPI.L("lo/radio/general/request"),
-				contentText: requestableOwnedLocos.Values.ElementAt(selectedIndex),
+				contentText: requestableOwnedLocos.Values.ElementAt(index),
 				actionText: LocalizationAPI.L("comms/confirm"),
 				buttonBehaviour: ButtonBehaviourType.Override))
 		{
-			index = selectedIndex;
+			selectedIndex = index;
 			selectedCar = TrainCarFromIndex(selectedIndex);
 		}
 

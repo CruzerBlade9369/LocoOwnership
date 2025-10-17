@@ -9,13 +9,11 @@ namespace LocoOwnership.Shared
 	{
 		public static TrainCar GetTender(TrainCar selectedCar)
 		{
-			// check if we're buying S282
 			bool isSteamEngine = CarTypes.IsMUSteamLocomotive(selectedCar.carType);
 			bool hasTender = selectedCar.rearCoupler.IsCoupled() && CarTypes.IsTender(selectedCar.rearCoupler.coupledTo.train.carLivery);
 
 			TrainCar tender = null;
 
-			// get tender if S282
 			if (isSteamEngine && hasTender)
 			{
 				tender = selectedCar.rearCoupler.coupledTo.train;
@@ -38,20 +36,27 @@ namespace LocoOwnership.Shared
 
 		public static bool IsLocoOrLocosetValid(TrainCar car)
 		{
-			// add check for CCL trainset validation here, to be implemented
-
 			if (CarTypes.IsMUSteamLocomotive(car.carType))
 			{
 				if (!car.rearCoupler.IsCoupled())
-				{
 					return false;
-				}
 
 				if (!CarTypes.IsTender(car.rearCoupler.coupledTo.train.carLivery))
-				{
 					return false;
-				}
 			}
+
+			if (!Main.IsCCLLoaded) return true;
+
+			return CheckCCLTypeWrapper(car);
+		}
+
+		private static bool CheckCCLTypeWrapper(TrainCar car)
+		{
+			if (car.carLivery is CCL.Importer.Types.CCL_CarVariant)
+			{
+				return IsCCLLocosetValid(car);
+			}
+
 			return true;
 		}
 
@@ -76,6 +81,28 @@ namespace LocoOwnership.Shared
 			}
 
 			return trainSet;
+		}
+
+		public static bool IsCCLLocosetValid(TrainCar car)
+		{
+			if (Main.IsCCLLoaded)
+			{
+				return IsLocosetValid(car);
+			}
+
+			return true;
+		}
+
+		private static bool IsLocosetValid(TrainCar car)
+		{
+			if (CCL.Importer.CarManager.TryGetInstancedTrainset(car, out var set)
+				is CCL.Importer.CarManager.TrainSetCompleteness.NotPartOfTrainset)
+				return true;
+
+			if (set.Length > 0)
+				return true;
+
+			return false;
 		}
 
 		public static List<TrainCar> GetCCLTrainset(TrainCar car)

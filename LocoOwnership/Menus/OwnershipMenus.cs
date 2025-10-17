@@ -64,6 +64,7 @@ namespace LocoOwnership.Menus
 
 							utility.PlaySound(VanillaSoundCommsRadio.ModeEnter);
 							return new RequestLocoSelector();
+
 						default:
 							Debug.LogError("Ownership menu selector error");
 							throw new Exception($"Unexpected index: {menuIndex}");

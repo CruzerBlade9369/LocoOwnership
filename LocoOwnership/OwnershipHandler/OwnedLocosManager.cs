@@ -51,7 +51,7 @@ namespace LocoOwnership.OwnershipHandler
 				}
 
 				Debug.Log("-----");
-				Debug.Log($"Found {ownedLocos.Count} vehicles, {CountLocosAsSets()} being locos");
+				Debug.Log($"Found {ownedLocos.Count} vehicles, {CountIndividualLocoUnits()} being loco units");
 				Debug.Log($"Found {ownedLocosLicensePrice.Count} loco price data");
 			}
 		}
