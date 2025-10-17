@@ -1,9 +1,7 @@
 using System.Collections;
-
 using DV;
 using DV.UI;
 using DV.UIFramework;
-
 using RSG;
 
 namespace LocoOwnership.Shared

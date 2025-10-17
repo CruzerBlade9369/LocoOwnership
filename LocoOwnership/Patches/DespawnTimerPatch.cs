@@ -1,7 +1,5 @@
 using HarmonyLib;
-
 using DV;
-
 using LocoOwnership.OwnershipHandler;
 
 namespace LocoOwnership.Patches

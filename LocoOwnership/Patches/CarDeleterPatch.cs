@@ -1,8 +1,6 @@
 using HarmonyLib;
-
 using DV;
 using DV.Localization;
-
 using LocoOwnership.OwnershipHandler;
 
 namespace LocoOwnership.Patches

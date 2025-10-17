@@ -1,6 +1,5 @@
 using DV;
 using DV.Localization;
-
 using CommsRadioAPI;
 
 namespace LocoOwnership.Menus

@@ -1,5 +1,4 @@
 using LocoOwnership.OwnershipHandler;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityModManagerNet;
 
@@ -35,10 +34,13 @@ namespace LocoOwnership
 		[Draw("The funny (enable at your own risk)")]
 		public bool theFunny = false;
 
-		[Draw("Maximum number of owned locomotives", Min = 0, Max = 100)]
+		[Draw("Maximum number of owned locomotives", Min = 1, Max = 30)]
 		public int maxLocosLimit = 16;
 
-		[Draw("Locomotive buy/sell price multiplier (Does not apply when dynamic resell price is on)", Min = 2f, Max = 100f)]
+		[Draw("Loco requesting price rate per km", Min = 1250f, Max = 10000f)]
+		public float requestPriceRate = 2500f;
+
+		[Draw("Locomotive buy/sell price multiplier (Does not apply on catalog prices or dynamic resell price)", Min = 2f, Max = 100f)]
 		public float priceMultiplier = 2f;
 
 		[Draw("Use locomotive catalog prices for purchase")]
@@ -75,28 +77,17 @@ namespace LocoOwnership
 
 				if (GUILayout.Button("Print all owned cars data to console"))
 				{
-					if (OwnedLocosManager.OwnedLocos.Count <= 0 || OwnedLocosManager.OwnedLocosLicensePrice.Count <= 0)
-					{
-						Debug.Log("You don't have owned locos yet or you haven't loaded into a save!");
-					}
-					else
-					{
-						Debug.Log("Owned locos list:");
-						foreach (KeyValuePair<string, string> kvp in OwnedLocosManager.OwnedLocos)
-						{
-							Debug.Log($"Guid = {kvp.Key}, LocoID = {kvp.Value}");
-						}
+					OwnedLocosManager.PrintAllOwnedLocos();
+				}
 
-						Debug.Log("Owned locos list, stored loco price:");
-						foreach (KeyValuePair<string, float> kvp in OwnedLocosManager.OwnedLocosLicensePrice)
-						{
-							Debug.Log($"Guid = {kvp.Key}, stored loco price = {kvp.Value}");
-						}
+				if (GUILayout.Button("Count trainsets"))
+				{
+					Debug.Log(OwnedLocosManager.CountLocosAsSets() + " locos as sets");
+				}
 
-						Debug.Log("-----");
-						Debug.Log($"Found {OwnedLocosManager.OwnedLocos.Count} locos, {OwnedLocosManager.CountLocosOnly()} without tender");
-						Debug.Log($"Found {OwnedLocosManager.OwnedLocosLicensePrice.Count} loco price data");
-					}
+				if (GUILayout.Button("Count individual loco units"))
+				{
+					Debug.Log(OwnedLocosManager.CountIndividualLocoUnits() + " individual loco units");
 				}
 			}
 

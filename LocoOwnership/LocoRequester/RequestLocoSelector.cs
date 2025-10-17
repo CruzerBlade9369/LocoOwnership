@@ -1,15 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-
 using DV;
 using DV.Localization;
 using DV.ServicePenalty;
-
 using UnityEngine;
-
 using CommsRadioAPI;
-
 using LocoOwnership.OwnershipHandler;
 using LocoOwnership.Shared;
 using DV.ThingTypes;
@@ -23,14 +19,14 @@ namespace LocoOwnership.LocoRequester
 		private int selectedIndex;
 		private TrainCar selectedCar;
 
-		public RequestLocoSelector(int selectedIndex = 0) : base(
+		public RequestLocoSelector(int index = 0) : base(
 			new CommsRadioState(
 				titleText: LocalizationAPI.L("lo/radio/general/request"),
-				contentText: requestableOwnedLocos.Values.ElementAt(selectedIndex),
+				contentText: requestableOwnedLocos.Values.ElementAt(index),
 				actionText: LocalizationAPI.L("comms/confirm"),
 				buttonBehaviour: ButtonBehaviourType.Override))
 		{
-			this.selectedIndex = selectedIndex;
+			selectedIndex = index;
 			selectedCar = TrainCarFromIndex(selectedIndex);
 		}
 
@@ -40,7 +36,7 @@ namespace LocoOwnership.LocoRequester
 			{
 				case InputAction.Activate:
 
-					TrainCar tender = CarGetters.GetTender(selectedCar);
+					TrainCar tender = CarUtils.GetTender(selectedCar);
 
 					if (CarTypes.IsMUSteamLocomotive(selectedCar.carType) && tender == null)
 					{
@@ -98,6 +94,7 @@ namespace LocoOwnership.LocoRequester
 			{
 				nextIndex = 0;
 			}
+			selectedIndex = nextIndex;
 			return nextIndex;
 		}
 
@@ -108,31 +105,18 @@ namespace LocoOwnership.LocoRequester
 			{
 				previousIndex = requestableOwnedLocos.Count - 1;
 			}
+			selectedIndex = previousIndex;
 			return previousIndex;
 		}
 
 		private TrainCar TrainCarFromIndex(int index)
 		{
 			OwnedCarsStateController ocsc = OwnedCarsStateController.Instance;
-			TrainCar loco = null;
-
 			string ownedLocoGuid = requestableOwnedLocos.Keys.ElementAt(index);
 
-			foreach (ExistingOwnedCarDebt eocd in ocsc.existingOwnedCarStates)
-			{
-				if (eocd.car.CarGUID == ownedLocoGuid && eocd.car.IsLoco)
-				{
-					loco = eocd.car;
-					break;
-				}
-			}
+			TrainCar car = TrainCarRegistry.Instance.GetTrainCarByCarGuid(ownedLocoGuid);
 
-			if (loco == null)
-			{
-				throw new Exception("content from index selector: traincar is null!!");
-			}
-
-			return loco;
+			return car;
 		}
 
 		public static int GetRequestableLocosCount()
@@ -149,7 +133,9 @@ namespace LocoOwnership.LocoRequester
 
 			foreach (ExistingOwnedCarDebt eocd in ocsc.existingOwnedCarStates)
 			{
-				if (OwnedLocosManager.HasLocoGUIDAsKey(eocd.car.CarGUID) && eocd.car.IsLoco)
+				if (eocd.car.carType == TrainCarType.Tender) continue;
+
+				if (OwnedLocosManager.HasLocoGUIDAsKey(eocd.car.CarGUID))
 				{
 					tempDict.Add(eocd.car.CarGUID, $"{LocalizationAPI.L(eocd.car.carLivery.localizationKey)} {eocd.car.ID}");
 				}
