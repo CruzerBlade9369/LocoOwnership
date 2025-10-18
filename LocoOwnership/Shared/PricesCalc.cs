@@ -104,6 +104,8 @@ namespace LocoOwnership.Shared
 		{
 			float totalPrice;
 
+			if (selectedCar.carLivery.requiredLicense == null) return 0;
+
 			if (selectedCar.carType == TrainCarType.LocoShunter && selectedCar.carLivery.requiredLicense.price <= 0)
 			{
 				totalPrice = DE2_ARTIFICIAL_LICENSE_PRICE * Main.Settings.priceMultiplier;

@@ -101,7 +101,7 @@ namespace LocoOwnership.LocoSeller
 			}
 
 			// if pointing at the selected locomotive
-			if (target.CarGUID == selectedCar.CarGUID && selectedCar.carLivery.requiredLicense != null)
+			if (target.CarGUID == selectedCar.CarGUID)
 			{
 				if (!highlighterState)
 				{

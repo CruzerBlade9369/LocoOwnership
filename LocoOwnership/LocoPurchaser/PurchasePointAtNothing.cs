@@ -63,11 +63,6 @@ namespace LocoOwnership.LocoPurchaser
 				return this;
 			}
 
-			if (selectedCar.carLivery.requiredLicense == null)
-			{
-				return this;
-			}
-
 			utility.PlaySound(VanillaSoundCommsRadio.HoverOver);
 			return new PurchasePointAtLoco(selectedCar);
 		}

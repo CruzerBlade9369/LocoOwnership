@@ -51,11 +51,6 @@ namespace LocoOwnership.LocoSeller
 				return this;
 			}
 
-			if (selectedCar.carLivery.requiredLicense == null)
-			{
-				return this;
-			}
-
 			if (OwnedLocosManager.HasLocoGUIDAsKey(selectedCar.CarGUID))
 			{
 				utility.PlaySound(VanillaSoundCommsRadio.HoverOver);
