@@ -83,11 +83,11 @@ namespace LocoOwnership.LocoPurchaser
 				return new PurchasePointAtNothing();
 			}
 
-			if (selectedCar.playerSpawnedCar)
+			/*if (selectedCar.playerSpawnedCar)
 			{
 				utility.PlaySound(VanillaSoundCommsRadio.Warning);
 				return new TransactionPurchaseFail(5);
-			}
+			}*/
 
 			if (!CarUtils.IsLocoOrLocosetValid(selectedCar))
 			{
@@ -113,7 +113,13 @@ namespace LocoOwnership.LocoPurchaser
 				return new TransactionPurchaseFail(6);
 			}
 
-			if (OwnedLocosManager.HasLocoGUIDAsKey(selectedCar.CarGUID))
+			/*if (OwnedLocosManager.HasLocoGUIDAsKey(selectedCar.CarGUID))
+			{
+				utility.PlaySound(VanillaSoundCommsRadio.Warning);
+				return new TransactionPurchaseFail(7);
+			}*/
+
+			if (selectedCar.TryGetComponent<LocoOwnershipController>(out var loc))
 			{
 				utility.PlaySound(VanillaSoundCommsRadio.Warning);
 				return new TransactionPurchaseFail(7);
@@ -137,8 +143,9 @@ namespace LocoOwnership.LocoPurchaser
 				return new TransactionPurchaseFail(4);
 			}
 
-			OwnedLocosManager.BuyLoco(selectedCar);
-			Inventory.Instance.RemoveMoney(carBuyPrice);
+			/*OwnedLocosManager.BuyLoco(selectedCar);
+			Inventory.Instance.RemoveMoney(carBuyPrice);*/
+			selectedCar.gameObject.AddComponent<LocoOwnershipController>();
 			utility.PlaySound(VanillaSoundCommsRadio.MoneyRemoved);
 			return new TransactionPurchaseSuccess(selectedCar, carBuyPrice);
 		}

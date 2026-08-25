@@ -10,7 +10,7 @@ namespace LocoOwnership.Patches
 	{
 		static bool Prefix(CommsRadioCarDeleter __instance)
 		{
-			if (__instance.carToDelete != null && OwnedLocosManager.HasLocoGUIDAsKey(__instance.carToDelete.CarGUID))
+			if (__instance.carToDelete != null && OwnedLocosManager.IsLocoGuidAlreadyOwned(__instance.carToDelete.CarGUID))
 			{
 				__instance.display.SetContent(LocalizationAPI.L("lo/misc/cardeleterpatch"));
 				__instance.SetState(CommsRadioCarDeleter.State.CancelDelete);

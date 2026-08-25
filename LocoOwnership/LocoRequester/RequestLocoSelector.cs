@@ -135,7 +135,7 @@ namespace LocoOwnership.LocoRequester
 			{
 				if (eocd.car.carType == TrainCarType.Tender) continue;
 
-				if (OwnedLocosManager.HasLocoGUIDAsKey(eocd.car.CarGUID))
+				if (OwnedLocosManager.IsLocoGuidAlreadyOwned(eocd.car.CarGUID))
 				{
 					tempDict.Add(eocd.car.CarGUID, $"{LocalizationAPI.L(eocd.car.carLivery.localizationKey)} {eocd.car.ID}");
 				}

@@ -64,7 +64,7 @@ namespace LocoOwnership.LocoSeller
 				return new TransactionSellFail(1);
 			}
 
-			if (!OwnedLocosManager.HasLocoGUIDAsKey(selectedCar.CarGUID))
+			if (!OwnedLocosManager.IsLocoGuidAlreadyOwned(selectedCar.CarGUID))
 			{
 				return new TransactionSellFail(1);
 			}
@@ -74,8 +74,9 @@ namespace LocoOwnership.LocoSeller
 				return new TransactionSellFail(0);
 			}
 
-			carSellPrice = PricesCalc.CalculateSellPrice(selectedCar);
-			OwnedLocosManager.SellLoco(selectedCar);
+			/*carSellPrice = PricesCalc.CalculateSellPrice(selectedCar);
+			OwnedLocosManager.SellLoco(selectedCar);*/
+			selectedCar.GetComponent<LocoOwnershipController>();
 			Inventory.Instance.AddMoney(carSellPrice);
 			utility.PlaySound(VanillaSoundCommsRadio.MoneyRemoved);
 			return new TransactionSellSuccess(selectedCar, carSellPrice);

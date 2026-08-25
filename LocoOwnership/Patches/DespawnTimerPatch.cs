@@ -9,7 +9,7 @@ namespace LocoOwnership.Patches
 	{
 		static bool Prefix(CarVisitChecker __instance, ref bool __result)
 		{
-			if (OwnedLocosManager.HasLocoGUIDAsKey(__instance.car.CarGUID))
+			if (OwnedLocosManager.IsLocoGuidAlreadyOwned(__instance.car.CarGUID))
 			{
 				__result = true;
 				return false;

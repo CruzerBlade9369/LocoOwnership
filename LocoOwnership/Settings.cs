@@ -37,7 +37,7 @@ namespace LocoOwnership
 		[Draw("Maximum number of owned locomotives", Min = 1, Max = 30)]
 		public int maxLocosLimit = 16;
 
-		[Draw("Loco requesting price rate per km", Min = 1250f, Max = 10000f)]
+		[Draw("Loco requesting price rate per km", Min = 1000, Max = 10000f)]
 		public float requestPriceRate = 2500f;
 
 		[Draw("Locomotive buy/sell price multiplier (Does not apply on catalog prices or dynamic resell price)", Min = 2f, Max = 100f)]

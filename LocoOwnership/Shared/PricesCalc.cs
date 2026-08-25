@@ -5,7 +5,6 @@ using DV.UserManagement;
 using LocoOwnership.OwnershipHandler;
 using System.Collections.Generic;
 using UnityEngine;
-using static DV.CommsRadioCrewVehicle;
 
 namespace LocoOwnership.Shared
 {

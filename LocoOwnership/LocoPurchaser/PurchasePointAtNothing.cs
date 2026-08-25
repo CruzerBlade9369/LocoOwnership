@@ -53,7 +53,7 @@ namespace LocoOwnership.LocoPurchaser
 			}
 
 			// check if loco exists in owned locos cache
-			if (OwnedLocosManager.HasLocoGUIDAsKey(selectedCar.CarGUID))
+			if (OwnedLocosManager.IsLocoGuidAlreadyOwned(selectedCar.CarGUID))
 			{
 				return this;
 			}

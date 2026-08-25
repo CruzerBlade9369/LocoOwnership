@@ -51,7 +51,13 @@ namespace LocoOwnership.LocoSeller
 				return this;
 			}
 
-			if (OwnedLocosManager.HasLocoGUIDAsKey(selectedCar.CarGUID))
+			/*if (OwnedLocosManager.HasLocoGUIDAsKey(selectedCar.CarGUID))
+			{
+				utility.PlaySound(VanillaSoundCommsRadio.HoverOver);
+				return new SellPointAtLoco(selectedCar);
+			}*/
+
+			if (selectedCar.TryGetComponent<LocoOwnershipController>(out var loc))
 			{
 				utility.PlaySound(VanillaSoundCommsRadio.HoverOver);
 				return new SellPointAtLoco(selectedCar);
