@@ -72,22 +72,22 @@ namespace LocoOwnership
 
 				if (GUILayout.Button("Validate owned cars"))
 				{
-					OwnedLocosManager.ValidateOwnedCars();
+					OwnedLocosManager.Instance.ValidateOwnedCars();
 				}
 
 				if (GUILayout.Button("Print all owned cars data to console"))
 				{
-					OwnedLocosManager.PrintAllOwnedLocos();
+					OwnedLocosManager.Instance.PrintAllOwnedLocos();
 				}
 
 				if (GUILayout.Button("Count trainsets"))
 				{
-					Debug.Log(OwnedLocosManager.CountLocosAsSets() + " locos as sets");
+					Debug.Log(OwnedLocosManager.Instance.CountLocosAsSets() + " locos as sets");
 				}
 
 				if (GUILayout.Button("Count individual loco units"))
 				{
-					Debug.Log(OwnedLocosManager.CountIndividualLocoUnits() + " individual loco units");
+					Debug.Log(OwnedLocosManager.Instance.CountIndividualLocoUnits() + " individual loco units");
 				}
 			}
 

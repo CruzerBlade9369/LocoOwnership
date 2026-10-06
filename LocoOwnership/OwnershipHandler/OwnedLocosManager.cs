@@ -12,9 +12,10 @@ namespace LocoOwnership.OwnershipHandler
 {
 	public class OwnedLocosManager : SingletonBehaviour<OwnedLocosManager>
 	{
-		[SerializeField] private List<string> _ownedLocosGuidsTracker = new();
-		public List<string> OwnedLocosGuidsTracker => _ownedLocosGuidsTracker;
+		[SerializeField] private List<LocoOwnershipController> _ownedLocosTrackers = new();
+		public List<LocoOwnershipController> OwnedLocosTrackers => _ownedLocosTrackers;
 
+		private Dictionary<string, float> ownedLocosGuidsAndValuesTemp = new();
 		public new static string AllowAutoCreate()
 		{
 			return "[OwnedLocosManager]";
@@ -36,51 +37,46 @@ namespace LocoOwnership.OwnershipHandler
 
 		public void PrintAllOwnedLocos()
 		{
-			if (_ownedLocosGuidsTracker.Count <= 0)
+			if (_ownedLocosTrackers.Count <= 0)
 			{
 				Debug.Log("You don't have owned locos yet or you haven't loaded into a save!");
 			}
 			else
 			{
 				Debug.Log("Owned locos list:");
-				for (int i = 0; i < _ownedLocosGuidsTracker.Count; i++)
+				for (int i = 0; i < _ownedLocosTrackers.Count; i++)
 				{
-					string guid = _ownedLocosGuidsTracker[i];
+					LocoOwnershipController tracker = _ownedLocosTrackers[i];
+					var car = tracker.Car;
 
-					var car = TrainCarRegistry.Instance.GetTrainCarByCarGuid(guid);
-					var ownership = GetOwnershipComponentFromGuid(guid);
-					if (car == null || ownership == null) continue;
+					if (car == null || tracker == null) continue;
 
 					string id = car.ID;
-					float purchaseValue = ownership.GetUnitPurchaseValue();
+					float purchaseValue = tracker.GetUnitPurchaseValue();
 
-					Debug.Log($"{i}. Guid = {guid}, LocoID = {id}, purchase price = {purchaseValue}");
+					Debug.Log($"{i}. Guid = {tracker.CarGUID}, LocoID = {id}, purchase price = {purchaseValue}");
 				}
 
 				Debug.Log("-----");
-				Debug.Log($"Found {_ownedLocosGuidsTracker.Count} vehicles, {CountIndividualLocoUnits()} being loco units");
+				Debug.Log($"Found {_ownedLocosTrackers.Count} vehicles, {CountIndividualLocoUnits()} being loco units");
 			}
 		}
 
-		public bool IsLocoGuidAlreadyOwned(string guid)
+		public bool IsLocoAlreadyOwned(string carGuid)
 		{
-			if (_ownedLocosGuidsTracker.Contains(guid))
-			{
-				return true;
-			}
-
-			return false;
+			return _ownedLocosTrackers.Any(l => l != null && l.CarGUID == carGuid);
 		}
 
 		public int CountLocosAsSets()
 		{
 			ValidateOwnedCars();
 
-			return _ownedLocosGuidsTracker
-				.Where(str => str.StartsWith("L-"))
-				.Select(str =>
+			return _ownedLocosTrackers
+				.Where(l => l != null && l.Car != null)
+				.Where(l => l.Car.ID.StartsWith("L-"))
+				.Select(l =>
 				{
-					var car = TrainCarRegistry.Instance.GetTrainCarByCarGuid(str);
+					var car = TrainCarRegistry.Instance.GetTrainCarByCarGuid(l.CarGUID);
 					var set = CarUtils.GetCCLTrainsetOrLocoAndTender(car);
 					return new HashSet<string>(set.Select(tc => tc.CarGUID));
 				})
@@ -92,23 +88,19 @@ namespace LocoOwnership.OwnershipHandler
 
 		public int CountIndividualLocoUnits()
 		{
-			return _ownedLocosGuidsTracker.Count(str => str.StartsWith("L-"));
+			return _ownedLocosTrackers.Where(l => l != null && l.Car != null).Count(l => l.Car.ID.StartsWith("L-"));
 		}
 
 		public LocoOwnershipController GetOwnershipComponentFromGuid(string guid)
 		{
-			TrainCar loco = TrainCarRegistry.Instance.GetTrainCarByCarGuid(guid);
-			if (loco == null)
-			{
-				return null;
-			}
-			return loco.gameObject.GetComponent<LocoOwnershipController>();
+			return _ownedLocosTrackers.FirstOrDefault(l => l.CarGUID == guid);
 		}
 
-		public void ClearCache()
+		public void ClearTracker()
 		{
-			Main.DebugLog("Clearing owned loco list cache.");
-			_ownedLocosGuidsTracker.Clear();
+			Main.DebugLog("Clearing owned loco list tracker and temp cache.");
+			_ownedLocosTrackers.Clear();
+			ownedLocosGuidsAndValuesTemp.Clear();
 		}
 
 		#endregion
@@ -123,10 +115,11 @@ namespace LocoOwnership.OwnershipHandler
 
 			foreach (TrainCar car in trainSet)
 			{
+
 				var loc = car.gameObject.AddComponent<LocoOwnershipController>();
 				loc.Initialize(PricesCalc.CalculateBuyPrice(car, getTotalTrainsetPrice: false));
 
-				_ownedLocosGuidsTracker.Add(car.CarGUID);
+				_ownedLocosTrackers.Add(loc);
 			}
 		}
 
@@ -146,7 +139,7 @@ namespace LocoOwnership.OwnershipHandler
 					Debug.LogError($"{car.ID} doesn't have the ownership tracker component for some reason.");
 				}
 
-				_ownedLocosGuidsTracker.Remove(car.CarGUID);
+				_ownedLocosTrackers.Remove(loc);
 			}
 		}
 
@@ -159,37 +152,51 @@ namespace LocoOwnership.OwnershipHandler
 		public void ValidateOwnedCars()
 		{
 			Debug.Log("Beginning validating existence of owned cars");
-			List<string> invalidGuids = new List<string>();
+			List<string> invalidGuids = new();
+			int locosToAssignComponents = 0;
 
-			bool carsGone = false;
-
-			foreach (var guid in _ownedLocosGuidsTracker)
+			if (ownedLocosGuidsAndValuesTemp.Count > 0 && _ownedLocosTrackers.Count == 0)
 			{
-				TrainCar loco = TrainCarRegistry.Instance?.GetTrainCarByCarGuid(guid);
-				if (loco == null)
-				{
-					Debug.LogWarning($"Car with GUID {guid} is gone!");
-					invalidGuids.Add(guid);
-					continue;
-				}
+				// Assign tracker to valid locos and validate only if there are temp values and no trackers
 
-				var ownership = loco.gameObject.GetComponent<LocoOwnershipController>();
-				if (ownership == null)
+				foreach (var guid in ownedLocosGuidsAndValuesTemp.Keys)
 				{
-					Debug.LogWarning($"Car {guid} missing ownership component!");
-					invalidGuids.Add(guid);
+					TrainCar loco = TrainCarRegistry.Instance?.GetTrainCarByCarGuid(guid);
+					if (loco != null)
+					{
+						Main.DebugLog($"Adding tracker to {loco.ID}");
+						var loc = loco.gameObject.AddComponent<LocoOwnershipController>();
+						loc.Initialize(ownedLocosGuidsAndValuesTemp[guid]);
+
+						_ownedLocosTrackers.Add(loc);
+
+						locosToAssignComponents++;
+					}
+					else
+					{
+						Debug.LogWarning($"Car with GUID {guid} is gone!");
+						invalidGuids.Add(guid);
+						continue;
+					}
 				}
 			}
 
+			// Clear stale and invalid data in tracker and temp
+			_ownedLocosTrackers.RemoveAll(x => x == null);
 			if (invalidGuids.Count > 0)
 			{
 				foreach (var guid in invalidGuids)
 				{
-					_ownedLocosGuidsTracker.Remove(guid);
+					ownedLocosGuidsAndValuesTemp.Remove(guid);
 				}
 
 				CoroutineHelper.StartCoro(ShowDelayedPopup());
 			}
+
+			// TODO: Remove uniquecar and handle debts
+			// don't forget loco requesting
+
+			Debug.Log($"Validated {_ownedLocosTrackers} locos, removed {invalidGuids.Count} locos, assigned ownership component to {locosToAssignComponents} locos");
 		}
 
 		private IEnumerator ShowDelayedPopup()
@@ -210,10 +217,13 @@ namespace LocoOwnership.OwnershipHandler
 
 			if (ownedLocosTrackerObject == null)
 			{
-				// this block runs if v2 doesn't exist
+				// Migrate if v2 does not yet exist
+				Main.DebugLog("v2 not found, beginning migration");
+
 				JObject[] ownedLocosJobject = savedOwnedLocos.GetJObjectArray("savedOwnedLocos");
 				JObject[] ownedLocosPricesJobject = savedOwnedLocos.GetJObjectArray("savedOwnedLocosLicensePrice");
-				
+
+				// v1 dataforms, migration only runs if v1 also exists
 				Dictionary<string, string> ownedLocosTemp = new();
 				Dictionary<string, float> ownedLocosLicensePriceTemp = new();
 
@@ -245,68 +255,43 @@ namespace LocoOwnership.OwnershipHandler
 					}
 				}
 
-				// migrator to v2
+				Main.DebugLog($"Found {ownedLocosTemp.Count} items in savedOwnedLocos, {ownedLocosLicensePriceTemp.Count} in license price");
+				Main.DebugLog($"Migrating now...");
+
+				// Migrator to v2
 				foreach (var kvp in ownedLocosTemp)
 				{
-					TrainCar loco = TrainCarRegistry.Instance.GetTrainCarByCarGuid(kvp.Key);
-					if (loco != null)
-					{
-						if (!loco.gameObject.TryGetComponent<LocoOwnershipController>(out var l))
-						{
-							var loc = loco.gameObject.AddComponent<LocoOwnershipController>();
-
-							if (ownedLocosLicensePriceTemp.TryGetValue(kvp.Key, out float price))
-							{
-								loc.Initialize(price);
-							}
-							else
-							{
-								loc.Initialize(0f);
-							}
-
-							_ownedLocosGuidsTracker.Add(kvp.Key);
-						}
-					}
+					ownedLocosGuidsAndValuesTemp.Add(kvp.Key, ownedLocosLicensePriceTemp[kvp.Key]);
 				}
+
+				Main.DebugLog($"Successfully migrated {ownedLocosGuidsAndValuesTemp.Count} locos to v2");
 			}
 			else
 			{
-				// normal v2 loader
+				// If v2 exists, do not run migration and only load as normal
+				Main.DebugLog("v2 found, skipping migration");
+
 				foreach (JObject jobject in ownedLocosTrackerObject)
 				{
 					var locoGuid = jobject.GetString("locoGuid");
 					var purchaseValue = (float)jobject.GetFloat("purchaseValue");
 
-					TrainCar loco = TrainCarRegistry.Instance.GetTrainCarByCarGuid(locoGuid);
-					if (loco != null)
-					{
-						if (!loco.gameObject.TryGetComponent<LocoOwnershipController>(out var l))
-						{
-							var loc = loco.gameObject.AddComponent<LocoOwnershipController>();
-							loc.Initialize(purchaseValue);
-						}
-
-						_ownedLocosGuidsTracker.Add(locoGuid);
-					}
+					ownedLocosGuidsAndValuesTemp.Add(locoGuid, purchaseValue);
 				}
 			}
 		}
 
-		// convert owned locos dict cache into JObjects for savegame
+		// Convert owned locos trackers into JObjects for savegame
 		public JObject OnGameSaved()
 		{
 			JObject savedOwnedLocos = new();
 			List<JObject> trackerData = new();
 
-			int k = 0;
-			foreach (var guid in _ownedLocosGuidsTracker)
+			foreach (var tracker in _ownedLocosTrackers)
 			{
-				var ownership = GetOwnershipComponentFromGuid(guid);
-				if (ownership == null) continue;
-
 				JObject dataObject = new();
-				dataObject.SetString("locoGuid", guid);
-				dataObject.SetFloat("purchaseValue", ownership.GetUnitPurchaseValue());
+				dataObject.SetString("locoGuid", tracker.CarGUID);
+				dataObject.SetFloat("purchaseValue", tracker.GetUnitPurchaseValue());
 
 				trackerData.Add(dataObject);
 			}

@@ -4,8 +4,12 @@ namespace LocoOwnership.OwnershipHandler
 {
 	public class LocoOwnershipController : MonoBehaviour
 	{
-		public TrainCar car;
+		private TrainCar car;
+		private string carGuid;
 		private float unitPurchaseValue;
+
+		public TrainCar Car => car;
+		public string CarGUID => carGuid;
 
 		private void Awake()
 		{
