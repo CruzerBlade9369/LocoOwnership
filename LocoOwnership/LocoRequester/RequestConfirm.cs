@@ -42,7 +42,11 @@ namespace LocoOwnership.LocoRequester
 			)
 			: base(new CommsRadioState(
 				titleText: LocalizationAPI.L("lo/radio/general/request"),
-				contentText: LocalizationAPI.L("lo/radio/rselected/content", selectedCar.carLivery.localizationKey, selectedCar.ID, carTeleportPrice.ToString()),
+				contentText: LocalizationAPI.L(
+					"lo/radio/rselected/content",
+					LocalizationAPI.L(selectedCar.carLivery.localizationKey),
+					selectedCar.ID,
+					carTeleportPrice.ToString()),
 				actionText: LocalizationAPI.L("comms/confirm"),
 				buttonBehaviour: ButtonBehaviourType.Override))
 		{

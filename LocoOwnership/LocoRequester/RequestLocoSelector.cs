@@ -20,7 +20,7 @@ namespace LocoOwnership.LocoRequester
 		public RequestLocoSelector(int index = 0) : base(
 			new CommsRadioState(
 				titleText: LocalizationAPI.L("lo/radio/general/request"),
-				contentText: OwnedLocosManager.Instance.GetLocoDisplayName(index),
+				contentText: OwnedLocosManager.Instance.GetLocoDisplayNameFromIndex(index),
 				actionText: LocalizationAPI.L("comms/confirm"),
 				buttonBehaviour: ButtonBehaviourType.Override))
 		{

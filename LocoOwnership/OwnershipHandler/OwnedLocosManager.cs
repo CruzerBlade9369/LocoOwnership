@@ -18,8 +18,10 @@ namespace LocoOwnership.OwnershipHandler
 		[SerializeField] private List<LocoOwnershipController> _ownedLocosTrackers = new();
 		public List<LocoOwnershipController> OwnedLocosTrackers => _ownedLocosTrackers;
 
-		// This dict is the source of truth before validation, as validation is where assignment of trackers happen
-		// This should not be referenced at any point after first validation is performed
+		/// <summary>
+		/// This dict is the source of truth before validation, as validation is where assignment of trackers happen.
+		/// This should not be referenced at any point after first validation is performed
+		/// </summary>
 		private Dictionary<string, float> ownedLocosGuidsAndValuesTemp = new();
 
 		public new static string AllowAutoCreate()
@@ -100,7 +102,7 @@ namespace LocoOwnership.OwnershipHandler
 			return _ownedLocosTrackers.FirstOrDefault(l => l.CarGUID == guid);
 		}
 
-		public string GetLocoDisplayName(int index)
+		public string GetLocoDisplayNameFromIndex(int index)
 		{
 			var tracker = _ownedLocosTrackers
 				.Where(l => l != null && l.Car != null)
