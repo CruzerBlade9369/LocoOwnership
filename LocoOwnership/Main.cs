@@ -55,7 +55,7 @@ namespace LocoOwnership
 				{
 					IsCCLLoaded = true;
 				}
-				Debug.Log($"Loco Ownership CCL integration: CCL is loaded? {IsCCLLoaded}");
+				DebugLog($"Loco Ownership CCL integration: CCL is loaded? {IsCCLLoaded}");
 
 				ControllerAPI.Ready += StartCommsRadio;
 			}

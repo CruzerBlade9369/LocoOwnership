@@ -182,30 +182,28 @@ namespace LocoOwnership.OwnershipHandler
 
 		public void ValidateOwnedCars()
 		{
-			Debug.Log("Beginning validating existence of owned cars");
+			Debug.Log("[LocoOwnership] Beginning validating existence of owned cars");
 			List<string> invalidGuids = new();
 			int validatedLocomotives = 0;
 
-			// Validate if temp values and tracker don't match
-			// Execute right after loading finished before player has the chance to modify the tracker
-			if (ownedLocosGuidsAndValuesTemp.Count > 0 && _ownedLocosTrackers.Count > 0)
-			{
-				foreach (var guid in ownedLocosGuidsAndValuesTemp.Keys)
-				{
-					var tracker = _ownedLocosTrackers.FirstOrDefault(t => t.CarGUID == guid);
-					if (tracker != null)
-					{
-						// Make sure cars are not unique
-						tracker.Car.uniqueCar = false;
+			Debug.Log($"[LocoOwnership] Validating {ownedLocosGuidsAndValuesTemp.Count} entries from temp tracker");
 
-						validatedLocomotives++;
-					}
-					else
-					{
-						Debug.LogWarning($"Car with GUID {guid} is not found!");
-						invalidGuids.Add(guid);
-						continue;
-					}
+			// Validate right after loading finished before player has the chance to modify the tracker
+			foreach (var guid in ownedLocosGuidsAndValuesTemp.Keys)
+			{
+				var tracker = _ownedLocosTrackers.FirstOrDefault(t => t.CarGUID == guid);
+				if (tracker != null)
+				{
+					// Make sure cars are not unique
+					tracker.Car.uniqueCar = false;
+
+					validatedLocomotives++;
+				}
+				else
+				{
+					Debug.LogWarning($"[LocoOwnership] Car with GUID {guid} is not found!");
+					invalidGuids.Add(guid);
+					continue;
 				}
 			}
 
@@ -215,6 +213,7 @@ namespace LocoOwnership.OwnershipHandler
 			{
 				foreach (var guid in invalidGuids)
 				{
+					Debug.Log($"[LocoOwnership] Refunding {ownedLocosGuidsAndValuesTemp[guid]} to the player");
 					Inventory.Instance.AddMoney(ownedLocosGuidsAndValuesTemp[guid]);
 					ownedLocosGuidsAndValuesTemp.Remove(guid);
 				}
@@ -225,7 +224,7 @@ namespace LocoOwnership.OwnershipHandler
 			// TODO: Remove uniquecar and handle debts
 			// don't forget loco requesting
 
-			Debug.Log($"Validated {_ownedLocosTrackers.Count} loco entries, removed {invalidGuids.Count} locos, {validatedLocomotives} locos are valid");
+			Debug.Log($"[LocoOwnership] Validated {_ownedLocosTrackers.Count} loco entries, removed {invalidGuids.Count} locos, {validatedLocomotives} locos are valid");
 		}
 
 		private IEnumerator ShowDelayedPopup()
@@ -298,7 +297,7 @@ namespace LocoOwnership.OwnershipHandler
 			else
 			{
 				// If v2 exists, do not run migration and only load as normal
-				Main.DebugLog("v2 found, skipping migration");
+				Main.DebugLog($"v2 found, skipping migration. Detected {ownedLocosTrackerObject.Length} entries from save object");
 
 				foreach (JObject jobject in ownedLocosTrackerObject)
 				{
@@ -307,6 +306,8 @@ namespace LocoOwnership.OwnershipHandler
 
 					ownedLocosGuidsAndValuesTemp.Add(locoGuid, purchaseValue);
 				}
+
+				Main.DebugLog($"Successfully loaded {ownedLocosGuidsAndValuesTemp.Count} entries to temp tracker");
 			}
 		}
 
