@@ -7,6 +7,7 @@ using CommsRadioAPI;
 using LocoOwnership.OwnershipHandler;
 using LocoOwnership.Shared;
 using DV.ThingTypes;
+using System.Collections.Generic;
 
 namespace LocoOwnership.LocoRequester
 {
@@ -15,14 +16,16 @@ namespace LocoOwnership.LocoRequester
 		private static int selectedIndex = 0;
 		private TrainCar selectedCar;
 
+		private static List<LocoOwnershipController> requestableOwnedLocos = new();
+
 		public RequestLocoSelector() : base(
 			new CommsRadioState(
 				titleText: LocalizationAPI.L("lo/radio/general/request"),
-				contentText: OwnedLocosManager.Instance.GetLocoDisplayNameFromIndex(selectedIndex),
+				contentText: $"{LocalizationAPI.L(requestableOwnedLocos[selectedIndex].Car.carLivery.localizationKey)} {requestableOwnedLocos[selectedIndex].Car.ID}",
 				actionText: LocalizationAPI.L("comms/confirm"),
 				buttonBehaviour: ButtonBehaviourType.Override))
 		{
-			selectedCar = OwnedLocosManager.Instance.GetTrainCarFromIndex(selectedIndex);
+			selectedCar = requestableOwnedLocos[selectedIndex].Car;
 		}
 
 		public override AStateBehaviour OnAction(CommsRadioUtility utility, InputAction action)
@@ -88,7 +91,7 @@ namespace LocoOwnership.LocoRequester
 		{
 			int nextIndex = selectedIndex + 1;
 
-			if (nextIndex >= OwnedLocosManager.Instance.OwnedLocosTrackers.Count)
+			if (nextIndex >= requestableOwnedLocos.Count)
 			{
 				nextIndex = 0;
 			}
@@ -102,7 +105,7 @@ namespace LocoOwnership.LocoRequester
 
 			if (previousIndex < 0)
 			{
-				previousIndex = OwnedLocosManager.Instance.OwnedLocosTrackers.Count - 1;
+				previousIndex = requestableOwnedLocos.Count - 1;
 			}
 
 			selectedIndex = previousIndex;
@@ -110,12 +113,15 @@ namespace LocoOwnership.LocoRequester
 
 		public static void ValidateIndex()
 		{
-			var trackers = OwnedLocosManager.Instance.OwnedLocosTrackers;
-
-			if (selectedIndex >= trackers.Count)
+			if (selectedIndex >= requestableOwnedLocos.Count)
 			{
-				selectedIndex = trackers.Count - 1;
+				selectedIndex = requestableOwnedLocos.Count - 1;
 			}
+		}
+
+		public static void RefreshRequestableLocos()
+		{
+			requestableOwnedLocos = OwnedLocosManager.Instance.OwnedLocosTrackers.Where(t => t.Car.carType != TrainCarType.Tender).ToList();
 		}
 	}
 }

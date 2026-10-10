@@ -78,7 +78,7 @@ namespace LocoOwnership.OwnershipHandler
 		{
 			return _ownedLocosTrackers
 				.Where(l => l != null && l.Car != null)
-				.Where(l => l.Car.ID.StartsWith("L-"))
+				.Where(l => l.Car.IsLoco)
 				.Select(l =>
 				{
 					var car = TrainCarRegistry.Instance.GetTrainCarByCarGuid(l.CarGUID);
@@ -93,16 +93,7 @@ namespace LocoOwnership.OwnershipHandler
 
 		public int CountIndividualLocoUnits()
 		{
-			return _ownedLocosTrackers.Where(l => l != null && l.Car != null).Count(l => l.Car.ID.StartsWith("L-"));
-		}
-
-		public string GetLocoDisplayNameFromIndex(int index)
-		{
-			var tracker = _ownedLocosTrackers
-				.Where(l => l != null && l.Car != null)
-				.ElementAt(index);
-
-			return $"{LocalizationAPI.L(tracker.Car.carLivery.localizationKey)} {tracker.Car.ID}";
+			return _ownedLocosTrackers.Where(l => l != null && l.Car != null).Count(l => l.Car.IsLoco);
 		}
 
 		public TrainCar GetTrainCarFromIndex(int index)

@@ -77,7 +77,7 @@ namespace LocoOwnership
 
 				if (GUILayout.Button("Count trainsets"))
 				{
-					Debug.Log(OwnedLocosManager.Instance.CountLocosAsSets() + " locos as sets");
+					Debug.Log(OwnedLocosManager.Instance.CountLocosAsSets() + " locos sets");
 				}
 
 				if (GUILayout.Button("Count individual loco units"))

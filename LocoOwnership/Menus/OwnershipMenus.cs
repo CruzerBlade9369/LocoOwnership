@@ -62,6 +62,7 @@ namespace LocoOwnership.Menus
 							}
 
 							utility.PlaySound(VanillaSoundCommsRadio.ModeEnter);
+							RequestLocoSelector.RefreshRequestableLocos();
 							RequestLocoSelector.ValidateIndex();
 							return new RequestLocoSelector();
 
