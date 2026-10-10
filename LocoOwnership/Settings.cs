@@ -70,11 +70,6 @@ namespace LocoOwnership
 			{
 				GUILayout.Label("Debug functions");
 
-				if (GUILayout.Button("Validate owned cars"))
-				{
-					OwnedLocosManager.Instance.ValidateOwnedCars();
-				}
-
 				if (GUILayout.Button("Print all owned cars data to console"))
 				{
 					OwnedLocosManager.Instance.PrintAllOwnedLocos();

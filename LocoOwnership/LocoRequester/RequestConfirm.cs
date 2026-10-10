@@ -176,7 +176,7 @@ namespace LocoOwnership.LocoRequester
 
 			yield return null;
 			Debug.Log("Teleporting locomotive '" + loco.name + "'", loco);
-			BaseControlsOverrider controls = loco.GetComponent<SimController>()?.controlsOverrider;
+			BaseControlsOverrider controls = loco.SimController?.controlsOverrider;
 			controls.DynamicBrake?.Set(0f);
 			controls.Handbrake?.Set(1f);
 			controls.Throttle?.Set(0f);

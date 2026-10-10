@@ -19,6 +19,7 @@ namespace LocoOwnership.OwnershipHandler
 		public void Initialize(float purchaseValue)
 		{
 			unitPurchaseValue = purchaseValue;
+			carGuid = car.CarGUID;
 		}
 
 		public void RemoveOwnership()

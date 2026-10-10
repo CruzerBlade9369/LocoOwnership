@@ -7,6 +7,7 @@ using LocoOwnership.LocoPurchaser;
 using LocoOwnership.LocoSeller;
 using LocoOwnership.LocoRequester;
 using System.Collections.Generic;
+using LocoOwnership.OwnershipHandler;
 
 namespace LocoOwnership.Menus
 {
@@ -54,9 +55,7 @@ namespace LocoOwnership.Menus
 							return new SellPointAtNothing();
 
 						case 2:
-							RequestLocoSelector.RefreshRequestableLocos();
-
-							if (RequestLocoSelector.GetRequestableLocosCount() <= 0)
+							if (OwnedLocosManager.Instance.OwnedLocosTrackers.Count <= 0)
 							{
 								utility.PlaySound(VanillaSoundCommsRadio.Warning);
 								return new RequestFail(1);

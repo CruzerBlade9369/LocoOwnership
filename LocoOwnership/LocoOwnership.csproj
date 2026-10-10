@@ -86,6 +86,7 @@
 	<!-- Publicizer -->
 	<ItemGroup>
 		<Publicize Include="Assembly-CSharp" IncludeCompilerGeneratedMembers="false" />
+		<Publicize Include="DV.Simulation" IncludeCompilerGeneratedMembers="false" />
 	</ItemGroup>
 
 	<Target Name="PostBuild" AfterTargets="PostBuildEvent">

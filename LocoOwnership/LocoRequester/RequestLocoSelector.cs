@@ -14,15 +14,13 @@ namespace LocoOwnership.LocoRequester
 {
 	public class RequestLocoSelector : AStateBehaviour
 	{
-		private static Dictionary<string, string> requestableOwnedLocos = new();
-
 		private int selectedIndex;
 		private TrainCar selectedCar;
 
 		public RequestLocoSelector(int index = 0) : base(
 			new CommsRadioState(
 				titleText: LocalizationAPI.L("lo/radio/general/request"),
-				contentText: requestableOwnedLocos.Values.ElementAt(index),
+				contentText: OwnedLocosManager.Instance.GetLocoDisplayName(index),
 				actionText: LocalizationAPI.L("comms/confirm"),
 				buttonBehaviour: ButtonBehaviourType.Override))
 		{
@@ -90,7 +88,7 @@ namespace LocoOwnership.LocoRequester
 		private int NextIndex()
 		{
 			int nextIndex = selectedIndex + 1;
-			if (nextIndex >= requestableOwnedLocos.Count)
+			if (nextIndex >= OwnedLocosManager.Instance.OwnedLocosTrackers.Count)
 			{
 				nextIndex = 0;
 			}
@@ -103,7 +101,7 @@ namespace LocoOwnership.LocoRequester
 			int previousIndex = selectedIndex - 1;
 			if (previousIndex < 0)
 			{
-				previousIndex = requestableOwnedLocos.Count - 1;
+				previousIndex = OwnedLocosManager.Instance.OwnedLocosTrackers.Count - 1;
 			}
 			selectedIndex = previousIndex;
 			return previousIndex;
@@ -111,15 +109,13 @@ namespace LocoOwnership.LocoRequester
 
 		private TrainCar TrainCarFromIndex(int index)
 		{
-			OwnedCarsStateController ocsc = OwnedCarsStateController.Instance;
-			string ownedLocoGuid = requestableOwnedLocos.Keys.ElementAt(index);
-
-			TrainCar car = TrainCarRegistry.Instance.GetTrainCarByCarGuid(ownedLocoGuid);
-
-			return car;
+			return OwnedLocosManager.Instance.OwnedLocosTrackers
+				.Where(l => l != null && l.Car != null)
+				.ElementAt(index)
+				.Car;
 		}
 
-		public static int GetRequestableLocosCount()
+		/*public static int GetRequestableLocosCount()
 		{
 			return requestableOwnedLocos.Count;
 		}
@@ -142,6 +138,6 @@ namespace LocoOwnership.LocoRequester
 			}
 
 			requestableOwnedLocos = tempDict.OrderBy(kvp => kvp.Value).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
-		}
+		}*/
 	}
 }
