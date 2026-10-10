@@ -9,7 +9,7 @@ namespace LocoOwnership.Patches
 	{
 		static void Prefix(SaveGameManager __instance)
 		{
-			JObject savedOwnedLocos = OwnedLocosManager.OnGameSaved();
+			JObject savedOwnedLocos = OwnedLocosManager.Instance.OnGameSaved();
 
 			SaveGameManager.Instance.data.SetJObject("MOD_LOCOOWNERSHIP", savedOwnedLocos);
 		}
@@ -28,11 +28,11 @@ namespace LocoOwnership.Patches
 
 			JObject savedOwnedLocos = SaveGameManager.Instance.data.GetJObject("MOD_LOCOOWNERSHIP");
 
-			OwnedLocosManager.ClearCache();
+			OwnedLocosManager.Instance.ClearTracker();
 
 			if (savedOwnedLocos != null)
 			{
-				OwnedLocosManager.OnGameLoad(savedOwnedLocos);
+				OwnedLocosManager.Instance.OnGameLoad(savedOwnedLocos);
 			}
 		}
 	}

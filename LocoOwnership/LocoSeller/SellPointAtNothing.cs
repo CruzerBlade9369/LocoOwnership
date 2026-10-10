@@ -27,7 +27,7 @@ namespace LocoOwnership.LocoSeller
 				return this;
 			}
 			utility.PlaySound(VanillaSoundCommsRadio.Cancel);
-			return new OwnershipMenus(1);
+			return new OwnershipMenus();
 		}
 
 		public override AStateBehaviour OnUpdate(CommsRadioUtility utility)
@@ -38,20 +38,28 @@ namespace LocoOwnership.LocoSeller
 				return this;
 			}
 
-			// try to get the car we're pointing at
+			// Try to get the car we're pointing at
 			TrainCar selectedCar = TrainCar.Resolve(hit.transform.root);
 			if (selectedCar == null)
 			{
 				return this;
 			}
 
-			// check if the car we're pointing at is valid to sell
+			// Check if the car we're pointing at is valid to sell
 			if (!selectedCar.IsLoco)
 			{
 				return this;
 			}
 
-			if (OwnedLocosManager.HasLocoGUIDAsKey(selectedCar.CarGUID))
+			// Succeeded by the next block
+			/*if (OwnedLocosManager.HasLocoGUIDAsKey(selectedCar.CarGUID))
+			{
+				utility.PlaySound(VanillaSoundCommsRadio.HoverOver);
+				return new SellPointAtLoco(selectedCar);
+			}*/
+
+			// Valid to sell if car is owned
+			if (selectedCar.TryGetComponent<LocoOwnershipController>(out _))
 			{
 				utility.PlaySound(VanillaSoundCommsRadio.HoverOver);
 				return new SellPointAtLoco(selectedCar);

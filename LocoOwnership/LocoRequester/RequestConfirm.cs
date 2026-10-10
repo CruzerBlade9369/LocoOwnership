@@ -42,7 +42,11 @@ namespace LocoOwnership.LocoRequester
 			)
 			: base(new CommsRadioState(
 				titleText: LocalizationAPI.L("lo/radio/general/request"),
-				contentText: LocalizationAPI.L("lo/radio/rselected/content", selectedCar.carLivery.localizationKey, selectedCar.ID, carTeleportPrice.ToString()),
+				contentText: LocalizationAPI.L(
+					"lo/radio/rselected/content",
+					LocalizationAPI.L(selectedCar.carLivery.localizationKey),
+					selectedCar.ID,
+					carTeleportPrice.ToString()),
 				actionText: LocalizationAPI.L("comms/confirm"),
 				buttonBehaviour: ButtonBehaviourType.Override))
 		{
@@ -69,7 +73,7 @@ namespace LocoOwnership.LocoRequester
 			if (!highlighterState)
 			{
 				utility.PlaySound(VanillaSoundCommsRadio.Cancel);
-				return new OwnershipMenus(2);
+				return new OwnershipMenus();
 			}
 
 			if (playerMoney >= carTeleportPrice)
@@ -94,7 +98,7 @@ namespace LocoOwnership.LocoRequester
 				{
 					utility.PlaySound(VanillaSoundCommsRadio.MoneyRemoved);
 				}
-				return new OwnershipMenus(2);
+				return new OwnershipMenus();
 			}
 			else
 			{
@@ -176,7 +180,7 @@ namespace LocoOwnership.LocoRequester
 
 			yield return null;
 			Debug.Log("Teleporting locomotive '" + loco.name + "'", loco);
-			BaseControlsOverrider controls = loco.GetComponent<SimController>()?.controlsOverrider;
+			BaseControlsOverrider controls = loco.SimController?.controlsOverrider;
 			controls.DynamicBrake?.Set(0f);
 			controls.Handbrake?.Set(1f);
 			controls.Throttle?.Set(0f);

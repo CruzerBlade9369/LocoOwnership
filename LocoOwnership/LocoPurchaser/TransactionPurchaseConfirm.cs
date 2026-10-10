@@ -20,27 +20,27 @@ namespace LocoOwnership.LocoPurchaser
 		private const float SIGNAL_RANGE = 200f;
 
 		private float carBuyPrice;
-		private bool highlighterState;
+		private bool isAimingAtCar;
 		private TrainCar selectedCar;
 
-		public TransactionPurchaseConfirm(TrainCar selectedCar, bool highlighterState = true)
+		public TransactionPurchaseConfirm(TrainCar selectedCar, float carBuyPrice, bool isAimingAtCar = true)
 			: base(new CommsRadioState(
 				titleText: LocalizationAPI.L("lo/radio/general/purchase"),
-				contentText: LocalizationAPI.L("lo/radio/pselected/content", selectedCar.ID, PricesCalc.CalculateBuyPrice(selectedCar, getTotalTrainsetPrice: true).ToString()),
-				actionText: highlighterState
+				contentText: LocalizationAPI.L("lo/radio/pselected/content", selectedCar.ID, carBuyPrice.ToString()),
+				actionText: isAimingAtCar
 				? LocalizationAPI.L("comms/confirm")
 				: LocalizationAPI.L("comms/cancel"),
 				buttonBehaviour: ButtonBehaviourType.Override))
 		{
 			this.selectedCar = selectedCar;
-			this.highlighterState = highlighterState;
+			this.isAimingAtCar = isAimingAtCar;
 
 			if (this.selectedCar == null)
 			{
 				throw new ArgumentNullException(nameof(selectedCar));
 			}
 
-			carBuyPrice = PricesCalc.CalculateBuyPrice(selectedCar, getTotalTrainsetPrice: true);
+			this.carBuyPrice = carBuyPrice;
 		}
 
 		private bool HasDemonstrator()
@@ -58,7 +58,7 @@ namespace LocoOwnership.LocoPurchaser
 
 		private bool HasEnoughLocos()
 		{
-			if (OwnedLocosManager.CountLocosAsSets() >= Main.Settings.maxLocosLimit) return true;
+			if (OwnedLocosManager.Instance.CountLocosAsSets() >= Main.Settings.maxLocosLimit) return true;
 
 			return false;
 		}
@@ -77,16 +77,10 @@ namespace LocoOwnership.LocoPurchaser
 				return this;
 			}
 
-			if (!highlighterState)
+			if (!isAimingAtCar)
 			{
 				utility.PlaySound(VanillaSoundCommsRadio.Cancel);
 				return new PurchasePointAtNothing();
-			}
-
-			if (selectedCar.playerSpawnedCar)
-			{
-				utility.PlaySound(VanillaSoundCommsRadio.Warning);
-				return new TransactionPurchaseFail(5);
 			}
 
 			if (!CarUtils.IsLocoOrLocosetValid(selectedCar))
@@ -113,7 +107,14 @@ namespace LocoOwnership.LocoPurchaser
 				return new TransactionPurchaseFail(6);
 			}
 
-			if (OwnedLocosManager.HasLocoGUIDAsKey(selectedCar.CarGUID))
+			// Succeeded by the next block
+			/*if (OwnedLocosManager.Instance.IsLocoGuidAlreadyOwned(selectedCar.CarGUID))
+			{
+				utility.PlaySound(VanillaSoundCommsRadio.Warning);
+				return new TransactionPurchaseFail(7);
+			}*/
+
+			if (selectedCar.TryGetComponent<LocoOwnershipController>(out _))
 			{
 				utility.PlaySound(VanillaSoundCommsRadio.Warning);
 				return new TransactionPurchaseFail(7);
@@ -137,7 +138,7 @@ namespace LocoOwnership.LocoPurchaser
 				return new TransactionPurchaseFail(4);
 			}
 
-			OwnedLocosManager.BuyLoco(selectedCar);
+			OwnedLocosManager.Instance.SetLocoToOwned(selectedCar);
 			Inventory.Instance.RemoveMoney(carBuyPrice);
 			utility.PlaySound(VanillaSoundCommsRadio.MoneyRemoved);
 			return new TransactionPurchaseSuccess(selectedCar, carBuyPrice);
@@ -146,12 +147,12 @@ namespace LocoOwnership.LocoPurchaser
 		public override AStateBehaviour OnUpdate(CommsRadioUtility utility)
 		{
 			RaycastHit hit;
+			// If pointing away from selected loco, highlight red
 			if (!Physics.Raycast(utility.SignalOrigin.position, utility.SignalOrigin.forward, out hit, SIGNAL_RANGE, CarHighlighter.trainCarMask))
 			{
-				// if no longer looking at the locomotive
-				if (highlighterState)
+				if (isAimingAtCar)
 				{
-					return new TransactionPurchaseConfirm(selectedCar, false);
+					return new TransactionPurchaseConfirm(selectedCar, carBuyPrice, false);
 				}
 
 				return this;
@@ -163,13 +164,13 @@ namespace LocoOwnership.LocoPurchaser
 				return this;
 			}
 
-			// if pointing at the selected locomotive
+			// If pointing at the selected loco, highlight blue
 			if (target.CarGUID == selectedCar.CarGUID)
 			{
-				if (!highlighterState)
+				if (!isAimingAtCar)
 				{
 					utility.PlaySound(VanillaSoundCommsRadio.HoverOver);
-					return new TransactionPurchaseConfirm(selectedCar, true);
+					return new TransactionPurchaseConfirm(selectedCar, carBuyPrice, true);
 				}
 			}
 
@@ -179,7 +180,7 @@ namespace LocoOwnership.LocoPurchaser
 		public override void OnEnter(CommsRadioUtility utility, AStateBehaviour? previous)
 		{
 			base.OnEnter(utility, previous);
-			CarHighlighter.StartSelectorHighlighter(utility, selectedCar, highlighterState);
+			CarHighlighter.StartSelectorHighlighter(utility, selectedCar, isAimingAtCar);
 		}
 
 		public override void OnLeave(CommsRadioUtility utility, AStateBehaviour? next)

@@ -1,78 +1,87 @@
-using System;
+using DV.InventorySystem;
+using DV.JObjectExtstensions;
+using DV.Localization;
+using DV.Utils;
+using LocoOwnership.Shared;
+using Newtonsoft.Json.Linq;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Newtonsoft.Json.Linq;
-using DV.Localization;
-using DV.JObjectExtstensions;
-using DV.ServicePenalty;
-using DV.InventorySystem;
-using DV.Simulation.Cars;
-using DV.Utils;
 using UnityEngine;
-using LocoOwnership.Shared;
-using System.Collections;
 
 namespace LocoOwnership.OwnershipHandler
 {
-	public class OwnedLocosManager
+	public class OwnedLocosManager : SingletonBehaviour<OwnedLocosManager>
 	{
-		// this is the cache
-		private static Dictionary<string, string> ownedLocos = new();
-		private static Dictionary<string, float> ownedLocosLicensePrice = new();
+		// This list is the main source of truth after validation is complete
+		[SerializeField] private List<LocoOwnershipController> _ownedLocosTrackers = new();
+		public List<LocoOwnershipController> OwnedLocosTrackers => _ownedLocosTrackers;
 
-		public static Dictionary<string, string> OwnedLocos => ownedLocos;
-		public static Dictionary<string, float> OwnedLocosLicensePrice => ownedLocosLicensePrice;
+		/// <summary>
+		/// This dict is the source of truth before validation, as validation is where assignment of trackers happen.
+		/// This should not be referenced at any point after first validation is performed
+		/// </summary>
+		private Dictionary<string, float> ownedLocosGuidsAndValuesTemp = new();
 
-		public static void Initialize()
+		public new static string AllowAutoCreate()
 		{
-			//WorldStreamingInit.LoadingFinished += OwnedCarsStatesValidate;
+			return "[OwnedLocosManager]";
+		}
+
+		private void OnEnable()
+		{
 			WorldStreamingInit.LoadingFinished += ValidateOwnedCars;
+		}
+
+		private void OnDisable()
+		{
+			WorldStreamingInit.LoadingFinished -= ValidateOwnedCars;
 		}
 
 		/*-----------------------------------------------------------------------------------------------------------------------*/
 
 		#region UTILITY
 
-		public static void PrintAllOwnedLocos()
+		public void PrintAllOwnedLocos()
 		{
-			if (ownedLocos.Count <= 0 || ownedLocosLicensePrice.Count <= 0)
+			if (_ownedLocosTrackers.Count <= 0)
 			{
 				Debug.Log("You don't have owned locos yet or you haven't loaded into a save!");
 			}
 			else
 			{
 				Debug.Log("Owned locos list:");
-				for (int i = 0; i < ownedLocos.Count; i++)
+				for (int i = 0; i < _ownedLocosTrackers.Count; i++)
 				{
-					string guid = ownedLocos.Keys.ToList()[i];
-					string id = ownedLocos.Values.ToList()[i];
-					string purchasePrice = ownedLocosLicensePrice[guid].ToString();
-					Debug.Log($"{i}. Guid = {guid}, LocoID = {id}, purchase price = {purchasePrice}");
+					LocoOwnershipController tracker = _ownedLocosTrackers[i];
+					var car = tracker.Car;
+
+					if (car == null || tracker == null) continue;
+
+					string id = car.ID;
+					float purchaseValue = tracker.GetUnitPurchaseValue();
+
+					Debug.Log($"{i}. Guid = {tracker.CarGUID}, LocoID = {id}, purchase price = {purchaseValue}");
 				}
 
 				Debug.Log("-----");
-				Debug.Log($"Found {ownedLocos.Count} vehicles, {CountIndividualLocoUnits()} being loco units");
-				Debug.Log($"Found {ownedLocosLicensePrice.Count} loco price data");
+				Debug.Log($"Found {_ownedLocosTrackers.Count} vehicles, {CountIndividualLocoUnits()} being loco units");
 			}
 		}
 
-		public static bool HasLocoGUIDAsKey(string key)
+		public bool IsLocoAlreadyOwned(string carGuid)
 		{
-			if (ownedLocos.ContainsKey(key))
-			{
-				return true;
-			}
-
-			return false;
+			return _ownedLocosTrackers.Any(l => l != null && l.CarGUID == carGuid);
 		}
 
-		public static int CountLocosAsSets()
+		public int CountLocosAsSets()
 		{
-			return ownedLocos
-				.Where(kvp => kvp.Value.StartsWith("L-"))
-				.Select(kvp =>
+			return _ownedLocosTrackers
+				.Where(l => l != null && l.Car != null)
+				.Where(l => l.Car.IsLoco)
+				.Select(l =>
 				{
-					var car = TrainCarRegistry.Instance.GetTrainCarByCarGuid(kvp.Key);
+					var car = TrainCarRegistry.Instance.GetTrainCarByCarGuid(l.CarGUID);
 					var set = CarUtils.GetCCLTrainsetOrLocoAndTender(car);
 					return new HashSet<string>(set.Select(tc => tc.CarGUID));
 				})
@@ -82,115 +91,69 @@ namespace LocoOwnership.OwnershipHandler
 			// thanks Zeibach for helping with this part!
 		}
 
-		public static int CountIndividualLocoUnits()
+		public int CountIndividualLocoUnits()
 		{
-			return ownedLocos.Count(kvp => kvp.Value.StartsWith("L-"));
+			return _ownedLocosTrackers.Where(l => l != null && l.Car != null).Count(l => l.Car.IsLoco);
 		}
 
-		public static void ClearCache()
+		public TrainCar GetTrainCarFromIndex(int index)
 		{
-			Main.DebugLog("Clearing owned loco list cache.");
-			ownedLocos.Clear();
-			ownedLocosLicensePrice.Clear();
+			return _ownedLocosTrackers
+				.Where(l => l != null && l.Car != null)
+				.ElementAt(index)
+				.Car;
+		}
+
+		public void ClearTracker()
+		{
+			Main.DebugLog("Clearing owned loco list tracker and temp cache.");
+			_ownedLocosTrackers.Clear();
+			ownedLocosGuidsAndValuesTemp.Clear();
 		}
 
 		#endregion
 
 		/*-----------------------------------------------------------------------------------------------------------------------*/
 
-		#region OWNED LOCOS HANDLER\
+		#region OWNED LOCOS HANDLER V2
 
-		private static void SetToOwned(TrainCar car)
-		{
-			var locoDebtController = LocoDebtController.Instance;
-			var simController = car.GetComponent<SimController>();
-			SimulatedCarDebtTracker locoDebt = simController.debt;
-			List<ExistingLocoDebt> debts = locoDebtController.trackedLocosDebts;
-
-			if (locoDebt == null)
-			{
-				Debug.LogWarning($"Debt for {car.ID} is missing, cannot continue own operation for this one");
-				return;
-			}
-
-			ExistingLocoDebt locoDebtEntry = debts.Find(debt => debt.locoDebtTracker == locoDebt);
-
-			if (locoDebtEntry != null)
-			{
-				Main.DebugLog($"Preparing unregister existing debt for {car.ID}");
-				debts.Remove(locoDebtEntry);
-				SingletonBehaviour<CareerManagerDebtController>.Instance.UnregisterDebt(locoDebtEntry);
-				Main.DebugLog($"Successfully unregistered debt for {car.ID}");
-				locoDebtEntry.UpdateDebtState();
-			}
-			else
-			{
-				Debug.LogWarning($"{car.ID} does not have existing loco debt, skipping removal");
-			}
-
-			Main.DebugLog($"Preparing to register {car.ID} as owned");
-			car.uniqueCar = true;
-			SingletonBehaviour<OwnedCarsStateController>.Instance.RegisterCarStateTracker(car, locoDebt);
-			Main.DebugLog($"Registered {car.ID} as owned");
-		}
-
-		private static void UnsetOwned(TrainCar car)
-		{
-			var ownedCarsStateController = OwnedCarsStateController.Instance;
-			var simController = car.GetComponent<SimController>();
-			SimulatedCarDebtTracker locoDebt = simController.debt;
-			List<ExistingOwnedCarDebt> debts = ownedCarsStateController.existingOwnedCarStates;
-
-			if (locoDebt == null)
-			{
-				Debug.LogWarning($"Debt for {car.ID} is missing, cannot continue un-own operation for this one");
-				return;
-			}
-
-			ExistingOwnedCarDebt locoDebtEntry = debts.Find(debt => debt.carDebtTrackerBase == locoDebt);
-
-			if (locoDebtEntry != null)
-			{
-				Main.DebugLog("Removing loco from owned cars list");
-				debts.Remove(locoDebtEntry);
-				Main.DebugLog("Removed loco from owned cars list");
-				locoDebtEntry.UpdateDebtState();
-			}
-			else
-			{
-				Debug.LogWarning($"{car.ID} does not have existing owned car debt, skipping removal");
-			}
-
-			// Register as regular DVRT loco
-			Main.DebugLog($"Preparing to register {car.ID} as DVRT");
-			car.uniqueCar = false;
-			SingletonBehaviour<LocoDebtController>.Instance.RegisterLocoDebtTracker(car, locoDebt);
-			Main.DebugLog($"Registered {car.ID} as DVRT");
-		}
-
-		public static void BuyLoco(TrainCar selectedCar)
+		public void SetLocoToOwned(TrainCar selectedCar)
 		{
 			List<TrainCar> trainSet = CarUtils.GetCCLTrainsetOrLocoAndTender(selectedCar);
 
-			// process loco purchase
 			foreach (TrainCar car in trainSet)
 			{
-				ownedLocos.Add(car.CarGUID, car.ID);
-				ownedLocosLicensePrice.Add(car.CarGUID, PricesCalc.CalculateBuyPrice(car, getTotalTrainsetPrice: false));
-				SetToOwned(car);
+				var tracker = car.gameObject.AddComponent<LocoOwnershipController>();
+				tracker.Initialize(PricesCalc.CalculateBuyPrice(car, getTotalTrainsetPrice: false));
+
+				_ownedLocosTrackers.Add(tracker);
+
+				// Make sure car is no longer considered as player spawned
+				car.playerSpawnedCar = false;
+
+				DebtHandling.RegisterDebtToWorkTrain(car);
 			}
 		}
 
-		public static void SellLoco(TrainCar selectedCar)
+		public void UnsetLocoFromOwned(TrainCar selectedCar)
 		{
 			List<TrainCar> trainSet = CarUtils.GetCCLTrainsetOrLocoAndTender(selectedCar);
 
-			// process loco sell
 			foreach (TrainCar car in trainSet)
 			{
-				UnsetOwned(car);
-				ownedLocos.Remove(car.CarGUID);
-				ownedLocosLicensePrice.Remove(car.CarGUID);
+				var tracker = car.gameObject.GetComponent<LocoOwnershipController>();
+				if (tracker != null)
+				{
+					tracker.RemoveOwnership();
+				}
+				else
+				{
+					Debug.LogError($"{car.ID} doesn't have the ownership tracker component for some reason.");
+				}
+
+				_ownedLocosTrackers.Remove(tracker);
+
+				DebtHandling.RegisterDebtToDVRT(car);
 			}
 		}
 
@@ -198,102 +161,74 @@ namespace LocoOwnership.OwnershipHandler
 
 		/*-----------------------------------------------------------------------------------------------------------------------*/
 
-		#region OWNED LOCOS VALIDATOR
+		#region OWNED LOCOS VALIDATOR V2
 
-		public static void ValidateOwnedCars()
+		// To be called from patch
+		public void AssignOwnershipComponent(TrainCar car)
+		{
+			if (!ownedLocosGuidsAndValuesTemp.Keys.Contains(car.CarGUID))
+			{
+				Main.DebugLog($"Skipping ownership component of {car.ID}");
+				return;
+			}
+
+			Main.DebugLog($"Assigning ownership component to {car.ID}");
+
+			var tracker = car.gameObject.AddComponent<LocoOwnershipController>();
+			tracker.Initialize(ownedLocosGuidsAndValuesTemp[car.CarGUID]);
+
+			_ownedLocosTrackers.Add(tracker);
+		}
+
+		public void ValidateOwnedCars()
 		{
 			Debug.Log("Beginning validating existence of owned cars");
+			List<string> invalidGuids = new();
+			int validatedLocomotives = 0;
 
-			try
+			// Validate if temp values and tracker don't match
+			// Execute right after loading finished before player has the chance to modify the tracker
+			if (ownedLocosGuidsAndValuesTemp.Count > 0 && _ownedLocosTrackers.Count > 0)
 			{
-				if (OwnedCarsStateController.Instance == null)
+				foreach (var guid in ownedLocosGuidsAndValuesTemp.Keys)
 				{
-					Debug.LogError("Owned cars state controller is null while trying to validate owned cars");
-					return;
-				}
-
-				if (Inventory.Instance == null)
-				{
-					Debug.LogError("Inventory instance is null while trying to validate owned cars");
-					return;
-				}
-
-				var ocsc = OwnedCarsStateController.Instance;
-				bool carsDeleted = false;
-
-				// build temporary lists
-				var eocdGuids = new HashSet<string>(
-					ocsc.existingOwnedCarStates
-						.Where(eocd => eocd?.car != null)
-						.Select(eocd => eocd.car.CarGUID)
-				);
-
-				// process staged deletions
-				var carsToStagedDelete = ocsc.currentlyDestroyedOwnedCarStates
-					.Where(socd => socd != null && ownedLocos.Values.Contains(socd.ID))
-					.ToList();
-
-				foreach (var socd in carsToStagedDelete)
-				{
-					Main.DebugLog($"Removing {socd.ID} from staged debt list");
-					ocsc.currentlyDestroyedOwnedCarStates.Remove(socd);
-				}
-
-				// validate owned cars against existing state
-				foreach (var guid in ownedLocos.Keys.ToList())
-				{
-					// if existing owned car states dont have whats in ownedLocos
-					if (!eocdGuids.Contains(guid))
+					var tracker = _ownedLocosTrackers.FirstOrDefault(t => t.CarGUID == guid);
+					if (tracker != null)
 					{
-						carsDeleted = true;
-						string carID = ownedLocos[guid];
+						// Make sure cars are not unique
+						tracker.Car.uniqueCar = false;
 
-						Debug.LogWarning($"Car {carID} (GUID: {guid}) no longer exists! Refunding purchase");
-
-						if (ownedLocosLicensePrice.TryGetValue(guid, out var price))
-						{
-							Inventory.Instance.AddMoney(price);
-						}
-						else
-						{
-							Debug.LogError($"Error: no purchase price found for car {carID} (GUID: {guid})");
-						}
-
-						ownedLocos.Remove(guid);
-						ownedLocosLicensePrice.Remove(guid);
+						validatedLocomotives++;
+					}
+					else
+					{
+						Debug.LogWarning($"Car with GUID {guid} is not found!");
+						invalidGuids.Add(guid);
+						continue;
 					}
 				}
-
-				// orphaned data is stuff that does not have valid relations to any past existing locos
-				// added this because back then i forgot to add something to remove purchase price entries
-				// in selling logic
-
-				// clean up orphaned license prices
-				var orphanedPrices = ownedLocosLicensePrice.Keys
-					.Where(guid => !ownedLocos.ContainsKey(guid))
-					.ToList();
-
-				foreach (var guid in orphanedPrices)
-				{
-					Debug.LogWarning($"Removing orphaned license price data for GUID: {guid}");
-					ownedLocosLicensePrice.Remove(guid);
-				}
-
-				Debug.Log($"Owned cars validation complete");
-
-				if (carsDeleted)
-				{
-					CoroutineHelper.StartCoro(ShowDelayedPopup());
-				}
 			}
-			catch (Exception ex)
+
+			// Clear stale and invalid data in tracker and temp, and refund player
+			_ownedLocosTrackers.RemoveAll(x => x == null);
+			if (invalidGuids.Count > 0)
 			{
-				Debug.LogError($"[ValidateOwnedCars] Unexpected error: {ex.Message}");
-				Debug.LogException(ex);
+				foreach (var guid in invalidGuids)
+				{
+					Inventory.Instance.AddMoney(ownedLocosGuidsAndValuesTemp[guid]);
+					ownedLocosGuidsAndValuesTemp.Remove(guid);
+				}
+
+				CoroutineHelper.StartCoro(ShowDelayedPopup());
 			}
+
+			// TODO: Remove uniquecar and handle debts
+			// don't forget loco requesting
+
+			Debug.Log($"Validated {_ownedLocosTrackers.Count} loco entries, removed {invalidGuids.Count} locos, {validatedLocomotives} locos are valid");
 		}
 
-		private static IEnumerator ShowDelayedPopup()
+		private IEnumerator ShowDelayedPopup()
 		{
 			yield return new WaitForSeconds(1f);
 			CarDeletedNotif.ShowOK(LocalizationAPI.L("lo/popupapi/okmsg/carvalidate"));
@@ -303,88 +238,94 @@ namespace LocoOwnership.OwnershipHandler
 
 		/*-----------------------------------------------------------------------------------------------------------------------*/
 
-
 		#region LOAD/SAVE HANDLER V2
 
-
-
-		#endregion
-
-		/*-----------------------------------------------------------------------------------------------------------------------*/
-
-		#region LOAD/SAVE HANDLER
-
-		// convert JObject of owned locos back into dict and apply to cache
-		public static void OnGameLoad(JObject savedOwnedLocos)
+		public void OnGameLoad(JObject savedOwnedLocos)
 		{
-			JObject[] jobjectArray = savedOwnedLocos.GetJObjectArray("savedOwnedLocos");
-			JObject[] jobjectArrayPrice = savedOwnedLocos.GetJObjectArray("savedOwnedLocosLicensePrice");
+			JObject[] ownedLocosTrackerObject = savedOwnedLocos.GetJObjectArray("ownedLocosTrackerObject");
 
-			if (jobjectArray != null)
+			if (ownedLocosTrackerObject == null)
 			{
-				foreach (JObject jobject in jobjectArray)
-				{
-					var guid = jobject.GetString("guid");
-					var locoID = jobject.GetString("locoID");
+				// Migrate if v2 does not yet exist
+				Main.DebugLog("v2 not found, beginning migration");
 
-					if (!ownedLocos.ContainsKey(guid))
+				JObject[] ownedLocosJobject = savedOwnedLocos.GetJObjectArray("savedOwnedLocos");
+				JObject[] ownedLocosPricesJobject = savedOwnedLocos.GetJObjectArray("savedOwnedLocosLicensePrice");
+
+				// v1 dataforms, migration only runs if v1 also exists
+				Dictionary<string, string> ownedLocosTemp = new();
+				Dictionary<string, float> ownedLocosLicensePriceTemp = new();
+
+				if (ownedLocosJobject != null)
+				{
+					foreach (JObject jobject in ownedLocosJobject)
 					{
-						ownedLocos.Add(guid, locoID);
+						var guid = jobject.GetString("guid");
+						var locoID = jobject.GetString("locoID");
+
+						if (!ownedLocosTemp.ContainsKey(guid))
+						{
+							ownedLocosTemp.Add(guid, locoID);
+						}
 					}
 				}
-			}
 
-			if (jobjectArrayPrice != null)
-			{
-				foreach (JObject jobject in jobjectArrayPrice)
+				if (ownedLocosPricesJobject != null)
 				{
-					var guidPrice = jobject.GetString("guidPrice");
-					var licensePrice = jobject.GetFloat("licensePrice");
-
-					if (!ownedLocosLicensePrice.ContainsKey(guidPrice))
+					foreach (JObject jobject in ownedLocosPricesJobject)
 					{
-						ownedLocosLicensePrice.Add(guidPrice, (float)licensePrice);
+						var guidPrice = jobject.GetString("guidPrice");
+						var licensePrice = jobject.GetFloat("licensePrice");
+
+						if (!ownedLocosLicensePriceTemp.ContainsKey(guidPrice))
+						{
+							ownedLocosLicensePriceTemp.Add(guidPrice, (float)licensePrice);
+						}
 					}
+				}
+
+				Main.DebugLog($"Found {ownedLocosTemp.Count} items in savedOwnedLocos, {ownedLocosLicensePriceTemp.Count} in license price");
+				Main.DebugLog($"Migrating now...");
+
+				// Migrator to v2
+				foreach (var kvp in ownedLocosTemp)
+				{
+					ownedLocosGuidsAndValuesTemp.Add(kvp.Key, ownedLocosLicensePriceTemp[kvp.Key]);
+				}
+
+				Main.DebugLog($"Successfully migrated {ownedLocosGuidsAndValuesTemp.Count} locos to v2");
+			}
+			else
+			{
+				// If v2 exists, do not run migration and only load as normal
+				Main.DebugLog("v2 found, skipping migration");
+
+				foreach (JObject jobject in ownedLocosTrackerObject)
+				{
+					var locoGuid = jobject.GetString("locoGuid");
+					var purchaseValue = (float)jobject.GetFloat("purchaseValue");
+
+					ownedLocosGuidsAndValuesTemp.Add(locoGuid, purchaseValue);
 				}
 			}
 		}
 
-		// convert owned locos dict cache into JObjects for savegame
-		public static JObject OnGameSaved()
+		// Convert owned locos trackers into JObjects for savegame
+		public JObject OnGameSaved()
 		{
 			JObject savedOwnedLocos = new();
+			List<JObject> trackerData = new();
 
-			JObject[] array = new JObject[ownedLocos.Count];
-			JObject[] priceArray = new JObject[ownedLocosLicensePrice.Count];
-
-			int i = 0;
-			foreach (var kvp in ownedLocos)
+			foreach (var tracker in _ownedLocosTrackers)
 			{
 				JObject dataObject = new();
+				dataObject.SetString("locoGuid", tracker.CarGUID);
+				dataObject.SetFloat("purchaseValue", tracker.GetUnitPurchaseValue());
 
-				dataObject.SetString("guid", kvp.Key);
-				dataObject.SetString("locoID", kvp.Value);
-
-				array[i] = dataObject;
-
-				i++;
+				trackerData.Add(dataObject);
 			}
 
-			int j = 0;
-			foreach (var kvp in ownedLocosLicensePrice)
-			{
-				JObject dataObject = new();
-
-				dataObject.SetString("guidPrice", kvp.Key);
-				dataObject.SetFloat("licensePrice", kvp.Value);
-
-				priceArray[j] = dataObject;
-
-				j++;
-			}
-
-			savedOwnedLocos.SetJObjectArray("savedOwnedLocos", array);
-			savedOwnedLocos.SetJObjectArray("savedOwnedLocosLicensePrice", priceArray);
+			savedOwnedLocos.SetJObjectArray("ownedLocosTrackerObject", trackerData.ToArray());
 
 			return savedOwnedLocos;
 		}

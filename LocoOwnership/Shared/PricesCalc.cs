@@ -5,7 +5,6 @@ using DV.UserManagement;
 using LocoOwnership.OwnershipHandler;
 using System.Collections.Generic;
 using UnityEngine;
-using static DV.CommsRadioCrewVehicle;
 
 namespace LocoOwnership.Shared
 {
@@ -153,10 +152,13 @@ namespace LocoOwnership.Shared
 
 		private static float GetStoredPriceOrDefault(TrainCar car)
 		{
-			if (OwnedLocosManager.OwnedLocosLicensePrice.TryGetValue(car.CarGUID, out float storedPrice))
+			var trainCar = TrainCarRegistry.Instance.GetTrainCarByCarGuid(car.CarGUID);
+
+			if (trainCar.TryGetComponent<LocoOwnershipController>(out var loc))
 			{
-				if (storedPrice > 0f) return storedPrice;
+				if (loc.GetUnitPurchaseValue() > 0f) return loc.GetUnitPurchaseValue();
 			}
+
 			return 0f;
 		}
 

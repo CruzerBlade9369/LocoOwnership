@@ -37,7 +37,7 @@ namespace LocoOwnership
 		[Draw("Maximum number of owned locomotives", Min = 1, Max = 30)]
 		public int maxLocosLimit = 16;
 
-		[Draw("Loco requesting price rate per km", Min = 1250f, Max = 10000f)]
+		[Draw("Loco requesting price rate per km", Min = 1000, Max = 10000f)]
 		public float requestPriceRate = 2500f;
 
 		[Draw("Locomotive buy/sell price multiplier (Does not apply on catalog prices or dynamic resell price)", Min = 2f, Max = 100f)]
@@ -70,24 +70,19 @@ namespace LocoOwnership
 			{
 				GUILayout.Label("Debug functions");
 
-				if (GUILayout.Button("Validate owned cars"))
-				{
-					OwnedLocosManager.ValidateOwnedCars();
-				}
-
 				if (GUILayout.Button("Print all owned cars data to console"))
 				{
-					OwnedLocosManager.PrintAllOwnedLocos();
+					OwnedLocosManager.Instance.PrintAllOwnedLocos();
 				}
 
 				if (GUILayout.Button("Count trainsets"))
 				{
-					Debug.Log(OwnedLocosManager.CountLocosAsSets() + " locos as sets");
+					Debug.Log(OwnedLocosManager.Instance.CountLocosAsSets() + " locos sets");
 				}
 
 				if (GUILayout.Button("Count individual loco units"))
 				{
-					Debug.Log(OwnedLocosManager.CountIndividualLocoUnits() + " individual loco units");
+					Debug.Log(OwnedLocosManager.Instance.CountIndividualLocoUnits() + " individual loco units");
 				}
 			}
 

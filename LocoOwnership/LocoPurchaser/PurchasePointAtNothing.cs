@@ -1,10 +1,10 @@
+using CommsRadioAPI;
 using DV;
 using DV.Localization;
-using UnityEngine;
-using CommsRadioAPI;
 using LocoOwnership.Menus;
-using LocoOwnership.Shared;
 using LocoOwnership.OwnershipHandler;
+using LocoOwnership.Shared;
+using UnityEngine;
 
 namespace LocoOwnership.LocoPurchaser
 {
@@ -27,7 +27,7 @@ namespace LocoOwnership.LocoPurchaser
 				return this;
 			}
 			utility.PlaySound(VanillaSoundCommsRadio.Cancel);
-			return new OwnershipMenus(0);
+			return new OwnershipMenus();
 		}
 
 		public override AStateBehaviour OnUpdate(CommsRadioUtility utility)
@@ -38,27 +38,33 @@ namespace LocoOwnership.LocoPurchaser
 				return this;
 			}
 
-			// try to get the car we're pointing at
+			// Try to get the car we're pointing at
 			TrainCar selectedCar = TrainCar.Resolve(hit.transform.root);
 			if (selectedCar == null)
 			{
 				return this;
 			}
 
-			// check if we're pointing at a locomotive
-			bool isLoco = selectedCar.IsLoco;
-			if (!isLoco)
+			// Check if we're pointing at a locomotive
+			if (!selectedCar.IsLoco)
 			{
 				return this;
 			}
 
-			// check if loco exists in owned locos cache
-			if (OwnedLocosManager.HasLocoGUIDAsKey(selectedCar.CarGUID))
+			// Succeeded by the next block
+			/*if (OwnedLocosManager.Instance.IsLocoGuidAlreadyOwned(selectedCar.CarGUID))
+			{
+				return this;
+			}*/
+
+			// Skip if car is owned
+			if (selectedCar.TryGetComponent<LocoOwnershipController>(out _))
 			{
 				return this;
 			}
 
-			if (selectedCar.uniqueCar || selectedCar.playerSpawnedCar)
+			// Avoid uniquecar
+			if (selectedCar.uniqueCar)
 			{
 				return this;
 			}

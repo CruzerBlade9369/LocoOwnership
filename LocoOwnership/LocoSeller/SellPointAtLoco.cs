@@ -34,23 +34,22 @@ namespace LocoOwnership.LocoSeller
 			}
 
 			utility.PlaySound(VanillaSoundCommsRadio.Confirm);
-			return new TransactionSellConfirm(selectedCar, true);
+			return new TransactionSellConfirm(selectedCar, PricesCalc.CalculateSellPrice(selectedCar), true);
 		}
 
 		public override AStateBehaviour OnUpdate(CommsRadioUtility utility)
 		{
+			// Not hitting anything
 			RaycastHit hit;
 			if (!Physics.Raycast(utility.SignalOrigin.position, utility.SignalOrigin.forward, out hit, SIGNAL_RANGE, CarHighlighter.trainCarMask))
 			{
 				return new SellPointAtNothing();
 			}
 
+			// No longer hitting the previously hit car
 			TrainCar target = TrainCar.Resolve(hit.transform.root);
 			if (target == null || target != selectedCar)
 			{
-				//if we stopped pointing at selectedCar and are now pointing at either
-				//nothing or another train car, then go back to PointingAtNothing so
-				//we can figure out what we're pointing at
 				return new SellPointAtNothing();
 			}
 			return this;

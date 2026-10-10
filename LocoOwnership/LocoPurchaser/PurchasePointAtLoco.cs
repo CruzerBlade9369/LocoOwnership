@@ -34,17 +34,19 @@ namespace LocoOwnership.LocoPurchaser
 			}
 
 			utility.PlaySound(VanillaSoundCommsRadio.Confirm);
-			return new TransactionPurchaseConfirm(selectedCar);
+			return new TransactionPurchaseConfirm(selectedCar, PricesCalc.CalculateBuyPrice(selectedCar, getTotalTrainsetPrice: true));
 		}
 
 		public override AStateBehaviour OnUpdate(CommsRadioUtility utility)
 		{
+			// Not hitting anything
 			RaycastHit hit;
 			if (!Physics.Raycast(utility.SignalOrigin.position, utility.SignalOrigin.forward, out hit, SIGNAL_RANGE, CarHighlighter.trainCarMask))
 			{
 				return new PurchasePointAtNothing();
 			}
 
+			// No longer hitting the previously hit car
 			TrainCar target = TrainCar.Resolve(hit.transform.root);
 			if (target == null || target != selectedCar)
 			{
