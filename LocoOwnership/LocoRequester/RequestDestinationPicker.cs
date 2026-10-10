@@ -79,7 +79,7 @@ namespace LocoOwnership.LocoRequester
 							);
 					}
 					utility.PlaySound(VanillaSoundCommsRadio.Cancel);
-					return new OwnershipMenus(2);
+					return new OwnershipMenus();
 
 				case InputAction.Up:
 					return new RequestDestinationPicker(selectedCar, selectedCarBounds, utility.SignalOrigin, selectedTrack, selectedPoint, !isSelectedOrientationOppositeTrackDirection);

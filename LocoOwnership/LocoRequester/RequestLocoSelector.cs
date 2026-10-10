@@ -1,9 +1,7 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using DV;
 using DV.Localization;
-using DV.ServicePenalty;
 using UnityEngine;
 using CommsRadioAPI;
 using LocoOwnership.OwnershipHandler;
@@ -14,18 +12,17 @@ namespace LocoOwnership.LocoRequester
 {
 	public class RequestLocoSelector : AStateBehaviour
 	{
-		private int selectedIndex;
+		private static int selectedIndex = 0;
 		private TrainCar selectedCar;
 
-		public RequestLocoSelector(int index = 0) : base(
+		public RequestLocoSelector() : base(
 			new CommsRadioState(
 				titleText: LocalizationAPI.L("lo/radio/general/request"),
-				contentText: OwnedLocosManager.Instance.GetLocoDisplayNameFromIndex(index),
+				contentText: OwnedLocosManager.Instance.GetLocoDisplayNameFromIndex(selectedIndex),
 				actionText: LocalizationAPI.L("comms/confirm"),
 				buttonBehaviour: ButtonBehaviourType.Override))
 		{
-			selectedIndex = index;
-			selectedCar = TrainCarFromIndex(selectedIndex);
+			selectedCar = OwnedLocosManager.Instance.GetTrainCarFromIndex(selectedIndex);
 		}
 
 		public override AStateBehaviour OnAction(CommsRadioUtility utility, InputAction action)
@@ -74,10 +71,12 @@ namespace LocoOwnership.LocoRequester
 					return new RequestDestinationPicker(selectedCar, bounds, utility.SignalOrigin);
 
 				case InputAction.Up:
-					return new RequestLocoSelector(PreviousIndex());
+					PreviousIndex();
+					return new RequestLocoSelector();
 
 				case InputAction.Down:
-					return new RequestLocoSelector(NextIndex());
+					NextIndex();
+					return new RequestLocoSelector();
 
 				default:
 					Debug.LogError("Request loco selector: why are you here?");
@@ -85,59 +84,38 @@ namespace LocoOwnership.LocoRequester
 			}
 		}
 
-		private int NextIndex()
+		private void NextIndex()
 		{
 			int nextIndex = selectedIndex + 1;
+
 			if (nextIndex >= OwnedLocosManager.Instance.OwnedLocosTrackers.Count)
 			{
 				nextIndex = 0;
 			}
+
 			selectedIndex = nextIndex;
-			return nextIndex;
 		}
 
-		private int PreviousIndex()
+		private void PreviousIndex()
 		{
 			int previousIndex = selectedIndex - 1;
+
 			if (previousIndex < 0)
 			{
 				previousIndex = OwnedLocosManager.Instance.OwnedLocosTrackers.Count - 1;
 			}
+
 			selectedIndex = previousIndex;
-			return previousIndex;
 		}
 
-		private TrainCar TrainCarFromIndex(int index)
+		public static void ValidateIndex()
 		{
-			return OwnedLocosManager.Instance.OwnedLocosTrackers
-				.Where(l => l != null && l.Car != null)
-				.ElementAt(index)
-				.Car;
-		}
+			var trackers = OwnedLocosManager.Instance.OwnedLocosTrackers;
 
-		/*public static int GetRequestableLocosCount()
-		{
-			return requestableOwnedLocos.Count;
-		}
-
-		public static void RefreshRequestableLocos()
-		{
-			requestableOwnedLocos.Clear();
-			var tempDict = new Dictionary<string, string>();
-
-			OwnedCarsStateController ocsc = OwnedCarsStateController.Instance;
-
-			foreach (ExistingOwnedCarDebt eocd in ocsc.existingOwnedCarStates)
+			if (selectedIndex >= trackers.Count)
 			{
-				if (eocd.car.carType == TrainCarType.Tender) continue;
-
-				if (OwnedLocosManager.Instance.IsLocoAlreadyOwned(eocd.car.CarGUID))
-				{
-					tempDict.Add(eocd.car.CarGUID, $"{LocalizationAPI.L(eocd.car.carLivery.localizationKey)} {eocd.car.ID}");
-				}
+				selectedIndex = trackers.Count - 1;
 			}
-
-			requestableOwnedLocos = tempDict.OrderBy(kvp => kvp.Value).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
-		}*/
+		}
 	}
 }

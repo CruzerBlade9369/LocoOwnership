@@ -32,7 +32,7 @@ namespace LocoOwnership.LocoRequester
 			}
 
 			utility.PlaySound(VanillaSoundCommsRadio.Confirm);
-			return new OwnershipMenus(2);
+			return new OwnershipMenus();
 		}
 	}
 }

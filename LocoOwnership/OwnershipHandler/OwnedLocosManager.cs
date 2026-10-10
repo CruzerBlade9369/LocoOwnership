@@ -1,7 +1,6 @@
 using DV.InventorySystem;
 using DV.JObjectExtstensions;
 using DV.Localization;
-using DV.ServicePenalty;
 using DV.Utils;
 using LocoOwnership.Shared;
 using Newtonsoft.Json.Linq;
@@ -97,11 +96,6 @@ namespace LocoOwnership.OwnershipHandler
 			return _ownedLocosTrackers.Where(l => l != null && l.Car != null).Count(l => l.Car.ID.StartsWith("L-"));
 		}
 
-		public LocoOwnershipController GetOwnershipComponentFromGuid(string guid)
-		{
-			return _ownedLocosTrackers.FirstOrDefault(l => l.CarGUID == guid);
-		}
-
 		public string GetLocoDisplayNameFromIndex(int index)
 		{
 			var tracker = _ownedLocosTrackers
@@ -109,6 +103,14 @@ namespace LocoOwnership.OwnershipHandler
 				.ElementAt(index);
 
 			return $"{LocalizationAPI.L(tracker.Car.carLivery.localizationKey)} {tracker.Car.ID}";
+		}
+
+		public TrainCar GetTrainCarFromIndex(int index)
+		{
+			return _ownedLocosTrackers
+				.Where(l => l != null && l.Car != null)
+				.ElementAt(index)
+				.Car;
 		}
 
 		public void ClearTracker()

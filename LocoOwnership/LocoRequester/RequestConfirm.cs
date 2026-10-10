@@ -73,7 +73,7 @@ namespace LocoOwnership.LocoRequester
 			if (!highlighterState)
 			{
 				utility.PlaySound(VanillaSoundCommsRadio.Cancel);
-				return new OwnershipMenus(2);
+				return new OwnershipMenus();
 			}
 
 			if (playerMoney >= carTeleportPrice)
@@ -98,7 +98,7 @@ namespace LocoOwnership.LocoRequester
 				{
 					utility.PlaySound(VanillaSoundCommsRadio.MoneyRemoved);
 				}
-				return new OwnershipMenus(2);
+				return new OwnershipMenus();
 			}
 			else
 			{

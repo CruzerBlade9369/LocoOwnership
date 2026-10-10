@@ -27,7 +27,7 @@ namespace LocoOwnership.LocoSeller
 				return this;
 			}
 			utility.PlaySound(VanillaSoundCommsRadio.Cancel);
-			return new OwnershipMenus(1);
+			return new OwnershipMenus();
 		}
 
 		public override AStateBehaviour OnUpdate(CommsRadioUtility utility)

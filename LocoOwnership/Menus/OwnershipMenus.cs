@@ -29,16 +29,16 @@ namespace LocoOwnership.Menus
 			return items;
 		}
 
-		private int menuIndex;
+		private static int menuIndex = 0;
 
-		public OwnershipMenus(int menuIndex = 0)
+		public OwnershipMenus()
 			: base(new CommsRadioState(
 				titleText: LocalizationAPI.L(GetMenuItems()[menuIndex].title),
 				contentText: LocalizationAPI.L(GetMenuItems()[menuIndex].content),
 				actionText: LocalizationAPI.L("comms/confirm"),
 				buttonBehaviour: ButtonBehaviourType.Override))
 		{
-			this.menuIndex = menuIndex;
+			
 		}
 
 		public override AStateBehaviour OnAction(CommsRadioUtility utility, InputAction action)
@@ -62,6 +62,7 @@ namespace LocoOwnership.Menus
 							}
 
 							utility.PlaySound(VanillaSoundCommsRadio.ModeEnter);
+							RequestLocoSelector.ValidateIndex();
 							return new RequestLocoSelector();
 
 						default:
@@ -70,10 +71,12 @@ namespace LocoOwnership.Menus
 					}
 
 				case InputAction.Up:
-					return new OwnershipMenus(PreviousIndex());
+					PreviousIndex();
+					return new OwnershipMenus();
 
 				case InputAction.Down:
-					return new OwnershipMenus(NextIndex());
+					NextIndex();
+					return new OwnershipMenus();
 
 				default:
 					Debug.Log("Ownership menu error: why are you here?");
@@ -81,24 +84,24 @@ namespace LocoOwnership.Menus
 			}
 		}
 
-		private int NextIndex()
+		private void NextIndex()
 		{
 			int nextIndex = menuIndex + 1;
 			if (nextIndex >= GetMenuItems().Count)
 			{
 				nextIndex = 0;
 			}
-			return nextIndex;
+			menuIndex = nextIndex;
 		}
 
-		private int PreviousIndex()
+		private void PreviousIndex()
 		{
 			int previousIndex = menuIndex - 1;
 			if (previousIndex < 0)
 			{
 				previousIndex = GetMenuItems().Count - 1;
 			}
-			return previousIndex;
+			menuIndex = previousIndex;
 		}
 	}
 }

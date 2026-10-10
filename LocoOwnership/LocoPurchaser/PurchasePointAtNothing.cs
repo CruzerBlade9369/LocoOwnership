@@ -1,7 +1,6 @@
 using CommsRadioAPI;
 using DV;
 using DV.Localization;
-using LocoOwnership.LocoSeller;
 using LocoOwnership.Menus;
 using LocoOwnership.OwnershipHandler;
 using LocoOwnership.Shared;
@@ -28,7 +27,7 @@ namespace LocoOwnership.LocoPurchaser
 				return this;
 			}
 			utility.PlaySound(VanillaSoundCommsRadio.Cancel);
-			return new OwnershipMenus(0);
+			return new OwnershipMenus();
 		}
 
 		public override AStateBehaviour OnUpdate(CommsRadioUtility utility)
